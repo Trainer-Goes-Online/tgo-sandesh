@@ -1,0 +1,2311 @@
+/* =====================================================================
+   SANDESH SOANS · EXTREME OR NOTHING PROTOCOL, landing stylesheet
+
+   SKIN: "SDP VSL Component System" (design-system.skin.sdp-vsl.md), re-themed.
+   PART 1 below is the ONLY thing that differs from the locked skin: the token
+   block is swapped to IVORY x CHARCOAL x BURNT COPPER (#A75E3B on #F4F0E8), with
+   Oswald as the DISPLAY voice and Inter as the BODY voice.
+   PART 2 is the skin's component design, reproduced token-only. Anatomy,
+   spacing, radii, motion curves, hover/open states and the light / light-alt /
+   dark section-band rhythm are identical to every other SDP-skin VSL.
+
+   Fonts arrive from next/font in layout.tsx as --font-oswald and --font-inter.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   PART 1: THEME (the only block that changes per client)
+   --------------------------------------------------------------------- */
+/* The tokens live on :root, NOT on .sdp-root.
+
+   They used to sit on .sdp-root, which worked only for as long as every styled
+   thing on the site was inside it. The moment the policy pages arrived under
+   their own .eon-policy root, every var() on them resolved to nothing and those
+   pages rendered unstyled: no colour, no typeface, no radii. A design token is
+   a property of the SITE, so it belongs at the document root, and any number of
+   component roots can then read it. */
+:root {
+  /* ---- ACCENT: copper. Spent sparingly, as a luxury accent, never as the
+     page's workhorse. It marks emphasis, rules and small print, not surfaces. */
+  --brand:#A75E3B; --brand-rgb:167,94,59;
+  --brand-bright:#C68A68; --brand-deep:#8A4B2E;
+  --brand-soft:rgba(var(--brand-rgb),.10); --brand-ring:rgba(var(--brand-rgb),.25);
+
+  /* ---- LIGHT NEUTRALS: warm ivory and stone, never white ---- */
+  --bg:#F4F0E8; --bg-alt:#EAE4DA;
+  --ink:#151515; --ink-rgb:21,21,21; --ink-soft:#6E6964; --muted:#8A857E;
+  --border:#D8C5B8; --border-strong:#C4AC99;
+
+  /* ---- DARK NEUTRALS: charcoal, for the VSL block, the protocol band,
+     the founder band and the finale ---- */
+  --bg-dark:#151515; --bg-dark-alt:#1E1E1D; --bg-dark-elev:#292826;
+  --ink-dark:#F4F0E8; --ink-dark-soft:#C4BEB5; --muted-dark:#8E8880;
+  --border-dark:#2C2B29; --border-dark-strong:#3D3B38;
+
+  /* ---- FUNCTIONAL (not brand: kept from the skin) ---- */
+  --success:#10B981; --danger:#DC2626; --danger-rgb:220,38,38; --star:#C68A68; --gold:#A75E3B;
+
+  /* ---- TYPE (faces swap; the ROLES in Part 2 never change) ----
+     Oswald carries real weights, unlike Anton, so --fh-weight exists and the
+     base heading rule reads it instead of the skin's hardcoded single 400. */
+  --fh: var(--font-oswald), 'Oswald', 'Arial Narrow', sans-serif;  /* DISPLAY: condensed caps */
+  --fb: var(--font-inter), 'Inter', 'Helvetica Neue', sans-serif;  /* BODY: neutral grotesque */
+  --fh-weight:600;
+
+  /* ---- RADII: tightened. Copper-on-ivory reads as a certification panel at
+     small radii and as a wellness app at large ones. ---- */
+  --r-sm:4px; --r:6px; --r-lg:10px; --r-xl:14px;
+
+  /* ---- ACCENT ADAPTATIONS ----
+     Copper is mid-toned: it carries white text on a fill, and it is legible as
+     text on both ivory and charcoal, so the light/dark accent-text tokens are
+     the copper itself rather than a shifted variant. */
+  --cta-ink:#FFFFFF;        /* on COPPER fills: the top strip, the tags */
+  --cta-ink-btn:#F4F0E8;    /* on the BLACK button: ivory, not a clinical white */
+  --accent-text-light:var(--brand-deep);
+  --accent-text-dark:var(--brand-bright);
+
+  /* ---- DERIVED DESIGN TOKENS ----
+     One deliberate departure from the skin's formulas: --grad-cta is CHARCOAL,
+     not the accent. A copper button on ivory is the orange fitness page we are
+     avoiding; charcoal with copper around it reads as the premium version of
+     the same instruction. The CTA glow follows it to ink. */
+  --grad-brand:     linear-gradient(135deg,var(--brand-deep),var(--brand));
+  --grad-announce:  linear-gradient(90deg,#7E4327,var(--brand-deep) 50%,#7E4327);
+  --grad-cta:       linear-gradient(180deg,#242322 0%,var(--ink) 55%,#0B0B0B 100%);
+  --grad-urgency:   linear-gradient(135deg,var(--danger) 0%,#EF4444 100%);
+  --grad-guarantee: linear-gradient(135deg,var(--bg-dark-alt),var(--bg-dark-elev));
+  --hero-stage:     linear-gradient(180deg,#F7F3EC 0%,#EDE7DC 100%);
+  --hero-bloom:     radial-gradient(circle,rgba(var(--brand-rgb),.08),transparent 65%);
+  --glow-cta:       0 8px 26px rgba(var(--ink-rgb),.28);
+  --glow-cta-hover: 0 12px 34px rgba(var(--ink-rgb),.38);
+  --shadow-card:    0 2px 12px rgba(var(--ink-rgb),.05);
+  --shadow-card-hover:0 10px 26px rgba(var(--ink-rgb),.12);
+  --inset-hi:       inset 0 1px 0 rgba(255,255,255,.05);   /* barely there: gloss is the enemy here */
+
+  /* ---- layout ---- */
+  --wrap:1180px;
+  --vsl-max:620px;
+
+}
+
+/* The landing page's own root: element-level properties only, no tokens. */
+.sdp-root {
+  font-family:var(--fb); color:var(--ink); background:var(--bg);
+  line-height:1.6; font-size:16px; -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+/* =====================================================================
+   PART 2: COMPONENT DESIGN (constant · token-only · identical every VSL)
+   ===================================================================== */
+
+/* ---- reset ---- */
+*{ box-sizing:border-box; }
+html{ -webkit-text-size-adjust:100%; }
+body{ margin:0; background:#F4F0E8; overflow-x:hidden; }
+
+.sdp-root img{ max-width:100%; height:auto; display:block; }
+/* :where() on the list reset too, and for the same reason: as a plain
+   `.sdp-root ul` this is (0,1,1) and out-specifies any `.sdp-who-list{margin:0
+   auto}` at (0,1,0), which silently drops a width-capped list hard against the
+   left of a centred section. Same family of bug as the heading margin above. */
+.sdp-root :where(ul,ol){ margin:0; padding:0; list-style:none; }
+/* :where() keeps this at zero specificity, so any component class below wins
+   without needing a scoping prefix (the CTA and the watch cue are links). */
+.sdp-root :where(a){ color:inherit; text-decoration:none; }
+.sdp-root button{ font:inherit; }
+
+/* ---- base type ---- */
+.sdp-root h1,.sdp-root h2,.sdp-root h3,.sdp-root h4{
+  font-family:var(--fh); color:var(--ink); line-height:1.05; letter-spacing:.01em;
+  /* CRITICAL, same trap as the p rule below, one element up: this MUST NOT be
+     the `margin` shorthand. `margin:0 0 .5em` also sets left and right to 0,
+     and at (0,1,1) it out-specifies any `.sdp-h1{margin:0 auto}`, which silently
+     drops a width-capped headline hard against the left of its wrapper with its
+     text still centred inside. margin-block touches top and bottom only. */
+  font-weight:var(--fh-weight); margin-block:0 .5em; text-transform:uppercase;
+}
+/* CRITICAL (skin note): bottom margin ONLY. Setting left/right/top here
+   out-specifies every child <p>'s margin:auto and drifts sections off-centre. */
+.sdp-root p{ font-family:var(--fb); color:var(--ink-soft); margin-bottom:1em; }
+.sdp-root strong,.sdp-root b{ font-weight:700; color:var(--ink); }
+.sdp-root .sdp-accent{ color:var(--accent-text-light); white-space:nowrap; }
+
+/* ---- section bands + shell ---- */
+.sdp-wrap{ max-width:var(--wrap); margin:0 auto; padding:0 22px; }
+.sdp-section{ padding:80px 0; position:relative; overflow:hidden; }
+.sdp-light{ background:var(--bg); color:var(--ink); }
+.sdp-light-alt{ background:var(--bg-alt); color:var(--ink); }
+.sdp-dark{ background:var(--bg-dark); color:var(--ink-dark); }
+.sdp-dark-alt{ background:var(--bg-dark-alt); color:var(--ink-dark); }
+.sdp-dark h1,.sdp-dark h2,.sdp-dark h3,.sdp-dark h4,
+.sdp-dark-alt h1,.sdp-dark-alt h2,.sdp-dark-alt h3,.sdp-dark-alt h4{ color:var(--ink-dark); }
+.sdp-dark p,.sdp-dark-alt p{ color:var(--ink-dark-soft); }
+.sdp-dark strong,.sdp-dark b,.sdp-dark-alt strong,.sdp-dark-alt b{ color:var(--ink-dark); }
+.sdp-center{ width:100%; text-align:center; }
+
+/* ---- reveal on scroll (FAIL-OPEN: only armed once JS runs) ---- */
+.sdp-root.sdp-armed [data-sdp-reveal]{
+  opacity:0; transform:translateY(28px);
+  transition:opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1);
+  transition-delay:var(--d,0s);
+}
+.sdp-root.sdp-armed [data-sdp-reveal].vis{ opacity:1; transform:translateY(0); }
+
+/* ---------------------------------------------------------------------
+   Typography atoms
+   --------------------------------------------------------------------- */
+/* Eyebrow: BODY voice, bold uppercase, 24x2 accent dash before it */
+.sdp-eyebrow{
+  display:inline-flex; align-items:center; gap:10px; font-family:var(--fb);
+  font-size:11.5px; font-weight:700; letter-spacing:.18em; text-transform:uppercase;
+  margin-bottom:18px; line-height:1.5;
+}
+.sdp-eyebrow::before{ content:""; width:24px; height:2px; background:var(--brand); flex:0 0 24px; }
+.sdp-light .sdp-eyebrow,.sdp-light-alt .sdp-eyebrow{ color:var(--accent-text-light); }
+.sdp-dark .sdp-eyebrow,.sdp-dark-alt .sdp-eyebrow{ color:var(--accent-text-dark); }
+/* block + inline dash: a flex eyebrow breaks/mis-centres on a multi-word line */
+.sdp-eyebrow.center{ display:block; text-align:center; margin-left:auto; margin-right:auto; max-width:760px; }
+.sdp-eyebrow.center::before{ display:inline-block; vertical-align:middle; margin-right:10px; }
+
+/* Hero gate pill: bordered + glowing dot (post-Kunal lock, replaces the filled callout) */
+.sdp-eyebrow-pill{
+  display:inline-flex; align-items:center; gap:10px; margin-bottom:20px;
+  padding:8px 18px 8px 14px; border-radius:999px;
+  border:1px solid color-mix(in oklab, var(--brand) 45%, transparent);
+  background:color-mix(in oklab, var(--brand) 4%, transparent);  /* no peach fill */
+  font-family:var(--fb); font-size:11.5px; font-weight:700; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--accent-text-light); line-height:1.4;
+}
+.sdp-eyebrow-pill .glowdot{
+  position:relative; width:8px; height:8px; border-radius:50%; background:var(--brand); flex:0 0 8px;
+  box-shadow:0 0 8px 1px color-mix(in oklab, var(--brand) 70%, transparent);
+}
+.sdp-eyebrow-pill .glowdot::before{
+  content:""; position:absolute; inset:-4px; border-radius:50%; background:var(--brand);
+  opacity:.4; animation:sdpDotPulse 2s ease-out infinite;
+}
+@keyframes sdpDotPulse{ 0%{transform:scale(.6);opacity:.5} 100%{transform:scale(2.6);opacity:0} }
+
+/* Section H2: DISPLAY, centred, accent word via <em> */
+h2.sdp-h2{
+  text-align:center; font-size:clamp(28px,4.4vw,52px);
+  letter-spacing:.02em; line-height:1.12; margin-bottom:14px; text-wrap:balance;
+}
+.sdp-light h2.sdp-h2 em,.sdp-light-alt h2.sdp-h2 em{ font-style:normal; color:var(--accent-text-light); }
+.sdp-dark h2.sdp-h2 em,.sdp-dark-alt h2.sdp-h2 em{ font-style:normal; color:var(--accent-text-dark); }
+.sdp-root .sdp-sub{
+  width:100%; text-align:center; max-width:680px; margin-left:auto; margin-right:auto;
+  margin-bottom:44px; font-size:15px; line-height:1.65; color:var(--ink-soft);
+}
+.sdp-dark .sdp-sub,.sdp-dark-alt .sdp-sub{ color:var(--ink-dark-soft); }
+
+/* Hero H1: two tiers: big INK line, then a smaller accent-deep qualifier */
+.sdp-root .sdp-h1{ max-width:1000px; margin:0 auto 18px; line-height:1.04; letter-spacing:.01em; }
+.sdp-h1-l1{
+  display:block; font-family:var(--fh); font-size:clamp(34px,5.6vw,70px);
+  color:var(--ink); line-height:1.0; letter-spacing:.02em; text-wrap:balance;
+}
+/* The promise runs to two lines on desktop plus the accent qualifier beneath,
+   so three in total. It was five, at a 1000px measure inside an 1180px wrap,
+   which left a deep gutter down both sides and made the headline read small.
+   text-wrap:pretty rather than balance: balance equalises line lengths, which
+   on a headline this long shortens every line and buys back the line we just
+   removed. */
+/* four-line promise: the skin's single-line scale would push the VSL off-screen */
+.sdp-h1-l1.is-long{ font-size:clamp(29px,4.5vw,54px); line-height:1.04; }
+/* the client's headline breaks, kept on desktop, released on phones where a
+   forced break leaves ragged two-word lines. The text reads as one sentence
+   either way, so nothing is lost when they drop out. */
+br.sdp-br-lg{ display:inline; }
+@media (max-width:640px){ br.sdp-br-lg{ display:none; } }
+.sdp-h1-l2{
+  display:block; font-family:var(--fh); font-size:clamp(20px,3vw,36px);
+  font-weight:700; letter-spacing:.03em;
+  color:var(--brand-deep); line-height:1.1; margin-top:10px; text-wrap:balance;
+}
+
+/* ---------------------------------------------------------------------
+   Announcement / trust banner (beat 0a), copper bar, white ink
+   --------------------------------------------------------------------- */
+.sdp-announce{
+  background:var(--grad-announce); color:var(--cta-ink);
+  display:flex; align-items:center; justify-content:center; gap:12px;
+  flex-wrap:wrap; padding:9px 16px; line-height:1.2;
+  border-bottom:1px solid rgba(var(--ink-rgb),.14);
+  font-family:var(--fb); font-weight:800; font-size:12.5px;
+  letter-spacing:.08em; text-transform:uppercase;
+}
+.sdp-announce-dot{
+  width:7px; height:7px; border-radius:50%; flex:0 0 7px;
+  background:var(--cta-ink); animation:sdpPulseInk 1.8s ease-in-out infinite;
+}
+@keyframes sdpPulseInk{
+  0%,100%{ box-shadow:0 0 0 0 rgba(var(--ink-rgb),.45); }
+  50%    { box-shadow:0 0 0 5px rgba(var(--ink-rgb),0); }
+}
+.sdp-announce-item{ display:inline-flex; align-items:center; gap:8px; }
+/* a light accent kills bold-on-accent contrast, so the FIGURE sits in a dark chip */
+.sdp-root .sdp-announce-num{
+  display:inline-flex; align-items:center; padding:3px 9px 2px; border-radius:6px;
+  background:var(--bg-dark); color:var(--brand-bright); font-weight:800; letter-spacing:.06em;
+}
+.sdp-announce-sep{ opacity:.45; }
+@media (max-width:520px){
+  .sdp-announce{ font-size:10.5px; gap:8px; letter-spacing:.06em; padding:8px 12px; }
+  .sdp-announce-sep{ display:none; }
+}
+
+/* ---------------------------------------------------------------------
+   Trust strip (beat 0b), hairline chip row under the banner
+   --------------------------------------------------------------------- */
+.sdp-trust-strip{
+  display:flex; align-items:center; justify-content:center; gap:20px; flex-wrap:wrap;
+  padding:10px 16px; background:var(--bg-alt);
+  border-bottom:1px solid rgba(var(--ink-rgb),.07);
+}
+.sdp-trust-avatars{ display:inline-flex; align-items:center; }
+.sdp-trust-avatar{
+  display:inline-block; width:32px; height:32px; flex:0 0 32px; aspect-ratio:1/1;
+  border-radius:50%; border:1.5px solid var(--bg); background-color:var(--border);
+  background-size:cover; background-position:center 18%; background-repeat:no-repeat;
+  box-shadow:0 0 0 1px rgba(var(--ink-rgb),.08); margin-left:-6px;
+}
+.sdp-trust-avatar:first-child{ margin-left:0; }
+.sdp-trust-avatar.is-empty{
+  background-image:repeating-linear-gradient(135deg,var(--border) 0 3px,var(--bg-alt) 3px 6px);
+}
+.sdp-trust-item{
+  display:inline-flex; align-items:center; gap:6px;
+  font-family:var(--fb); font-size:13px; font-weight:600; color:var(--ink); line-height:1.2;
+}
+.sdp-trust-item b{ font-weight:800; color:var(--ink); }
+.sdp-trust-stars{ display:inline-flex; align-items:center; gap:1px; color:var(--star); }
+.sdp-trust-stars svg{ width:13px; height:13px; }
+.sdp-trust-check{ display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; color:var(--success); }
+.sdp-trust-check svg{ width:18px; height:18px; }
+@media (max-width:520px){
+  .sdp-trust-strip{ gap:12px; padding:9px 12px; }
+  .sdp-trust-item{ font-size:11.5px; }
+  .sdp-trust-avatar{ width:26px; height:26px; flex:0 0 26px; }
+}
+
+/* ---------------------------------------------------------------------
+   HERO stage (beat 1), blueprint grid (radial-masked) + accent bloom
+   --------------------------------------------------------------------- */
+.sdp-hero{
+  padding:20px 0 48px; background:var(--hero-stage); color:var(--ink);
+  position:relative; overflow:hidden;
+}
+.sdp-hero::before{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(var(--ink-rgb),.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(var(--ink-rgb),.05) 1px,transparent 1px);
+  background-size:44px 44px;
+  -webkit-mask-image:radial-gradient(ellipse at 50% 35%,#000 35%,transparent 75%);
+          mask-image:radial-gradient(ellipse at 50% 35%,#000 35%,transparent 75%);
+  opacity:.38;   /* was .7: the grid should be felt, not read */
+}
+.sdp-hero::after{
+  content:""; position:absolute; top:-140px; left:50%; width:680px; height:680px;
+  transform:translateX(-50%); background:var(--hero-bloom); filter:blur(8px); pointer-events:none;
+}
+.sdp-hero-inner{ position:relative; z-index:1; text-align:center; }
+.sdp-root .sdp-hero-sub{
+  width:100%; text-align:center; max-width:760px; margin-left:auto; margin-right:auto;
+  margin-bottom:18px; font-size:15px; line-height:1.65; color:var(--ink-soft);
+}
+.sdp-root .sdp-hero-lead{
+  width:100%; text-align:center; max-width:820px; margin-left:auto; margin-right:auto;
+  margin-bottom:16px; font-size:15px; line-height:1.65; color:var(--ink-soft);
+}
+/* A rule under the words, not a highlighter over them. The peach block was the
+   last "wellness" gesture above the fold; an editorial underline in copper does
+   the same emphasis job and leaves the ivory alone. */
+.sdp-root .sdp-hero-lead mark{
+  background:transparent; color:var(--ink); font-weight:700;
+  padding:0 0 1px; border-bottom:2px solid var(--brand);
+}
+
+/* Outcome / feature chips */
+.sdp-hero-markers{
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+  gap:8px; margin:4px auto 14px; max-width:760px;
+}
+.sdp-marker-chip{
+  display:inline-flex; align-items:center; gap:7px; font-family:var(--fb);
+  font-size:12px; font-weight:700; color:var(--ink); letter-spacing:.05em;
+  background:var(--bg);
+  border:1px solid rgba(var(--brand-rgb),.45);
+  padding:7px 14px; border-radius:999px;
+  box-shadow:none;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1), background .25s, border-color .25s, box-shadow .25s;
+}
+.sdp-marker-dot{
+  width:7px; height:7px; border-radius:50%; flex:0 0 7px; background:var(--brand-deep);
+  box-shadow:0 0 0 3px rgba(var(--brand-rgb),.35);
+  animation:sdpMarkerPulse 2.4s ease-in-out infinite;
+}
+@keyframes sdpMarkerPulse{
+  0%,100%{ box-shadow:0 0 0 3px rgba(var(--brand-rgb),.35); }
+  50%    { box-shadow:0 0 0 5px rgba(var(--brand-rgb),.10); }
+}
+.sdp-marker-chip:hover{
+  transform:translateY(-2px);
+  background:var(--bg);
+  border-color:var(--brand);
+  box-shadow:0 6px 18px rgba(var(--brand-rgb),.28), inset 0 1px 0 rgba(255,255,255,.7);
+}
+
+/* "Watch the short video below" cue */
+.sdp-above-vsl{
+  display:inline-flex; align-items:center; gap:9px; margin:14px auto 14px;
+  font-family:var(--fb); font-size:12.5px; font-weight:700; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--brand-deep);
+  background:transparent; border:1px solid rgba(var(--brand-rgb),.45);
+  padding:8px 18px; border-radius:999px; cursor:pointer; line-height:1.2;
+  transition:background .18s ease, transform .18s ease;
+}
+.sdp-above-vsl:hover{ background:rgba(var(--brand-rgb),.06); border-color:var(--brand); transform:translateY(-1px); }
+.sdp-above-vsl svg{ width:14px; height:14px; animation:sdpNudge 1.8s ease-in-out infinite; }
+@keyframes sdpNudge{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(3px); } }
+
+/* ---------------------------------------------------------------------
+   VSL frame (beat 1 focal media), framed stage, accent play disc + ripple
+   --------------------------------------------------------------------- */
+/* THE VSL IS THE DARKEST THING ABOVE THE FOLD. Ivory, then a charcoal block,
+   then ivory: the contrast is what says the video matters, and it costs nothing
+   but a background. The copper is a hairline on the frame, not a glow around
+   it. Generous padding so the block reads as a container, not a border. */
+.sdp-video-frame{
+  position:relative; width:100%; max-width:var(--vsl-max); margin:0 auto 18px;
+  border-radius:var(--r-lg); padding:18px;
+  background:var(--bg-dark);
+  border:1px solid rgba(var(--brand-rgb),.34);
+  box-shadow:0 30px 70px -28px rgba(var(--ink-rgb),.45);
+}
+.sdp-video{
+  position:relative; width:100%; aspect-ratio:16/9; border-radius:10px; overflow:hidden;
+  background:linear-gradient(160deg,#1A1715,#121010);
+  border:1px solid rgba(var(--brand-rgb),.14);
+}
+.sdp-video.has-video{ background:#000; border-color:transparent; }
+.sdp-video-thumb{ position:absolute; inset:0; z-index:2; }
+.sdp-video-thumb img{ position:absolute; inset:0; width:100%; height:100%; max-width:none; object-fit:cover; }
+.sdp-video-thumb::after{
+  content:""; position:absolute; inset:0;
+  background:linear-gradient(180deg,rgba(var(--ink-rgb),.18) 0%,rgba(var(--ink-rgb),.42) 100%);
+}
+.sdp-play{
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:76px; height:76px; border-radius:50%; border:0; padding:0;
+  background:var(--brand); color:#fff;
+  display:grid; place-items:center; cursor:pointer; z-index:3;
+  box-shadow:0 10px 30px rgba(var(--brand-rgb),.45); transition:transform .25s cubic-bezier(.2,.8,.2,1);
+}
+.sdp-play::after{
+  content:""; position:absolute; inset:0; border-radius:50%;
+  border:2px solid rgba(var(--brand-rgb),.6); animation:sdpDiscPing 2.6s ease-out infinite;
+}
+@keyframes sdpDiscPing{ 0%{transform:scale(1);opacity:.6} 100%{transform:scale(1.5);opacity:0} }
+.sdp-play:hover{ transform:translate(-50%,-50%) scale(1.06); }
+.sdp-play svg{ width:26px; height:26px; fill:currentColor; margin-left:4px; }
+.sdp-video.playing .sdp-video-thumb,
+.sdp-video.playing .sdp-play{ display:none; }   /* decorative overlay yields to native controls */
+.sdp-video iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; z-index:5; }
+.sdp-root .sdp-below-vsl{
+  width:100%; text-align:center; max-width:580px; margin-left:auto; margin-right:auto;
+  margin-bottom:0; font-size:13px; font-style:italic; color:var(--muted); line-height:1.5;
+}
+
+/* ---------------------------------------------------------------------
+   PRIMARY CTA + the welded risk / timer / note stack (the lockup)
+   --------------------------------------------------------------------- */
+.sdp-lockup{ width:100%; text-align:center; margin:22px auto 0; }
+.sdp-cta{
+  display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
+  min-width:min(690px,100%); max-width:100%; padding:17px 40px 15px;
+  background:var(--grad-cta); color:var(--cta-ink-btn); border-radius:999px; border:0; cursor:pointer;
+  font-family:var(--fh); font-weight:400; font-size:clamp(15px,2.2vw,19px);
+  letter-spacing:.06em; line-height:1.2; text-align:center; text-transform:uppercase;
+  position:relative; overflow:hidden;
+  box-shadow:var(--glow-cta), var(--inset-hi);
+  transition:transform .2s, filter .2s, box-shadow .2s;
+}
+.sdp-cta::after{
+  content:""; position:absolute; top:0; bottom:0; left:-60%; width:40%; pointer-events:none;
+  background:linear-gradient(120deg,transparent,rgba(var(--brand-rgb),.30),transparent);
+  transform:skewX(-20deg); transition:left .9s;
+}
+.sdp-cta:hover{ transform:translateY(-2px); filter:brightness(1.08); box-shadow:var(--glow-cta-hover); }
+.sdp-cta:hover::after{ left:120%; }
+.sdp-cta-top{ display:inline-flex; align-items:center; gap:12px; justify-content:center; }
+.sdp-cta .arrow{
+  width:26px; height:26px; border-radius:50%; flex:0 0 26px;
+  background:var(--brand); color:var(--cta-ink);   /* the one copper mark ON the black button */
+  display:grid; place-items:center; transition:transform .25s;
+}
+.sdp-cta:hover .arrow{ transform:translateX(4px); }
+.sdp-cta .arrow svg{ width:14px; height:14px; }
+.sdp-cta .cta-sub{
+  display:inline-flex; align-items:center; gap:6px; font-family:var(--fb);
+  font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase;
+  color:color-mix(in oklab, var(--cta-ink) 70%, transparent); line-height:1.2;
+}
+
+/* risk badges */
+.sdp-risk-strip{
+  display:flex; align-items:center; justify-content:center; flex-wrap:wrap;
+  gap:10px 16px; margin:14px auto 0; max-width:620px;
+}
+.sdp-risk-badge{
+  display:inline-flex; align-items:center; gap:6px; font-family:var(--fb);
+  font-size:12.5px; font-weight:600; color:var(--ink-soft); line-height:1.2; white-space:nowrap;
+}
+/* The reassurance line under every CTA: warm grey words, copper marks. This is
+   the "copper around the button, not on it" idea, and it is where the accent
+   does its quiet work on an otherwise charcoal-and-ivory page. */
+.sdp-risk-icon{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:16px; height:16px; flex:0 0 16px; color:var(--brand);
+}
+.sdp-risk-badge b,.sdp-risk-badge strong{ color:var(--ink); font-weight:700; }
+.sdp-dark .sdp-risk-icon,.sdp-dark-alt .sdp-risk-icon{ color:var(--brand-bright); }
+.sdp-dark .sdp-risk-badge b,.sdp-dark-alt .sdp-risk-badge b{ color:var(--accent-text-dark); }
+.sdp-risk-icon svg{ width:16px; height:16px; }
+.sdp-risk-icon-green{ color:var(--success); }
+.sdp-risk-icon-gold{ color:var(--gold); }
+.sdp-risk-icon-blue{ color:var(--brand-deep); }
+.sdp-dark .sdp-risk-badge,.sdp-dark-alt .sdp-risk-badge{ color:var(--ink-dark-soft); }
+.sdp-dark .sdp-risk-icon-blue,.sdp-dark-alt .sdp-risk-icon-blue{ color:var(--brand-bright); }
+
+/* urgency countdown */
+.sdp-urgency{
+  display:flex; align-items:center; justify-content:center; flex-wrap:wrap;
+  gap:10px; text-align:center; margin:14px auto 0; font-family:var(--fb);
+}
+.sdp-urgency-label{
+  font-size:12.5px; font-weight:700; color:var(--ink-soft);
+  letter-spacing:.06em; text-transform:uppercase;
+}
+.sdp-dark .sdp-urgency-label,.sdp-dark-alt .sdp-urgency-label{ color:var(--muted-dark); }
+/* Black box, ivory numerals, copper labels. The red was the one element on the
+   page still shouting in a different language: urgency here comes from the
+   countdown being a hard black block in a soft ivory field, not from alarm
+   colour. The pulse goes with it, for the same reason. */
+.sdp-urgency-timer{
+  display:inline-flex; align-items:stretch; padding:7px 11px; border-radius:6px;
+  background:var(--ink); color:var(--cta-ink-btn); font-variant-numeric:tabular-nums;
+  box-shadow:0 0 0 1px rgba(var(--brand-rgb),.30);
+  animation:sdpUrgencyPulse 2s ease-in-out infinite;
+}
+/* The pulse earns its keep, so it stays. Retimed to the theme: a copper ring
+   breathing around a black block, rather than a red box glowing. Same rhythm,
+   same job, no alarm colour. */
+@keyframes sdpUrgencyPulse{
+  0%,100%{ box-shadow:0 0 0 1px rgba(var(--brand-rgb),.30), 0 0 0 0 rgba(var(--brand-rgb),.30); }
+  50%    { box-shadow:0 0 0 1px rgba(var(--brand-rgb),.85), 0 0 0 7px rgba(var(--brand-rgb),0); }
+}
+.sdp-urgency-unit{
+  display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
+  min-width:34px; padding:0 6px;
+}
+.sdp-urgency-unit b{ display:block; font-size:18px; font-weight:800; line-height:1; color:var(--cta-ink-btn); letter-spacing:.02em; }
+.sdp-urgency-unit span{
+  display:block; font-size:8.5px; font-weight:700; margin-top:3px;
+  color:var(--brand-bright); letter-spacing:.10em; text-transform:uppercase;
+}
+.sdp-urgency-sep{
+  display:inline-flex; align-items:center; padding:2px 1px 0;
+  color:rgba(var(--brand-rgb),.75); font-weight:800; font-size:16px;
+}
+
+.sdp-root .sdp-cta-note{
+  display:block; width:100%; text-align:center; max-width:760px;
+  margin:14px auto 0; font-style:italic; font-size:13px; color:var(--muted); line-height:1.5;
+}
+.sdp-dark .sdp-cta-note,.sdp-dark-alt .sdp-cta-note{ color:var(--muted-dark); }
+
+/* ---------------------------------------------------------------------
+   Credibility / stat band (hero), 4 cells
+   --------------------------------------------------------------------- */
+.sdp-cred-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; max-width:740px; margin:26px auto 0; }
+/* Editorial, not glossy: flat ivory surface, a solid copper rule across the
+   top, black numerals, no shadow and no lift. A masthead statistic in a men's
+   magazine, which is the register this page is aiming at. Layout unchanged. */
+.sdp-cred-card{
+  position:relative; background:var(--bg); border:1px solid var(--border); border-radius:8px;
+  padding:16px 12px 14px; text-align:center; box-shadow:none;
+  transition:border-color .3s;
+}
+.sdp-cred-card::before{
+  content:""; position:absolute; top:0; left:0; right:0; height:2px; border-radius:8px 8px 0 0;
+  background:var(--brand);
+}
+.sdp-cred-card:hover{ border-color:var(--brand); }
+.sdp-cred-num{
+  display:flex; align-items:center; justify-content:center; gap:5px;
+  font-family:var(--fh); font-size:clamp(20px,3vw,30px); color:var(--ink);
+  line-height:1; letter-spacing:.04em; margin-bottom:5px;
+}
+.sdp-cred-num svg{ color:var(--star); margin-top:-2px; }
+.sdp-cred-lbl{
+  font-family:var(--fb); font-size:10.5px; font-weight:700; color:var(--muted);
+  letter-spacing:.1em; text-transform:uppercase; line-height:1.3;
+}
+
+/* ---------------------------------------------------------------------
+   CARD SYSTEM: white, soft border, accent-on-hover lift
+   (shared DNA: cred / pillar / programme / proof cards)
+   --------------------------------------------------------------------- */
+.sdp-card{
+  background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:26px;
+  box-shadow:var(--shadow-card); transition:border-color .2s, transform .2s, box-shadow .2s;
+}
+.sdp-card:hover{ border-color:var(--brand); box-shadow:var(--shadow-card); }
+.sdp-dark .sdp-card,.sdp-dark-alt .sdp-card{ background:var(--bg-dark-elev); border-color:var(--border-dark); }
+.sdp-dark .sdp-card:hover,.sdp-dark-alt .sdp-card:hover{ border-color:var(--brand); }
+
+/* numbered badge (pillar / programme) */
+.sdp-pillar-num{
+  display:inline-flex; align-items:center; justify-content:center; width:46px; height:46px;
+  border-radius:10px; font-family:var(--fh); font-size:22px; letter-spacing:.04em;
+  color:var(--ink); font-weight:700;
+  background:var(--bg);
+  border:1px solid rgba(var(--brand-rgb),.45);
+}
+
+/* checklist card (For-You-If) */
+.sdp-who-list{ display:flex; flex-direction:column; gap:12px; max-width:860px; margin:0 auto; }
+.sdp-who-list li{
+  /* Atul's call: the rows centre rather than sitting left inside the card.
+     justify-content centres the tick + copy as one group, so the tick stays
+     welded to the text it marks instead of drifting to the card edge. */
+  display:flex; gap:14px; justify-content:center; text-align:center;
+  background:var(--bg-alt);
+  border:1px solid var(--border); border-radius:10px; padding:18px 22px;
+  font-size:14.5px; line-height:1.65; color:var(--ink-soft);
+  transition:border-color .2s, transform .2s, box-shadow .2s;
+}
+.sdp-who-list li:hover{ border-color:var(--brand); }
+.sdp-who-list .ck{
+  flex:0 0 26px; width:26px; height:26px; border-radius:50%; margin-top:2px;
+  background:transparent; border:1px solid rgba(var(--brand-rgb),.50);
+  color:var(--brand); display:grid; place-items:center;
+}
+.sdp-who-list .ck svg{ width:14px; height:14px; }
+
+/* ---------------------------------------------------------------------
+   GUARANTEE card: dark gradient, accent top bar, rotated icon tile
+   --------------------------------------------------------------------- */
+/* A certification panel, not a badge, on the CHARCOAL band. Ivory was tried
+   here and read flat: the whole beat, its title, its copy and the terms ledger
+   below, is written in dark-band tokens, so on ivory most of it was rendering
+   ivory-on-ivory and simply was not there.
+
+   The restraint stays and copper works harder on charcoal than it did on ivory:
+   a copper hairline across the top, a flat copper shield outline, a faint copper
+   ring on the panel edge. No gradient, no tilt, no lift. The panel sits one step
+   off the band rather than glowing above it. */
+.sdp-guarantee-card{
+  max-width:880px; margin:0 auto; text-align:center; position:relative;
+  background:var(--bg-dark-alt); border:1px solid rgba(var(--brand-rgb),.34);
+  border-radius:var(--r-lg); padding:52px 44px;
+  box-shadow:0 0 0 1px rgba(var(--brand-rgb),.10), 0 28px 60px -34px rgba(0,0,0,.75);
+}
+.sdp-guarantee-card::before{
+  content:""; position:absolute; inset:0 0 auto 0; height:2px;
+  background:linear-gradient(90deg,transparent,var(--brand) 20%,var(--brand) 80%,transparent);
+}
+.sdp-guarantee-icon{
+  width:76px; height:76px; margin:0 auto 24px; border-radius:50%; display:grid; place-items:center;
+  background:transparent; color:var(--brand-bright);
+  border:1px solid rgba(var(--brand-rgb),.45);
+}
+
+/* ---------------------------------------------------------------------
+   FAQ: bg-alt rows; open = white + accent border; icon rotates 45deg to x
+   --------------------------------------------------------------------- */
+.sdp-faq{ max-width:860px; margin:0 auto; }
+.sdp-q{
+  background:var(--bg-alt); border:1px solid var(--border); border-radius:10px;
+  margin-bottom:12px; overflow:hidden; transition:border-color .25s, background .25s, box-shadow .25s;
+}
+.sdp-q.open{ border-color:var(--brand-deep); background:var(--bg); box-shadow:0 8px 24px rgba(var(--brand-rgb),.18); }
+.sdp-q-head{
+  width:100%; padding:20px 24px; display:flex; align-items:center; justify-content:space-between;
+  gap:18px; text-align:left; background:transparent; border:0; cursor:pointer;
+  font-family:var(--fb); font-size:15.5px; font-weight:600; color:var(--ink); line-height:1.45;
+}
+.sdp-q-head .ic{
+  flex:0 0 30px; width:30px; height:30px; border-radius:50%; display:grid; place-items:center;
+  background:transparent; color:var(--brand);
+  border:1px solid rgba(var(--brand-rgb),.45); transition:transform .3s, background .3s, color .3s;
+}
+.sdp-q.open .sdp-q-head .ic{ background:var(--brand); border-color:var(--brand); color:var(--cta-ink); transform:rotate(45deg); }
+.sdp-q-body{ max-height:0; overflow:hidden; transition:max-height .45s cubic-bezier(.2,.8,.2,1); }
+.sdp-q.open .sdp-q-body{ max-height:700px; }
+.sdp-q-body-inner{ padding:0 24px 22px; font-size:14.5px; line-height:1.7; color:var(--ink-soft); }
+
+/* ---------------------------------------------------------------------
+   STICKY CTA (page chrome), dark glass, accent top sweep
+   --------------------------------------------------------------------- */
+.sdp-stuck{
+  position:fixed; left:0; right:0; bottom:0; z-index:999;
+  background:linear-gradient(180deg,rgba(var(--ink-rgb),.92),rgba(var(--ink-rgb),.98));
+  -webkit-backdrop-filter:blur(20px) saturate(140%); backdrop-filter:blur(20px) saturate(140%);
+  padding:12px 0 calc(12px + env(safe-area-inset-bottom));
+  border-top:1px solid rgba(var(--brand-rgb),.35);
+  box-shadow:0 -16px 40px rgba(0,0,0,.4), inset 0 1px 0 rgba(var(--brand-rgb),.15);
+  transform:translateY(120%); transition:transform .45s cubic-bezier(.2,.8,.2,1);
+}
+.sdp-stuck.on{ transform:translateY(0); }
+.sdp-stuck::before{
+  content:""; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg,transparent 10%,var(--brand-bright) 50%,transparent 90%);
+  background-size:200% 100%; animation:sdpStuckSweep 5s linear infinite;
+}
+@keyframes sdpStuckSweep{ from{ background-position:0% 0; } to{ background-position:200% 0; } }
+
+/* ---------------------------------------------------------------------
+   Marquee rails (breadth / proof rows, beats 3-4)
+   --------------------------------------------------------------------- */
+.sdp-rail{ position:relative; overflow:hidden; width:100%; }
+.sdp-rail::before,.sdp-rail::after{
+  content:""; position:absolute; top:0; bottom:0; width:64px; z-index:2; pointer-events:none;
+}
+.sdp-rail::before{ left:0;  background:linear-gradient(90deg,var(--bg),transparent); }
+.sdp-rail::after{  right:0; background:linear-gradient(270deg,var(--bg),transparent); }
+.sdp-light-alt .sdp-rail::before{ background:linear-gradient(90deg,var(--bg-alt),transparent); }
+.sdp-light-alt .sdp-rail::after{  background:linear-gradient(270deg,var(--bg-alt),transparent); }
+.sdp-rail-track{ display:flex; gap:16px; width:max-content; animation:sdpRailLeft 46s linear infinite; }
+.sdp-rail-track.reverse{ animation-name:sdpRailRight; }
+.sdp-rail:hover .sdp-rail-track{ animation-play-state:paused; }
+@keyframes sdpRailLeft{  from{ transform:translateX(0); }    to{ transform:translateX(-50%); } }
+@keyframes sdpRailRight{ from{ transform:translateX(-50%); } to{ transform:translateX(0); } }
+
+/* ---------------------------------------------------------------------
+   MEDIA PLACEHOLDER: holds the exact aspect ratio of the real asset so
+   nothing reflows when the photograph lands. Labelled with the ask.
+   --------------------------------------------------------------------- */
+.sdp-ph{
+  position:relative; width:100%; aspect-ratio:var(--ph-ratio,16/9);
+  border-radius:var(--r); overflow:hidden;
+  display:grid; place-items:center; text-align:center; padding:18px;
+  background:
+    repeating-linear-gradient(135deg, rgba(var(--ink-rgb),.03) 0 8px, transparent 8px 16px),
+    var(--bg-alt);
+  border:1px dashed var(--border-strong); color:var(--muted);
+}
+.sdp-ph-round{ border-radius:50%; }
+.sdp-ph-inner{ max-width:90%; }
+.sdp-ph-tag{
+  display:inline-flex; align-items:center; gap:6px; margin-bottom:8px;
+  font-family:var(--fb); font-size:9.5px; font-weight:800; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--accent-text-light);
+}
+.sdp-ph-tag::before{ content:""; width:14px; height:2px; background:var(--brand); }
+.sdp-ph-label{ font-family:var(--fb); font-size:12.5px; font-weight:600; line-height:1.45; color:var(--ink-soft); }
+.sdp-ph-ratio{ margin-top:8px; font-family:var(--fb); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+.sdp-dark .sdp-ph,.sdp-dark-alt .sdp-ph{
+  background:repeating-linear-gradient(135deg, rgba(255,255,255,.03) 0 8px, transparent 8px 16px), var(--bg-dark-elev);
+  border-color:var(--border-dark-strong);
+}
+.sdp-dark .sdp-ph-label,.sdp-dark-alt .sdp-ph-label{ color:var(--ink-dark-soft); }
+.sdp-dark .sdp-ph-tag,.sdp-dark-alt .sdp-ph-tag{ color:var(--accent-text-dark); }
+.sdp-ph.is-compact{ padding:0; }
+.sdp-ph.is-compact .sdp-ph-inner{ display:none; }
+
+/* ---------------------------------------------------------------------
+   Responsive
+   --------------------------------------------------------------------- */
+@media (max-width:900px){
+  .sdp-section{ padding:64px 0; }
+}
+@media (max-width:768px){
+  .sdp-hero{ padding:16px 0 40px; }
+  .sdp-hero-markers{ display:grid; grid-template-columns:1fr 1fr; gap:8px; max-width:360px; margin:8px auto 14px; }
+  .sdp-marker-chip{ width:100%; justify-content:center; font-size:11px; padding:7px 10px; letter-spacing:.04em; gap:6px; }
+  .sdp-marker-dot{ width:6px; height:6px; flex:0 0 6px; }
+  .sdp-cred-row{ grid-template-columns:repeat(2,1fr); gap:10px; margin-top:20px; }
+  .sdp-cred-card{ padding:12px 10px; }
+  .sdp-cta{ padding:15px 22px 13px; }
+  .sdp-cta .cta-sub{ font-size:10px; }
+  .sdp-guarantee-card{ padding:36px 22px; }
+  .sdp-q-head{ padding:17px 18px; font-size:14.5px; }
+  .sdp-q-body-inner{ padding:0 18px 18px; }
+}
+@media (max-width:520px){
+  .sdp-section{ padding:52px 0; }
+  .sdp-wrap{ padding:0 18px; }
+  .sdp-eyebrow-pill{ font-size:10px; letter-spacing:.10em; padding:8px 14px 8px 12px; }
+  .sdp-risk-strip{ gap:8px 14px; }
+  .sdp-risk-badge{ font-size:11.5px; }
+  .sdp-who-list li{ padding:16px 16px; font-size:14px; }
+}
+
+/* ---------------------------------------------------------------------
+   Reduced motion: every ambient loop stops; nothing is hidden
+   --------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce){
+  .sdp-root.sdp-armed [data-sdp-reveal]{ opacity:1 !important; transform:none !important; transition:none !important; }
+  .sdp-announce-dot,
+  .sdp-eyebrow-pill .glowdot::before,
+  .sdp-marker-dot,
+  .sdp-above-vsl svg,
+  .sdp-play::after,
+  .sdp-urgency-timer,
+  .sdp-stuck::before,
+  .sdp-rail-track{ animation:none !important; }
+  .sdp-cta::after{ display:none; }
+  .sdp-rail-track{ transform:none; }
+}
+
+/* =====================================================================
+   PART 3: PASS 2 BEATS (2, 3, 3b, 4a, 4b)
+
+   APPENDED ONLY. Nothing above this line is edited. Same discipline as
+   Part 2: token-only, no raw colour, no raw font. Everything here is the
+   skin's existing card / rail / placeholder DNA extended to three new
+   card shapes and one lightbox.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   RAIL EXTENSIONS (shared by beats 3, 4a, 4b)
+
+   `is-grouped` moves the gap off the track and onto each copy, with one
+   trailing gap, so the halves are exactly equal and -50% lands seamlessly.
+   `is-scrollable` matters for access, not polish: with overflow hidden and
+   the animation stopped (reduced motion), everything past the fold would be
+   unreachable. It also makes the copy's own "to move…" cue literally true.
+   --------------------------------------------------------------------- */
+.sdp-rail.is-scrollable{
+  overflow-x:auto; overscroll-behavior-x:contain;
+  scrollbar-width:none; -ms-overflow-style:none;
+}
+.sdp-rail.is-scrollable::-webkit-scrollbar{ display:none; }
+
+.sdp-rail-bleed{ width:100vw; max-width:100vw; margin-left:calc(50% - 50vw); }
+
+/* the vertical padding is the room the cards' hover lift + shadow need: the
+   rail clips on the Y axis, so without it every card's shadow is guillotined */
+.sdp-rail-track.is-grouped{ gap:0; padding:16px 0; animation-duration:var(--rail-dur,60s); }
+.sdp-rail-group{ display:flex; gap:16px; padding-right:16px; }
+
+.sdp-rail-stack{ margin-top:26px; }
+
+
+/* ---------------------------------------------------------------------
+   BEAT 3: creator / athlete range card (§7 breadth)
+   Card DNA is the skin's: white surface, hairline border, accent border +
+   lift on hover. Photo runs edge to edge; the name is DISPLAY, the handle
+   is BODY, so the pair reads as "who / where to check it".
+   --------------------------------------------------------------------- */
+.sdp-creator-card{
+  display:flex; flex-direction:column; width:210px; flex:0 0 210px;
+  background:var(--bg); border:1px solid var(--border); border-radius:10px;
+  overflow:hidden; box-shadow:var(--shadow-card);
+  transition:border-color .22s, transform .22s, box-shadow .22s;
+}
+.sdp-creator-card:hover{ border-color:var(--brand); box-shadow:var(--shadow-card); }
+.sdp-creator-card:focus-visible{ outline:2px solid var(--brand-deep); outline-offset:3px; }
+.sdp-creator-shot{ position:relative; display:block; }
+/* the placeholder is edge-to-edge inside the card, so it drops its own
+   rounding and keeps only the rule that separates it from the meta row */
+.sdp-creator-shot .sdp-ph{
+  border-radius:0; border-width:0 0 1px 0; border-bottom-style:solid; border-bottom-color:var(--border);
+}
+.sdp-creator-meta{ display:flex; flex-direction:column; gap:4px; padding:12px 14px 14px; }
+.sdp-creator-name{
+  font-family:var(--fh); font-size:17px; letter-spacing:.03em; text-transform:uppercase;
+  color:var(--ink); line-height:1.1;
+}
+.sdp-creator-handle{
+  display:inline-flex; align-items:center; gap:6px; min-width:0;
+  font-family:var(--fb); font-size:11.5px; font-weight:600; color:var(--muted); line-height:1.3;
+}
+.sdp-creator-handle svg{ flex:0 0 13px; width:13px; height:13px; color:var(--brand-deep); }
+.sdp-creator-card:hover .sdp-creator-handle{ color:var(--accent-text-light); }
+
+/* ---------------------------------------------------------------------
+   BEAT 3b: the pivot line (TEXT beat) + descent cue
+   --------------------------------------------------------------------- */
+/* The protocol section's closing turn. On charcoal now, not its own ivory
+   band: bronze eyebrow, ivory line, copper on the words that land. Sized under
+   the section's own display headline so it closes the beat rather than
+   competing with the lockup that opened it. */
+.sdp-protocol-close{ width:100%; text-align:center; margin-top:52px; }
+.sdp-root .sdp-protocol-but{
+  font-family:var(--fb); font-size:11.5px; font-weight:700; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--brand-bright); margin:0 0 14px;
+}
+.sdp-root .sdp-protocol-turn{
+  width:100%; max-width:940px; margin-left:auto; margin-right:auto; margin-bottom:0;
+  font-family:var(--fh); font-weight:var(--fh-weight); text-transform:uppercase;
+  font-size:clamp(21px,3vw,34px); letter-spacing:.03em; line-height:1.22;
+  color:var(--ink-dark); text-wrap:balance;
+}
+.sdp-root .sdp-protocol-turn em{ font-style:normal; color:var(--brand-bright); }
+.sdp-descend{
+  display:flex; flex-direction:column; align-items:center; gap:1px;
+  margin-top:26px; color:var(--brand);
+}
+.sdp-descend svg{ width:24px; height:13px; animation:sdpDescend 1.7s ease-in-out infinite; }
+.sdp-descend svg:nth-child(2){ animation-delay:.16s; opacity:.62; }
+.sdp-descend svg:nth-child(3){ animation-delay:.32s; opacity:.34; }
+@keyframes sdpDescend{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(5px); } }
+
+/* ---------------------------------------------------------------------
+   BEAT 4a: before/after PAIR card (§6 proof)
+   The pair is the unit, so both frames live inside one border: the card is
+   the comparison, not the photograph. AFTER wears the accent chip, BEFORE
+   an ink chip, so the eye lands on the right half without a caption.
+   --------------------------------------------------------------------- */
+/* No card. Atul's call, and the right one: on the stone band the photographs
+   ARE the proof, and a bordered, shadowed, lifting container around each pair
+   competes with them. What is left is the frame's own edge and the pairing. */
+.sdp-ba-card{
+  width:360px; flex:0 0 360px; padding:0;
+  background:transparent; border:0; border-radius:0; box-shadow:none;
+}
+.sdp-ba-pair{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.sdp-ba-half{ position:relative; margin:0; }
+.sdp-ba-half .sdp-ph{ border-radius:10px; }
+.sdp-ba-tag{
+  position:absolute; top:8px; left:8px; z-index:2;
+  padding:4px 10px 3px; border-radius:999px; font-family:var(--fb);
+  font-size:9.5px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; line-height:1.2;
+}
+.sdp-ba-tag.is-before{ background:rgba(var(--ink-rgb),.74); color:#fff; }
+.sdp-ba-tag.is-after{
+  background:var(--brand); color:var(--cta-ink);
+  box-shadow:0 2px 10px rgba(var(--brand-rgb),.5);
+}
+
+/* ---------------------------------------------------------------------
+   BEAT 4b: video testimonial card + lightbox (§6 proof, varied option)
+   Nothing autoplays in the row: the card is a poster and a disc, the film
+   plays in the lightbox. A card with no film is `.is-inert`, dimmed disc,
+   no pointer, no click target that does nothing.
+   --------------------------------------------------------------------- */
+.sdp-vt-card{
+  display:block; width:250px; flex:0 0 250px; padding:6px; text-align:left;
+  background:var(--bg); border:1px solid var(--border); border-radius:10px;
+  box-shadow:var(--shadow-card); cursor:pointer;
+  transition:border-color .22s, transform .22s, box-shadow .22s;
+}
+.sdp-vt-card:hover:not(.is-inert){ border-color:var(--brand); box-shadow:var(--shadow-card); }
+.sdp-vt-card:focus-visible{ outline:2px solid var(--brand-deep); outline-offset:3px; }
+.sdp-vt-card.is-inert{ cursor:default; }
+.sdp-vt-stage{ position:relative; display:block; border-radius:11px; overflow:hidden; }
+.sdp-vt-stage .sdp-ph{ border-radius:11px; }
+.sdp-vt-poster{ display:block; width:100%; aspect-ratio:9/16; object-fit:cover; }
+.sdp-vt-stage::after{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(180deg,rgba(var(--ink-rgb),0) 45%,rgba(var(--ink-rgb),.34) 100%);
+}
+.sdp-vt-play{
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:2;
+  width:58px; height:58px; border-radius:50%; display:grid; place-items:center;
+  background:var(--grad-cta); color:var(--cta-ink); box-shadow:var(--glow-cta);
+  transition:transform .25s cubic-bezier(.2,.8,.2,1);
+}
+.sdp-vt-card:hover:not(.is-inert) .sdp-vt-play{ transform:translate(-50%,-50%) scale(1.08); }
+.sdp-vt-card.is-inert .sdp-vt-play{ opacity:.5; }
+
+/* lightbox */
+.sdp-lb{
+  position:fixed; inset:0; z-index:1200; display:grid; place-items:center; padding:24px;
+  background:rgba(0,0,0,.84);
+  -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  animation:sdpLbIn .2s ease-out;
+}
+@keyframes sdpLbIn{ from{ opacity:0; } to{ opacity:1; } }
+.sdp-lb-frame{
+  position:relative;
+  width:min(420px, 94vw, calc((100vh - 150px) * 0.5625));
+  border-radius:var(--r-lg); overflow:visible;
+}
+.sdp-lb-ratio{
+  position:relative; width:100%; aspect-ratio:var(--lb-ratio,9/16);
+  border-radius:var(--r-lg); overflow:hidden; background:#000;
+  border:1px solid rgba(var(--brand-rgb),.35);
+  box-shadow:0 30px 80px rgba(0,0,0,.6);
+}
+.sdp-lb-ratio iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
+.sdp-lb-close{
+  position:absolute; top:-46px; right:0; width:36px; height:36px; border-radius:50%;
+  display:grid; place-items:center; cursor:pointer; color:#fff;
+  background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.28);
+  transition:background .2s, transform .2s;
+}
+.sdp-lb-close:hover{ background:rgba(255,255,255,.2); transform:rotate(90deg); }
+.sdp-lb-close:focus-visible{ outline:2px solid var(--brand); outline-offset:2px; }
+
+/* ---------------------------------------------------------------------
+   Pass-2 responsive
+   --------------------------------------------------------------------- */
+@media (max-width:640px){
+  .sdp-creator-card{ width:158px; flex:0 0 158px; }
+  .sdp-creator-name{ font-size:15px; }
+  .sdp-creator-handle{ font-size:10.5px; }
+  .sdp-creator-meta{ padding:10px 11px 12px; }
+  .sdp-ba-card{ width:274px; flex:0 0 274px; }
+  .sdp-ba-pair{ gap:6px; }
+  .sdp-vt-card{ width:196px; flex:0 0 196px; }
+  .sdp-vt-play{ width:48px; height:48px; }
+  .sdp-rail-group{ gap:12px; padding-right:12px; }
+  .sdp-protocol-close{ margin-top:38px; }
+  .sdp-lb{ padding:16px; }
+  .sdp-lb-close{ top:-42px; }
+}
+
+/* ---------------------------------------------------------------------
+   Pass-2 reduced motion: the loops stop and, because the rails are then
+   scrolled by hand, the filler copies are removed so nothing repeats.
+   --------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce){
+  .sdp-descend svg{ animation:none !important; }
+  .sdp-lb{ animation:none; }
+  .sdp-rail-group[aria-hidden="true"]{ display:none; }
+}
+
+/* =====================================================================
+   PART 4: PASS 3 BEATS (5a, 5b, 7, 8, 10, 11, 12)
+
+   APPENDED ONLY. Nothing above this line is edited. Same discipline as
+   Parts 2 and 3: token-only, no raw colour, no raw font.
+
+   The three components the locked skin already carries (the guarantee
+   card, the rotate-to-x FAQ row, the sweeping sticky shell) are NOT
+   redefined here: they live in Part 2 and are used as-is. What is added
+   is only what the skin has no block for, the founder masthead, the
+   story beats, the programme grid, the guarantee's terms ledger, the
+   sticky's interior, and the finale stage.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   BEAT 5a: FOUNDER AUTHORITY (dark band)
+
+   Portrait left, identity right. The portrait is sticky on desktop
+   because the right column is the taller of the two: the face should
+   still be present while the record is being read, which is the whole
+   point of an authority beat.
+   --------------------------------------------------------------------- */
+.sdp-founder-grid{
+  display:grid; grid-template-columns:minmax(0,.82fr) minmax(0,1fr);
+  gap:46px; align-items:start; margin-top:8px;
+}
+.sdp-founder-frame{
+  position:relative; padding:8px; border-radius:var(--r-xl);
+  background:var(--bg-dark-elev); border:1px solid rgba(var(--brand-rgb),.28);
+  box-shadow:0 20px 56px rgba(0,0,0,.45);
+}
+.sdp-founder-frame::before{
+  content:""; position:absolute; top:-1px; left:28px; right:28px; height:2px;
+  background:linear-gradient(90deg,transparent,var(--brand),transparent);
+}
+.sdp-founder-frame .sdp-ph{ border-radius:var(--r-lg); }
+.sdp-founder-sticky{ position:sticky; top:28px; }
+
+/* nameplate */
+.sdp-root h3.sdp-founder-name{
+  font-size:clamp(36px,5.2vw,60px); letter-spacing:.035em; line-height:1;
+  color:var(--ink-dark); margin:0 0 12px;
+}
+.sdp-founder-rule{
+  width:64px; height:3px; border-radius:2px; margin:0 0 24px;
+  background:linear-gradient(90deg,var(--brand),rgba(var(--brand-rgb),0));
+}
+
+/* credential pill row (§12 authority) */
+.sdp-cred-pills{ display:flex; flex-wrap:wrap; gap:9px; margin:0 0 30px; }
+.sdp-cred-pill{
+  display:inline-flex; align-items:center; gap:8px; padding:8px 14px 7px;
+  border-radius:999px; line-height:1.3;
+  background:rgba(var(--brand-rgb),.09); border:1px solid rgba(var(--brand-rgb),.32);
+  font-family:var(--fb); font-size:10.5px; font-weight:800; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--brand-bright);
+  transition:background .22s, border-color .22s, transform .22s;
+}
+.sdp-cred-pill::before{
+  content:""; width:5px; height:5px; border-radius:50%; flex:0 0 5px; background:var(--brand);
+  box-shadow:0 0 6px 1px rgba(var(--brand-rgb),.6);
+}
+.sdp-cred-pill:hover{
+  background:rgba(var(--brand-rgb),.18); border-color:var(--brand); transform:translateY(-2px);
+}
+
+/* the record: hairline ledger, not cards (beat 2 owns the card checklist) */
+.sdp-record{ display:flex; flex-direction:column; }
+.sdp-record li{
+  display:grid; grid-template-columns:24px 1fr; gap:14px; align-items:start;
+  padding:16px 0; border-top:1px solid var(--border-dark);
+  font-family:var(--fb); font-size:14.5px; line-height:1.65; color:var(--ink-dark-soft);
+}
+.sdp-record li:last-child{ border-bottom:1px solid var(--border-dark); }
+.sdp-record .ck{
+  width:24px; height:24px; border-radius:50%; margin-top:1px; display:grid; place-items:center;
+  background:rgba(var(--brand-rgb),.14); border:1px solid rgba(var(--brand-rgb),.42);
+  color:var(--brand-bright);
+}
+.sdp-record .ck svg{ width:13px; height:13px; }
+
+/* ---------------------------------------------------------------------
+   BEAT 5b: "MY STORY IN MY OWN WORDS" (light band)
+
+   A TEXT beat. The narrative carries no structure, so nothing is
+   ledgered, numbered or carded: the only treatment is a framed photo
+   beside each passage, sides alternating, and the copy set at reading
+   width. The frame's hairline mat is the same one the founder portrait
+   wears above, so the two beats read as one chapter.
+   --------------------------------------------------------------------- */
+.sdp-story{ display:flex; flex-direction:column; gap:58px; max-width:1040px; margin:0 auto; }
+.sdp-story-beat{
+  display:grid; grid-template-columns:minmax(0,.88fr) minmax(0,1fr);
+  gap:40px; align-items:center;
+}
+.sdp-story-frame{
+  position:relative; padding:8px; border-radius:var(--r-lg);
+  background:var(--bg); border:1px solid var(--border); box-shadow:var(--shadow-card);
+}
+.sdp-story-frame::before{
+  content:""; position:absolute; top:-1px; left:24px; right:24px; height:2px;
+  background:linear-gradient(90deg,transparent,var(--brand),transparent); opacity:.85;
+}
+.sdp-story-frame .sdp-ph{ border-radius:10px; }
+/* alternate: on the flipped beat the photo moves to the right column */
+.sdp-story-beat.is-flip .sdp-story-frame{ order:2; }
+/* the prose: tight leading between the writer's own short lines, so the
+   spoken cadence survives without turning into six stranded paragraphs */
+.sdp-root .sdp-story-copy p{
+  font-size:15.5px; line-height:1.72; color:var(--ink-soft); margin-bottom:.5em;
+}
+.sdp-root .sdp-story-copy p:last-child{ margin-bottom:0; }
+
+/* ---------------------------------------------------------------------
+   BEAT 7: "EVERYTHING INCLUDED" (light-alt band)
+   Numbered pillar cards on the skin's card DNA + its .sdp-pillar-num tile.
+   --------------------------------------------------------------------- */
+.sdp-prog-grid{
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:18px; max-width:1020px; margin:0 auto;
+}
+.sdp-prog-card{ display:flex; flex-direction:column; gap:15px; text-align:left; }
+.sdp-prog-head{ display:flex; align-items:center; gap:15px; }
+.sdp-root h3.sdp-prog-title{
+  font-size:18.5px; letter-spacing:.03em; line-height:1.18; color:var(--ink); margin:0;
+}
+.sdp-root .sdp-prog-body{
+  font-size:14.5px; line-height:1.7; color:var(--ink-soft); margin:0;
+}
+
+/* ---------------------------------------------------------------------
+   BEAT 8: GUARANTEE (dark band)
+
+   The seal is the skin's .sdp-guarantee-card (Part 2), untouched. What is
+   added is the TERMS LEDGER that sits BELOW it: the five conditions are a
+   contract, not a promise, so they must not live inside the seal or the
+   promise stops reading as unconditional.
+   --------------------------------------------------------------------- */
+.sdp-root .sdp-guarantee-title{
+  font-size:clamp(24px,3.6vw,40px); letter-spacing:.02em; line-height:1.12;
+  color:var(--ink-dark); margin:0 0 18px; text-wrap:balance;
+}
+.sdp-root .sdp-guarantee-copy{
+  width:100%; text-align:center; max-width:660px; margin-left:auto; margin-right:auto;
+  margin-bottom:0; font-size:15px; line-height:1.7; color:var(--ink-dark-soft);
+}
+.sdp-guarantee-card .sdp-eyebrow{ margin-bottom:14px; }
+
+.sdp-terms{ max-width:880px; margin:52px auto 0; }
+.sdp-root h3.sdp-terms-head{
+  text-align:center; font-size:clamp(20px,2.6vw,30px); letter-spacing:.03em;
+  color:var(--ink-dark); margin:0 0 6px;
+}
+.sdp-terms-rule{
+  width:52px; height:2px; border-radius:2px; margin:0 auto 26px;
+  background:linear-gradient(90deg,rgba(var(--brand-rgb),0),var(--brand),rgba(var(--brand-rgb),0));
+}
+.sdp-terms-list{ display:flex; flex-direction:column; }
+.sdp-terms-list li{
+  display:grid; grid-template-columns:26px 1fr; gap:15px; align-items:start;
+  padding:20px 0; border-top:1px solid var(--border-dark);
+}
+.sdp-terms-list li:last-child{ border-bottom:1px solid var(--border-dark); }
+.sdp-terms-list .ck{
+  width:26px; height:26px; border-radius:50%; display:grid; place-items:center; margin-top:1px;
+  background:rgba(var(--brand-rgb),.14); border:1px solid rgba(var(--brand-rgb),.42);
+  color:var(--brand-bright);
+}
+.sdp-terms-list .ck svg{ width:14px; height:14px; }
+.sdp-terms-lead{
+  display:block; font-family:var(--fb); font-size:15px; font-weight:700;
+  line-height:1.5; color:var(--ink-dark);
+}
+.sdp-terms-detail{
+  display:block; margin-top:6px; font-family:var(--fb); font-size:14px;
+  line-height:1.68; color:var(--ink-dark-soft);
+}
+
+/* ---------------------------------------------------------------------
+   BEAT 10: FAQ (light band)
+   Rows are the skin's .sdp-q / .sdp-q-head / .sdp-q-body (Part 2). Only
+   the ordinal and the head's inner layout are added.
+   --------------------------------------------------------------------- */
+.sdp-q-head{ align-items:flex-start; }
+.sdp-q-ask{ display:flex; align-items:flex-start; gap:14px; min-width:0; }
+/* fixed-width ordinal, so the answer's indent below can be exact rather than
+   guessed from the numeral's rendered width */
+.sdp-q-ord{
+  flex:0 0 44px; width:44px; margin-top:2px; font-family:var(--fb); font-size:10.5px;
+  font-weight:800; letter-spacing:.14em; color:var(--muted); font-variant-numeric:tabular-nums;
+}
+.sdp-q.open .sdp-q-ord{ color:var(--accent-text-light); }
+.sdp-q-head .ic{ margin-top:1px; }
+.sdp-q-body-inner{ padding-left:82px; }   /* 24 head pad + 44 ordinal + 14 gap */
+/* on a phone the indent costs more than the alignment is worth */
+@media (max-width:768px){ .sdp-q-body-inner{ padding-left:18px; } }
+
+/* ---------------------------------------------------------------------
+   BEAT 11: FINALE (dark closing stage)
+
+   The Welds "closing-stage background depth": mesh blooms over a floor
+   ramp, a faint edge-masked drifting dot grid, a lit top seam, and the
+   colophon folded in above a centred fading hairline. Background only:
+   it adds no content, it makes the last beat read as the page's peak.
+   --------------------------------------------------------------------- */
+.sdp-finale{
+  position:relative; overflow:hidden;
+  padding:96px 0 60px; background:var(--bg-dark); color:var(--ink-dark);
+}
+.sdp-finale::before{
+  content:""; position:absolute; top:0; left:0; right:0; height:1px; z-index:2;
+  background:linear-gradient(90deg,transparent 8%,rgba(var(--brand-rgb),.75) 50%,transparent 92%);
+}
+.sdp-finale::after{
+  content:""; position:absolute; inset:-40px; pointer-events:none; z-index:0;
+  background-image:radial-gradient(rgba(var(--brand-rgb),.22) 1px, transparent 1px);
+  background-size:26px 26px;
+  -webkit-mask-image:radial-gradient(ellipse at 50% 40%,#000 18%,transparent 68%);
+          mask-image:radial-gradient(ellipse at 50% 40%,#000 18%,transparent 68%);
+  animation:sdpFinaleDrift 26s linear infinite;
+}
+@keyframes sdpFinaleDrift{ from{ background-position:0 0; } to{ background-position:26px 52px; } }
+.sdp-finale-glow{
+  position:absolute; inset:0; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(ellipse 620px 380px at 50% 8%, rgba(var(--brand-rgb),.16), transparent 70%),
+    radial-gradient(ellipse 420px 300px at 8% 92%, rgba(var(--brand-rgb),.10), transparent 72%),
+    linear-gradient(180deg, var(--bg-dark-alt) 0%, var(--bg-dark) 55%, #0D0D0D 100%);
+}
+.sdp-finale-inner{ position:relative; z-index:1; text-align:center; }
+.sdp-root .sdp-finale-h2{
+  font-size:clamp(30px,4.8vw,58px); letter-spacing:.02em; line-height:1.1;
+  margin-bottom:8px; text-wrap:balance; color:var(--ink-dark);
+}
+
+/* colophon (folded in: there is no separate footer) */
+.sdp-colophon{ position:relative; margin-top:58px; padding-top:34px; text-align:center; }
+.sdp-colophon::before{
+  content:""; position:absolute; top:0; left:50%; transform:translateX(-50%);
+  width:min(520px,80%); height:1px;
+  background:linear-gradient(90deg,transparent,rgba(var(--brand-rgb),.42),transparent);
+}
+.sdp-colophon-name{
+  display:inline-flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap;
+  font-family:var(--fh); font-size:13.5px; letter-spacing:.24em; text-transform:uppercase;
+  color:var(--ink-dark-soft); line-height:1.6;
+}
+.sdp-colophon-star{ color:var(--brand); font-size:11px; }
+.sdp-colophon-links{
+  display:flex; align-items:center; justify-content:center; gap:8px 20px; flex-wrap:wrap;
+  margin-top:16px;
+}
+.sdp-root .sdp-colophon-links a{
+  font-family:var(--fb); font-size:12px; font-weight:600; color:var(--muted-dark);
+  transition:color .2s;
+}
+.sdp-root .sdp-colophon-links a:hover{ color:var(--brand-bright); }
+.sdp-colophon-meta{
+  margin-top:16px; font-family:var(--fb); font-size:10.5px; font-weight:600;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--muted-dark);
+}
+
+/* ---------------------------------------------------------------------
+   BEAT 12: STICKY CTA interior
+   The shell (.sdp-stuck, its sweep and its slide) is Part 2's. This is
+   only what sits inside it.
+   --------------------------------------------------------------------- */
+.sdp-stuck-inner{ display:flex; align-items:center; justify-content:space-between; gap:20px; }
+.sdp-stuck-meta{ display:flex; flex-direction:column; gap:4px; min-width:0; }
+.sdp-stuck-title{
+  font-family:var(--fh); font-size:16px; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--ink-dark); line-height:1.1;
+}
+.sdp-stuck-note{
+  display:inline-flex; align-items:center; gap:8px; font-family:var(--fb);
+  font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--muted-dark); line-height:1.2;
+}
+.sdp-stuck-dot{
+  width:7px; height:7px; border-radius:50%; flex:0 0 7px; background:var(--brand);
+  animation:sdpStuckDot 1.8s ease-in-out infinite;
+}
+@keyframes sdpStuckDot{
+  0%,100%{ box-shadow:0 0 0 0 rgba(var(--brand-rgb),.55); }
+  50%    { box-shadow:0 0 0 6px rgba(var(--brand-rgb),0); }
+}
+.sdp-root .sdp-stuck-btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:12px;
+  padding:13px 26px 11px; border-radius:999px; position:relative; overflow:hidden;
+  background:var(--grad-cta); color:var(--cta-ink);
+  font-family:var(--fh); font-size:15px; letter-spacing:.05em; text-transform:uppercase;
+  line-height:1.1; white-space:nowrap;
+  box-shadow:var(--glow-cta), var(--inset-hi);
+  transition:transform .2s, filter .2s, box-shadow .2s;
+}
+.sdp-root .sdp-stuck-btn::after{
+  content:""; position:absolute; top:0; bottom:0; left:-60%; width:40%; pointer-events:none;
+  background:linear-gradient(120deg,transparent,rgba(var(--brand-rgb),.30),transparent);
+  transform:skewX(-20deg); transition:left .9s;
+}
+.sdp-root .sdp-stuck-btn:hover{
+  transform:translateY(-1px); filter:brightness(1.05); box-shadow:var(--glow-cta-hover);
+}
+.sdp-root .sdp-stuck-btn:hover::after{ left:120%; }
+.sdp-stuck-btn .arrow{
+  width:24px; height:24px; border-radius:50%; flex:0 0 24px; display:grid; place-items:center;
+  background:color-mix(in oklab, var(--cta-ink) 16%, transparent);
+  transition:transform .25s;
+}
+.sdp-stuck-btn:hover .arrow{ transform:translateX(3px); }
+.sdp-stuck-btn .arrow svg{ width:13px; height:13px; }
+
+/* ---------------------------------------------------------------------
+   Pass-3 responsive
+   --------------------------------------------------------------------- */
+@media (max-width:900px){
+  .sdp-founder-grid{ grid-template-columns:1fr; gap:32px; max-width:620px; margin-inline:auto; }
+  .sdp-founder-sticky{ position:static; }
+  .sdp-story-beat{ grid-template-columns:1fr; gap:24px; max-width:620px; margin:0 auto; }
+  /* the photo leads on a phone regardless of side, so the alternation
+     never strands a passage above its own picture */
+  .sdp-story-beat.is-flip .sdp-story-frame{ order:0; }
+  .sdp-story{ gap:46px; }
+  .sdp-prog-grid{ grid-template-columns:1fr; max-width:620px; }
+}
+@media (max-width:640px){
+  .sdp-cred-pill{ font-size:9.5px; letter-spacing:.1em; padding:7px 12px 6px; }
+  .sdp-record li{ font-size:14px; padding:14px 0; }
+  .sdp-terms-list li{ padding:17px 0; }
+  .sdp-finale{ padding:72px 0 48px; }
+  .sdp-colophon-name{ font-size:11.5px; letter-spacing:.18em; gap:8px; }
+}
+@media (max-width:720px){
+  .sdp-stuck-meta{ display:none; }
+  .sdp-stuck-inner{ justify-content:stretch; }
+  .sdp-root .sdp-stuck-btn{ width:100%; font-size:13.5px; letter-spacing:.04em; padding:13px 16px 11px; white-space:normal; }
+}
+
+/* ---------------------------------------------------------------------
+   Pass-3 reduced motion
+   --------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce){
+  .sdp-finale::after,
+  .sdp-stuck-dot{ animation:none !important; }
+  .sdp-root .sdp-stuck-btn::after{ display:none; }
+  .sdp-stuck{ transition:none; }
+}
+
+
+/* ---------------------------------------------------------------------
+   PROTOCOL BAND (beat 3 masthead), charcoal + ivory + one copper rule.
+   The offer's product identity. Deliberately NOT a SectionHeading: this is
+   the only place the protocol is NAMED rather than described, so the name is
+   set as a stacked lockup and given the room to be the whole idea.
+   --------------------------------------------------------------------- */
+.sdp-protocol{ width:100%; text-align:center; padding-bottom:8px; }
+.sdp-root .sdp-protocol-eyebrow{
+  font-family:var(--fb); font-size:11.5px; font-weight:700; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--accent-text-dark); margin:0 0 22px;
+}
+.sdp-root .sdp-protocol-lead{
+  font-family:var(--fh); font-weight:var(--fh-weight); text-transform:uppercase;
+  font-size:clamp(17px,2.1vw,24px); letter-spacing:.06em; line-height:1.25;
+  color:var(--ink-dark-soft); margin:0 0 20px;
+}
+.sdp-root .sdp-protocol-mark{
+  font-family:var(--fh); text-transform:uppercase; color:var(--ink-dark);
+  margin:0; line-height:.94;
+}
+/* "The" is the quiet half of the lockup: it sets the name up and gets out. */
+.sdp-protocol-mark > span{
+  display:block; font-weight:var(--fh-weight); font-size:clamp(14px,1.6vw,18px);
+  letter-spacing:.34em; color:var(--muted-dark); margin-bottom:14px;
+}
+/* Up from 88px: one line fewer means less vertical weight, and this beat is
+   meant to be the page's strongest visual moment. The binding line, "EXTREME OR
+   NOTHING", is 9.28em in Oswald 700, so 96px needs 891px of the 1136px wrap and
+   the ceiling before it wraps is 122px. */
+.sdp-protocol-mark > b{
+  display:block; font-weight:700; letter-spacing:.02em;
+  font-size:clamp(38px,7.6vw,96px);
+}
+/* the thin copper rule: the section's ONLY accent surface */
+.sdp-protocol-rule{
+  display:block; width:min(280px,52%); height:1px; margin:34px auto 0;
+  background:linear-gradient(90deg,transparent,var(--brand) 22%,var(--brand) 78%,transparent);
+}
+@media (max-width:640px){
+  .sdp-protocol-mark > b{ font-size:clamp(34px,11vw,52px); }
+  .sdp-protocol-rule{ margin-top:26px; }
+}
+
+
+/* ---------------------------------------------------------------------
+   DARK-BAND VARIANTS for the rail furniture.
+   The protocol band (beat 3) went charcoal, and everything inside it was
+   written for a light band: the rail's edge fades faded to IVORY over a
+   charcoal ground, and the creator cards were ivory tiles. These are the same
+   components, re-grounded, so the band reads as one surface.
+   --------------------------------------------------------------------- */
+.sdp-dark .sdp-rail::before,.sdp-dark-alt .sdp-rail::before{
+  background:linear-gradient(90deg,var(--bg-dark),transparent);
+}
+.sdp-dark .sdp-rail::after,.sdp-dark-alt .sdp-rail::after{
+  background:linear-gradient(270deg,var(--bg-dark),transparent);
+}
+.sdp-dark .sdp-creator-card,.sdp-dark-alt .sdp-creator-card{
+  background:var(--bg-dark-alt); border-color:var(--border-dark);
+}
+.sdp-dark .sdp-creator-card:hover,.sdp-dark-alt .sdp-creator-card:hover{
+  border-color:var(--brand);
+}
+.sdp-dark .sdp-creator-name,.sdp-dark-alt .sdp-creator-name{ color:var(--ink-dark); }
+.sdp-dark .sdp-creator-handle,.sdp-dark-alt .sdp-creator-handle{ color:var(--brand-bright); }
+.sdp-dark 
+/* The reserved frame, re-grounded: a hatched charcoal panel, not an ivory
+   block punched into the band. */
+.sdp-dark .sdp-ph,.sdp-dark-alt .sdp-ph{
+  background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,.03) 0 8px, transparent 8px 16px),
+    var(--bg-dark-elev);
+  border-color:var(--border-dark-strong); color:var(--muted-dark);
+}
+.sdp-dark .sdp-ph-tag,.sdp-dark-alt .sdp-ph-tag{
+  background:rgba(255,255,255,.05); color:var(--ink-dark-soft); border-color:var(--border-dark-strong);
+}
+
+
+/* ---------------------------------------------------------------------
+   CTA ON DARK SURFACES: the button inverts to copper.
+   The primary CTA is black on ivory, which is right and stays. But the same
+   button also renders on the charcoal finale and inside the dark sticky bar,
+   where black-on-black left it a shape you could only find by its text.
+   On a dark ground the accent becomes the fill and the ink becomes the mark
+   on it: exactly the hero relationship, turned over.
+   Flat copper, not the gradient, to match the play disc and the rest of the
+   flattened page.
+   --------------------------------------------------------------------- */
+.sdp-dark .sdp-cta,
+.sdp-dark-alt .sdp-cta,
+.sdp-root .sdp-stuck-btn{
+  background:var(--brand); color:var(--cta-ink);
+  box-shadow:0 8px 24px rgba(var(--brand-rgb),.30);
+}
+.sdp-dark .sdp-cta:hover,
+.sdp-dark-alt .sdp-cta:hover,
+.sdp-root .sdp-stuck-btn:hover{
+  background:var(--brand-deep); filter:none;
+  box-shadow:0 12px 30px rgba(var(--brand-rgb),.42);
+}
+/* The arrow disc flips with it: ink on copper, where it was copper on ink. */
+.sdp-dark .sdp-cta .arrow,
+.sdp-dark-alt .sdp-cta .arrow,
+.sdp-root .sdp-stuck-btn .arrow{
+  background:rgba(var(--ink-rgb),.30); color:var(--cta-ink);
+}
+/* The sweep would read as a smear across a flat copper fill. */
+.sdp-dark .sdp-cta::after,
+.sdp-dark-alt .sdp-cta::after,
+.sdp-root .sdp-stuck-btn::after{ display:none; }
+
+/* The sticky bar's own top border and sweep sat at copper-on-near-black, which
+   now competes with a copper button an inch below it. Quiet them to a hairline. */
+.sdp-stuck{ border-top-color:rgba(var(--brand-rgb),.20); }
+.sdp-stuck::before{ opacity:.45; }
+
+
+/* =====================================================================
+   PART 5: LEGAL PAGES + CHECKOUT
+   Same two grounds as the landing page, same type roles, same copper
+   discipline. Token-only, so a theme change carries these with it.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   POLICY PAGES: the live SDP funnel's structure, beat for beat.
+   Pill-eyebrow masthead, a sticky "On This Page" rail beside a ruled body,
+   a charcoal contact close, then the identity footer. Only the theme differs:
+   ivory / charcoal / burnt copper, Oswald and Inter, and the flatter surfaces
+   and tighter radii the rest of this page uses.
+
+   Scoped under .eon-policy so these generic names (.hero, .legal, .toc) can
+   never collide with the landing page's .sdp-* system.
+   --------------------------------------------------------------------- */
+.eon-policy{
+  font-family:var(--fb); color:var(--ink); background:var(--bg);
+  line-height:1.6; font-size:16px; -webkit-font-smoothing:antialiased;
+}
+.eon-policy .wrap{ max-width:1180px; margin:0 auto; padding:0 22px; }
+
+/* ---- masthead ---- */
+.eon-policy .hero{
+  padding:72px 0 60px; text-align:center; position:relative; overflow:hidden;
+  background:var(--hero-stage); border-bottom:1px solid var(--border);
+}
+/* Same blueprint grid as the landing hero, at the same reduced weight. Without
+   it the masthead is a flat band and the page loses its opening. */
+.eon-policy .hero::before{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(var(--ink-rgb),.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(var(--ink-rgb),.05) 1px,transparent 1px);
+  background-size:44px 44px;
+  -webkit-mask-image:radial-gradient(ellipse at 50% 35%,#000 35%,transparent 75%);
+          mask-image:radial-gradient(ellipse at 50% 35%,#000 35%,transparent 75%);
+  opacity:.38;
+}
+.eon-policy .hero .wrap{ position:relative; z-index:1; }
+.eon-policy .eyebrow{
+  display:inline-flex; align-items:center; gap:10px;
+  font-family:var(--fb); font-size:11.5px; font-weight:700;
+  letter-spacing:.2em; text-transform:uppercase; margin-bottom:16px;
+  color:var(--brand-deep);
+  background:transparent; border:1px solid rgba(var(--brand-rgb),.45);
+  padding:7px 16px; border-radius:999px;
+}
+.eon-policy .hero h1{
+  font-family:var(--fh); font-weight:700; text-transform:uppercase;
+  font-size:clamp(38px,6.4vw,72px); letter-spacing:.02em; line-height:1;
+  color:var(--ink); margin:0 0 18px;
+}
+.eon-policy .hero h1 em{ font-style:normal; color:var(--brand-deep); }
+.eon-policy .hero-sub{
+  max-width:640px; margin:0 auto; font-size:15.5px; line-height:1.7; color:var(--ink-soft);
+}
+.eon-policy .hero-sub strong{ color:var(--ink); font-weight:700; }
+.eon-policy .hero-meta{
+  display:inline-flex; align-items:center; gap:8px; margin-top:22px;
+  background:var(--bg); border:1px solid var(--border); border-radius:999px;
+  padding:8px 16px; font-size:12.5px; color:var(--ink-soft);
+}
+.eon-policy .hero-meta b{ color:var(--ink); font-weight:700; }
+.eon-policy .hero-meta .pip{ width:6px; height:6px; border-radius:50%; background:var(--brand); }
+
+/* ---- body + sticky contents rail ---- */
+.eon-policy .legal{ padding:56px 0 64px; background:var(--bg); }
+.eon-policy .legal-grid{
+  display:grid; grid-template-columns:240px minmax(0,1fr); gap:56px; align-items:start;
+}
+.eon-policy .toc{
+  position:sticky; top:24px;
+  background:var(--bg-alt); border:1px solid var(--border); border-radius:10px;
+  padding:18px 16px; font-size:13px;
+}
+.eon-policy .toc-label::before{
+  content:""; width:16px; height:2px; background:var(--brand); flex:0 0 16px;
+}
+.eon-policy .toc-label{
+  display:flex; align-items:center; gap:8px;
+  font-size:10.5px; letter-spacing:.18em; text-transform:uppercase; font-weight:800;
+  color:var(--brand-deep); padding:4px 6px 12px;
+  border-bottom:1px solid var(--border); margin-bottom:8px;
+}
+.eon-policy .toc ul{ display:flex; flex-direction:column; gap:2px; list-style:none; margin:0; padding:0; }
+.eon-policy .toc a{
+  display:block; padding:8px 10px; color:var(--ink-soft); font-weight:600;
+  border-radius:6px; line-height:1.4; text-decoration:none;
+  transition:color .2s, background .2s, padding-left .2s;
+}
+.eon-policy .toc a:hover{ color:var(--brand-deep); background:rgba(var(--brand-rgb),.06); padding-left:14px; }
+.eon-policy .toc a.active{ color:var(--brand-deep); background:rgba(var(--brand-rgb),.10); }
+
+.eon-policy .legal-body{ min-width:0; }
+.eon-policy .legal-intro{
+  background:rgba(var(--brand-rgb),.04);
+  border:1px solid rgba(var(--brand-rgb),.20);
+  border-left:3px solid var(--brand);
+  border-radius:0 10px 10px 0;
+  padding:20px 22px; margin-bottom:36px;
+  font-size:14.5px; line-height:1.75; color:var(--ink-soft);
+}
+.eon-policy .legal-intro strong{ color:var(--ink); font-weight:700; }
+
+.eon-policy .legal-section{ padding:0 0 36px; margin-bottom:36px; border-bottom:1px solid var(--border); }
+.eon-policy .legal-section:last-of-type{ border-bottom:none; padding-bottom:0; margin-bottom:0; }
+.eon-policy .legal-section h2{
+  font-family:var(--fh); font-weight:700; text-transform:uppercase;
+  font-size:clamp(20px,2.6vw,28px); color:var(--ink); letter-spacing:.03em; line-height:1.1;
+  margin:0 0 14px; position:relative; scroll-margin-top:24px;
+}
+/* The copper bar that marks a clause. Flat, per the rest of the page. */
+.eon-policy .legal-section h2::before{
+  content:""; display:inline-block; width:5px; height:22px;
+  background:var(--brand); border-radius:2px;
+  vertical-align:middle; margin-right:14px; transform:translateY(-2px);
+}
+.eon-policy .legal-section p{ font-size:15px; line-height:1.75; color:var(--ink-soft); margin:0 0 1em; }
+.eon-policy .legal-section p strong{ color:var(--ink); font-weight:700; }
+.eon-policy .legal-section a{
+  color:var(--brand-deep); text-decoration:none;
+  border-bottom:1px solid rgba(var(--brand-rgb),.45);
+}
+.eon-policy .legal-section a:hover{ color:var(--brand); border-bottom-color:var(--brand); }
+.eon-policy .legal-section ul.l-list{ list-style:none; margin:0 0 1em; padding:0; }
+.eon-policy .legal-section ul.l-list{ display:flex; flex-direction:column; gap:10px; }
+.eon-policy .legal-section ul.l-list li{
+  position:relative; padding:12px 16px 12px 38px;
+  background:var(--bg-alt); border:1px solid var(--border); border-radius:10px;
+  font-size:14px; line-height:1.65; color:var(--ink-soft);
+}
+.eon-policy .legal-section ul.l-list li::before{
+  content:""; position:absolute; left:14px; top:50%; transform:translateY(-50%);
+  width:7px; height:7px; border-radius:50%; background:var(--brand);
+  box-shadow:0 0 0 3px rgba(var(--brand-rgb),.14);
+}
+.eon-policy .legal-section ul.l-list li strong{ color:var(--ink); font-weight:700; }
+
+/* ---- charcoal contact close ---- */
+.eon-policy .contact{
+  background:var(--bg-dark); color:var(--ink-dark);
+  text-align:center; padding:72px 0 80px; position:relative; overflow:hidden;
+}
+.eon-policy .contact-icon{
+  width:60px; height:60px; margin:0 auto 22px; border-radius:50%;
+  display:grid; place-items:center;
+  border:1px solid rgba(var(--brand-rgb),.45); color:var(--brand-bright);
+}
+.eon-policy .contact-icon svg{ width:26px; height:26px; stroke-width:1.6; }
+.eon-policy .contact h3{
+  font-family:var(--fh); font-weight:700; text-transform:uppercase;
+  font-size:clamp(24px,3.6vw,38px); letter-spacing:.02em; line-height:1.1;
+  color:var(--ink-dark); margin:0 0 14px;
+}
+.eon-policy .contact h3 em{ font-style:normal; color:var(--brand-bright); }
+.eon-policy .contact p{
+  max-width:560px; margin:0 auto 8px; font-size:15px; line-height:1.7; color:var(--ink-dark-soft);
+}
+.eon-policy .contact-lines a{ color:var(--brand-bright); text-decoration:none; }
+.eon-policy .home-link{
+  display:inline-block; margin-top:26px;
+  font-family:var(--fb); font-size:12px; font-weight:700;
+  letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-dark); text-decoration:none;
+  border:1px solid rgba(var(--brand-rgb),.45); border-radius:999px; padding:11px 22px;
+  transition:background .2s, border-color .2s;
+}
+.eon-policy .home-link:hover{ background:rgba(var(--brand-rgb),.12); border-color:var(--brand); }
+
+
+
+@media (max-width:900px){
+  .eon-policy .legal-grid{ grid-template-columns:1fr; gap:28px; }
+  .eon-policy .toc{ position:static; }
+  .eon-policy .hero{ padding:52px 0 44px; }
+}
+
+/* ---------------------------------------------------------------------
+   CHECKOUT: the live SDP funnel's structure, beat for beat.
+   Trust announce strip, two-column main (form panel | order summary), mobile
+   summary bar, identity footer. Theme only differs: ivory / charcoal / burnt
+   copper, flat surfaces, tight radii.
+
+   Scoped under .eon-checkout for the same reason .eon-policy is: these generic
+   names must never collide with the landing page's .sdp-* system.
+   --------------------------------------------------------------------- */
+.eon-checkout{
+  font-family:var(--fb); color:var(--ink);
+  /* The GROUND is the stone tint. Both panels sit on it as ivory cards. On the
+     live SDP checkout this separation is the whole layout: page tint, two
+     floating cards, generous air. Mine had the page and the panels both ivory,
+     so nothing read as a card. */
+  background:var(--bg-alt);
+  line-height:1.6; font-size:16px; min-height:100vh;
+  display:flex; flex-direction:column;
+}
+
+/* ---- trust announce strip ---- */
+.eon-checkout .checkout-announce{
+  display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:10px 14px;
+  background:var(--bg-dark); color:var(--ink-dark-soft);
+  padding:11px 18px; font-size:11.5px; font-weight:600; letter-spacing:.06em;
+}
+.eon-checkout .checkout-announce-item{ display:inline-flex; align-items:center; gap:7px; }
+.eon-checkout .checkout-announce-item svg{ width:14px; height:14px; color:var(--brand-bright); }
+.eon-checkout .checkout-announce-dot{
+  width:3px; height:3px; border-radius:50%; background:rgba(var(--brand-rgb),.6);
+}
+
+.eon-checkout .checkout-page{ flex:1; padding:44px 22px 64px; }
+
+/* ---- two columns ---- */
+.eon-checkout .checkout-main{
+  max-width:1180px; margin:0 auto;
+  display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);
+  gap:28px; align-items:start;
+}
+
+/* ---- form panel ---- */
+.eon-checkout .checkout-form-panel{
+  background:var(--bg); border:1px solid var(--border); border-radius:14px;
+  padding:34px 32px;
+  box-shadow:0 18px 44px -32px rgba(var(--ink-rgb),.30);
+}
+/* The rule under the masthead, as on the live checkout: it closes the heading
+   before the fields start. */
+.eon-checkout .checkout-form-heading{
+  padding-bottom:20px; margin-bottom:24px; border-bottom:1px solid var(--border);
+}
+.eon-checkout .checkout-section-label{
+  font-size:10.5px; font-weight:800; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--brand-deep); margin-bottom:8px;
+}
+.eon-checkout .checkout-form-title{
+  font-family:var(--fh); font-weight:700; text-transform:uppercase;
+  font-size:clamp(26px,3.4vw,34px); letter-spacing:.03em; line-height:1.05;
+  color:var(--ink); margin:0;
+}
+.eon-checkout .checkout-fields{ display:flex; flex-direction:column; gap:16px; }
+.eon-checkout .checkout-fields-row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.eon-checkout .checkout-label{
+  display:block; font-size:10.5px; font-weight:800; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink-soft); margin-bottom:7px;
+}
+.eon-checkout .checkout-label span{ color:var(--brand); }
+.eon-checkout .checkout-field input{
+  width:100%; padding:14px 15px; border-radius:8px; font:inherit; font-size:15px;
+  color:var(--ink); background:var(--bg-alt); border:1px solid var(--border);
+  transition:border-color .2s, background .2s, box-shadow .2s;
+}
+.eon-checkout .checkout-field input::placeholder{ color:var(--muted); }
+.eon-checkout .checkout-field input:focus{
+  outline:none; border-color:var(--brand); background:var(--bg);
+  box-shadow:0 0 0 3px rgba(var(--brand-rgb),.14);
+}
+
+/* ---- submit ---- */
+/* ---- notice callout, phone field, acknowledgement, coupon ---- */
+.eon-checkout .checkout-notice{
+  display:flex; gap:12px; align-items:flex-start;
+  background:rgba(var(--brand-rgb),.05);
+  border:1px solid rgba(var(--brand-rgb),.22);
+  border-left:3px solid var(--brand);
+  border-radius:0 10px 10px 0; padding:16px 18px; margin-bottom:24px;
+}
+.eon-checkout .checkout-notice-icon{
+  flex:0 0 20px; width:20px; height:20px; border-radius:50%;
+  display:grid; place-items:center; background:var(--brand); color:var(--cta-ink);
+  font-family:var(--fh); font-weight:700; font-size:12px; line-height:1;
+}
+.eon-checkout .checkout-notice p{ margin:0; font-size:13.5px; line-height:1.6; color:var(--ink-soft); }
+.eon-checkout .checkout-notice strong{ color:var(--ink); font-weight:700; }
+
+.eon-checkout .checkout-phone-wrap{ position:relative; }
+.eon-checkout .checkout-phone-wrap{
+  display:flex; align-items:stretch; gap:0;
+  border:1px solid var(--border); border-radius:8px; overflow:hidden; background:var(--bg-alt);
+  transition:border-color .2s, box-shadow .2s;
+}
+.eon-checkout .checkout-phone-wrap:focus-within{
+  border-color:var(--brand); box-shadow:0 0 0 3px rgba(var(--brand-rgb),.14);
+}
+
+/* The dial-code select. The real <select> is laid over the visible value at
+   zero opacity, so the OS gets a native picker while the field keeps the page's
+   type and spacing. */
+.eon-checkout .country-select{
+  position:relative; display:inline-flex; align-items:center; gap:6px;
+  padding:0 11px 0 13px; border-right:1px solid var(--border); background:var(--bg);
+}
+.eon-checkout .country-select-value{
+  font-family:var(--fb); font-size:14px; font-weight:700; color:var(--ink); white-space:nowrap;
+}
+.eon-checkout .country-select-chevron{ font-size:10px; color:var(--muted); }
+.eon-checkout .country-select select{
+  position:absolute; inset:0; width:100%; height:100%;
+  opacity:0; cursor:pointer; font:inherit; border:0;
+}
+.eon-checkout .country-select:focus-within{ outline:2px solid var(--brand); outline-offset:-2px; }
+
+.eon-checkout .checkout-phone-wrap input{
+  border:0; border-radius:0; background:transparent; flex:1; min-width:0;
+}
+.eon-checkout .checkout-phone-wrap input:focus{ box-shadow:none; }
+
+.eon-checkout .checkout-ack{
+  display:flex; gap:12px; align-items:flex-start; margin-top:22px;
+  padding:14px 16px; border:1px solid var(--border); border-radius:10px;
+  background:var(--bg-alt); cursor:pointer;
+  font-size:13px; line-height:1.6; color:var(--ink-soft);
+}
+.eon-checkout .checkout-ack input{ margin-top:2px; accent-color:var(--brand); width:16px; height:16px; flex:0 0 16px; }
+
+
+.eon-checkout .checkout-submit-wrap{ margin-top:24px; }
+.eon-checkout .checkout-cta{
+  display:inline-flex; align-items:center; justify-content:center; gap:12px;
+  width:100%; padding:16px 26px 14px; border:0; border-radius:999px; cursor:pointer;
+  background:var(--grad-cta); color:var(--cta-ink-btn);
+  font-family:var(--fh); font-weight:700; font-size:16px;
+  letter-spacing:.06em; text-transform:uppercase; line-height:1.1;
+  box-shadow:var(--glow-cta); transition:transform .2s, filter .2s, box-shadow .2s;
+}
+.eon-checkout .checkout-cta:hover:not(:disabled){ transform:translateY(-2px); filter:brightness(1.08); }
+.eon-checkout .checkout-cta:disabled{ opacity:.45; cursor:not-allowed; transform:none; }
+.eon-checkout .cta-arrow{
+  display:grid; place-items:center; width:24px; height:24px; border-radius:50%;
+  background:var(--brand); color:var(--cta-ink); font-size:13px;
+}
+.eon-checkout .checkout-wiring{
+  font-size:10.5px; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--brand-deep); text-align:center; margin:12px 0 0;
+}
+
+/* ---- payment state + validation, added with the Razorpay wiring ----
+   One line under the CTA, and only ever one of them at a time. `.checkout-status`
+   inherits the wiring line's voice (tracked copper caps) because it occupies the
+   same slot; `.checkout-error` deliberately does not, because an error the buyer
+   has to READ must not be set in 10px tracked caps. */
+.eon-checkout .checkout-status{
+  font-size:10.5px; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--brand-deep); text-align:center; margin:12px 0 0;
+}
+.eon-checkout .checkout-error{
+  font-size:13px; line-height:1.55; font-weight:600;
+  color:var(--danger); text-align:center; margin:12px 0 0;
+}
+
+/* Invalid fields, marked only after a submit attempt: a form that turns red
+   while it is still being typed into is a form that argues with the buyer. */
+.eon-checkout .checkout-field input[aria-invalid="true"]{
+  border-color:var(--danger);
+  box-shadow:0 0 0 3px rgba(var(--danger-rgb),.12);
+}
+.eon-checkout .checkout-phone-wrap[data-invalid]{
+  border-color:var(--danger);
+  box-shadow:0 0 0 3px rgba(var(--danger-rgb),.12);
+}
+.eon-checkout .checkout-ack[data-invalid]{ border-color:var(--danger); }
+.eon-checkout .checkout-trust{
+  display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px;
+  margin-top:14px; font-size:11.5px; color:var(--muted); letter-spacing:.04em;
+}
+.eon-checkout .checkout-trust-sep{ color:var(--brand); }
+
+/* ---- order summary ---- */
+.eon-checkout .checkout-summary{
+  position:sticky; top:22px; overflow:hidden;
+  background:var(--bg); border:1px solid var(--border); border-radius:14px;
+  padding:30px 28px;
+  box-shadow:0 18px 44px -32px rgba(var(--ink-rgb),.30);
+}
+/* The accent bar across the top of the summary card. It is what marks this
+   panel as the thing being bought rather than a second form. */
+.eon-checkout .checkout-summary::before{
+  content:""; position:absolute; inset:0 0 auto 0; height:3px; background:var(--brand);
+}
+.eon-checkout .checkout-summary-label{
+  font-size:10.5px; font-weight:800; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--brand-deep); margin:0 0 10px;
+}
+.eon-checkout .checkout-product-name{
+  font-family:var(--fh); font-weight:700; text-transform:uppercase;
+  font-size:22px; letter-spacing:.03em; line-height:1.15; color:var(--ink); margin:0 0 12px;
+}
+.eon-checkout .checkout-event-pill{
+  display:inline-block; padding:6px 13px; border-radius:999px;
+  border:1px solid rgba(var(--brand-rgb),.45); color:var(--brand-deep);
+  font-size:10.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase;
+}
+.eon-checkout .checkout-divider{ height:1px; background:var(--border); margin:20px 0; }
+.eon-checkout .checkout-value-stack{ display:flex; flex-direction:column; gap:14px; }
+.eon-checkout .checkout-value-item{
+  display:flex; gap:11px; font-size:13.5px; line-height:1.6; color:var(--ink-soft);
+}
+.eon-checkout .checkout-check{
+  flex:0 0 19px; width:19px; height:19px; margin-top:2px; border-radius:50%;
+  display:grid; place-items:center;
+  border:1px solid rgba(var(--brand-rgb),.50); color:var(--brand);
+}
+.eon-checkout .checkout-check svg{ width:11px; height:11px; }
+
+.eon-checkout .checkout-price-block{ padding-top:2px; }
+.eon-checkout .checkout-price-row{ display:flex; align-items:baseline; flex-wrap:wrap; gap:12px; }
+.eon-checkout .checkout-price-was{
+  font-family:var(--fh); font-size:20px; color:var(--muted);
+  text-decoration:line-through; text-decoration-thickness:2px;
+}
+.eon-checkout .checkout-price-now{
+  font-family:var(--fh); font-weight:700; font-size:42px; line-height:1; color:var(--ink);
+}
+.eon-checkout .checkout-save-badge{
+  padding:5px 11px; border-radius:4px; background:var(--brand); color:var(--cta-ink);
+  font-size:10px; font-weight:800; letter-spacing:.12em; text-transform:uppercase;
+}
+.eon-checkout .checkout-guarantee{
+  margin:14px 0 0; font-size:12px; line-height:1.6; color:var(--ink-soft);
+}
+
+.eon-checkout .checkout-coaches{
+  display:flex; align-items:center; gap:13px;
+  margin-top:22px; padding-top:20px; border-top:1px solid var(--border);
+}
+.eon-checkout .checkout-coach-avatars{ display:flex; flex:0 0 auto; }
+.eon-checkout .checkout-coach-avatar{
+  width:42px; height:42px; border-radius:50%; display:grid; place-items:center;
+  background:var(--ink); color:var(--cta-ink-btn);
+  font-family:var(--fh); font-weight:700; font-size:14px; letter-spacing:.06em;
+}
+.eon-checkout .checkout-coach-names{ font-size:12px; line-height:1.55; color:var(--ink-soft); }
+.eon-checkout .checkout-coach-names strong{ display:block; color:var(--ink); font-size:13.5px; }
+
+/* ---- mobile summary bar ---- */
+.eon-checkout .checkout-summary-mobile{ display:none; }
+.eon-checkout .checkout-summary-mobile-bar{
+  display:flex; align-items:center; justify-content:space-between; gap:14px; width:100%;
+  padding:14px 16px; border:1px solid var(--border); border-radius:10px;
+  background:var(--bg-alt); color:var(--ink); cursor:pointer;
+  font-family:var(--fb); font-size:13px; font-weight:700; text-align:left;
+}
+.eon-checkout .checkout-summary-mobile-title{ font-weight:700; }
+.eon-checkout .checkout-summary-mobile-price{ font-family:var(--fh); font-size:20px; }
+.eon-checkout .checkout-summary-mobile-trail{
+  display:inline-flex; align-items:center; gap:8px;
+  font-family:var(--fh); font-size:20px; color:var(--ink);
+}
+.eon-checkout .checkout-summary-mobile-trail .chev{ color:var(--brand); font-size:14px; }
+.eon-checkout .checkout-summary-mobile.is-open .checkout-summary-mobile-trail .chev{ transform:rotate(180deg); }
+.eon-checkout .checkout-summary-expand-inner{
+  display:flex; flex-direction:column; gap:14px;
+  padding:18px 16px; margin-top:-1px;
+  border:1px solid var(--border); border-top:0; border-radius:0 0 10px 10px;
+  background:var(--bg-alt);
+}
+
+@media (max-width:960px){
+  .eon-checkout .checkout-main{ grid-template-columns:1fr; gap:22px; }
+  .eon-checkout .checkout-summary{ display:none; }
+  .eon-checkout .checkout-summary-mobile{ display:block; max-width:1180px; margin:0 auto 20px; }
+}
+@media (max-width:560px){
+  .eon-checkout .checkout-fields-row{ grid-template-columns:1fr; }
+  .eon-checkout .checkout-form-panel{ padding:22px 18px; }
+}
+
+
+/* =====================================================================
+   SITE FOOTER: one definition, scoped to ITSELF.
+
+   Deliberately NOT nested under a page root. The same component renders on
+   the policy pages (.eon-policy) and on the checkout (.eon-checkout), and
+   while these rules were written as `.eon-policy .footer` the checkout's
+   footer matched nothing and rendered unstyled. A shared component carries
+   its own scope or it is not shared.
+   ===================================================================== */
+.eon-foot{
+  background:var(--bg-dark); color:var(--muted-dark);
+  border-top:1px solid var(--border-dark);
+  padding:36px 0; text-align:center;
+  font-family:var(--fb); font-size:12.5px; line-height:1.7;
+}
+.eon-foot-wrap{ max-width:1180px; margin:0 auto; padding:0 22px; }
+.eon-foot-brand{
+  font-family:var(--fh); font-weight:700; text-transform:uppercase; letter-spacing:.16em;
+  font-size:13px; color:var(--ink-dark); margin-bottom:10px;
+}
+.eon-foot p{ margin:0 0 14px; color:var(--muted-dark); }
+.eon-foot a{ color:var(--brand-bright); text-decoration:none; }
+.eon-foot a:hover{ text-decoration:underline; text-underline-offset:2px; }
+.eon-foot-links{
+  display:flex; flex-wrap:wrap; justify-content:center; gap:18px; margin-top:16px;
+}
+.eon-foot-links a{
+  font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--ink-dark-soft);
+}
+.eon-foot-links a:hover{ color:var(--brand-bright); text-decoration:none; }
+
+
+/* =====================================================================
+   BOOKING PAGE (/book): where every paid buyer lands.
+
+   Structure is the live SDP funnel's book-a-call page: confirmation strip,
+   hero with a two-step indicator, the calendar in a bordered frame, what the
+   fee covers, who the buyer is about to talk to, a final nudge, a docked bar.
+   Theme is this project's own, so the light / light-alt / dark band rhythm and
+   every colour below resolve from the same :root tokens the landing page uses.
+
+   Scoped under .eon-book for the same reason .eon-policy and .eon-checkout
+   are: these are generic names and they must never collide with the landing
+   page's .sdp-* system. The site footer is NOT scoped here, it carries its own
+   .eon-foot scope, which is what lets it render styled on every page.
+   --------------------------------------------------------------------- */
+.eon-book{
+  font-family:var(--fb); color:var(--ink); background:var(--bg);
+  line-height:1.6; font-size:16px;
+
+  /* Semantic, not brand. "Payment confirmed" is a status and it is the one
+     place on this site that is allowed to be green. Darker than --success so
+     it holds contrast as TEXT on ivory rather than only as a fill. */
+  --book-good:#0E7C5A;
+  --book-good-soft:rgba(14,124,90,.10);
+  --book-good-ring:rgba(14,124,90,.30);
+  /* The same status, lifted for the charcoal announce strip, where the light
+     variant would sit under the contrast floor. */
+  --book-good-dark:#3FCF9E;
+
+  /* The calendar's reserved height. One number, so the loading overlay, the
+     embed and the unconnected stand-in are all exactly the same size and
+     nothing on the page moves when the real calendar arrives. */
+  --book-cal-h:780px;
+}
+
+/* :where() keeps these at zero specificity so any component class below wins
+   without a scoping prefix, the same trick the .sdp-root resets use. */
+.eon-book :where(a){ color:inherit; text-decoration:none; }
+.eon-book :where(ul){ margin:0; padding:0; list-style:none; }
+/* margin-block, never the margin shorthand: `margin:0 0 .5em` also zeroes left
+   and right and out-specifies any child's margin:auto, which silently drops a
+   width-capped heading against the left of a centred section. Same trap as the
+   landing page's base type rules. */
+.eon-book h1,.eon-book h2{
+  font-family:var(--fh); font-weight:var(--fh-weight); text-transform:uppercase;
+  line-height:1.05; letter-spacing:.02em; color:var(--ink); margin-block:0 .5em;
+}
+.eon-book em{ font-style:normal; color:var(--brand-deep); }
+.eon-book p{ margin-block:0 1em; color:var(--ink-soft); }
+.eon-book code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.88em;
+  background:rgba(var(--ink-rgb),.06); border-radius:4px; padding:2px 6px; color:var(--ink);
+}
+
+/* ---- shell + bands ---- */
+.eon-book .book-wrap{ max-width:1000px; margin:0 auto; padding:0 22px; }
+.eon-book .book-narrow{ max-width:720px; }
+.eon-book .book-section{ padding:64px 0; }
+.eon-book .book-light{ background:var(--bg); }
+.eon-book .book-light-alt{ background:var(--bg-alt); }
+.eon-book .book-dark{ background:var(--bg-dark); }
+.eon-book .book-dark-alt{ background:var(--bg-dark-alt); }
+.eon-book .book-dark h2,.eon-book .book-dark-alt h2{ color:var(--ink-dark); }
+.eon-book .book-dark p,.eon-book .book-dark-alt p{ color:var(--ink-dark-soft); }
+.eon-book .book-dark em,.eon-book .book-dark-alt em{ color:var(--brand-bright); }
+
+/* ---- announce strip (the checkout's, same rhythm) ---- */
+.eon-book .book-announce{
+  display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:10px 14px;
+  background:var(--bg-dark); color:var(--ink-dark-soft);
+  padding:11px 18px; font-size:11.5px; font-weight:600; letter-spacing:.06em;
+}
+.eon-book .book-announce-item{ display:inline-flex; align-items:center; gap:7px; }
+.eon-book .book-announce-item.is-good{ color:var(--book-good-dark); }
+.eon-book .book-announce-item svg{ width:12px; height:12px; }
+.eon-book .book-announce-dot{
+  width:3px; height:3px; border-radius:50%; background:rgba(var(--brand-rgb),.6);
+}
+
+/* ---- hero ---- */
+.eon-book .book-hero{
+  background:var(--hero-stage); border-bottom:1px solid var(--border);
+  padding:56px 0 52px; text-align:center; position:relative; overflow:hidden;
+}
+.eon-book .book-hero::before{
+  content:""; position:absolute; inset:-40% 20% auto; height:420px;
+  background:var(--hero-bloom); pointer-events:none;
+}
+.eon-book .book-hero .book-wrap{ position:relative; z-index:1; }
+.eon-book .book-badge{
+  display:inline-flex; align-items:center; gap:9px; margin-bottom:18px;
+  padding:7px 15px 6px; border-radius:999px;
+  background:var(--book-good-soft); border:1px solid var(--book-good-ring); color:var(--book-good);
+  font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
+}
+.eon-book .book-badge-tick{
+  width:16px; height:16px; border-radius:50%; flex:0 0 16px;
+  display:grid; place-items:center; background:var(--book-good); color:#FFFFFF;
+}
+.eon-book .book-badge-tick svg{ width:9px; height:9px; }
+.eon-book .book-hero h1{
+  font-size:clamp(30px,5.4vw,52px); letter-spacing:.03em; margin-block:0 14px;
+}
+.eon-book .book-hero-sub{
+  max-width:620px; margin:0 auto; font-size:16px; line-height:1.65; color:var(--ink-soft);
+}
+.eon-book .book-hero-sub strong{ color:var(--ink); font-weight:700; }
+.eon-book .book-hero-sub a{
+  color:var(--brand-deep); font-weight:700;
+  border-bottom:1px solid rgba(var(--brand-rgb),.4);
+}
+
+/* ---- two-step indicator ---- */
+.eon-book .book-steps{
+  display:flex; align-items:center; justify-content:center; gap:14px; margin-top:30px;
+}
+.eon-book .book-step{ display:flex; flex-direction:column; align-items:center; gap:8px; }
+.eon-book .book-step-circ{
+  width:36px; height:36px; border-radius:50%; display:grid; place-items:center;
+  border:1px solid var(--border-strong); background:var(--bg); color:var(--muted);
+  font-family:var(--fh); font-weight:700; font-size:15px; line-height:1;
+}
+.eon-book .book-step-circ svg{ width:15px; height:15px; }
+.eon-book .book-step-lbl{
+  font-size:10.5px; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--muted);
+}
+.eon-book .book-step.is-done .book-step-circ{
+  background:var(--book-good); border-color:var(--book-good); color:#FFFFFF;
+}
+.eon-book .book-step.is-done .book-step-lbl{ color:var(--book-good); }
+.eon-book .book-step.is-active .book-step-circ{
+  background:var(--ink); border-color:var(--ink); color:var(--cta-ink-btn);
+}
+.eon-book .book-step.is-active .book-step-lbl{ color:var(--ink); }
+.eon-book .book-step-line{
+  width:64px; height:1px; background:var(--border-strong); margin-bottom:22px;
+}
+
+/* ---- section heads ---- */
+.eon-book .book-head{ text-align:center; margin-bottom:30px; }
+.eon-book .book-eyebrow{
+  font-size:10.5px; font-weight:800; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--brand-deep); margin-bottom:10px;
+}
+.eon-book .book-eyebrow.is-dark{ color:var(--brand-bright); }
+.eon-book .book-h2{ font-size:clamp(24px,3.4vw,36px); margin-block:0; }
+.eon-book .book-h2.is-dark{ color:var(--ink-dark); }
+
+/* ---- the calendar frame ---- */
+.eon-book .book-cal-frame{
+  position:relative; background:var(--bg);
+  border:1px solid var(--border); border-radius:14px; overflow:hidden;
+  box-shadow:0 18px 44px -32px rgba(var(--ink-rgb),.30);
+}
+.eon-book .book-cal-embed{ height:var(--book-cal-h); }
+.eon-book .book-cal-embed iframe{ width:100%; height:100%; border:0; display:block; }
+.eon-book .book-cal-overlay{
+  position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:14px;
+  background:var(--bg); text-align:center; padding:26px;
+}
+.eon-book .book-cal-overlay p{ margin:0; font-size:14px; }
+.eon-book .book-cal-overlay a{
+  color:var(--brand-deep); font-weight:700;
+  border-bottom:1px solid rgba(var(--brand-rgb),.4);
+}
+.eon-book .book-cal-spin{
+  width:30px; height:30px; border-radius:50%;
+  border:3px solid var(--border); border-top-color:var(--brand);
+  animation:eonBookSpin .8s linear infinite;
+}
+@keyframes eonBookSpin{ to{ transform:rotate(360deg); } }
+
+/* ---- the unconnected stand-in, at the calendar's exact height ---- */
+.eon-book .book-cal-standin{
+  min-height:var(--book-cal-h);
+  border:2px dashed var(--border-strong); border-radius:14px;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgba(var(--brand-rgb),.035) 0 12px,
+      transparent 12px 24px
+    ),
+    var(--bg-alt);
+  display:grid; place-items:center;
+}
+.eon-book .book-cal-placeholder{
+  max-width:520px; text-align:center; padding:40px 26px;
+}
+.eon-book .book-cal-placeholder-tag{
+  display:inline-block; margin-bottom:16px; padding:6px 13px 5px; border-radius:999px;
+  background:var(--brand); color:var(--cta-ink);
+  font-size:10.5px; font-weight:800; letter-spacing:.16em; text-transform:uppercase;
+}
+.eon-book .book-cal-placeholder-lead{
+  font-family:var(--fh); font-weight:var(--fh-weight); text-transform:uppercase;
+  font-size:22px; letter-spacing:.04em; color:var(--ink); margin-block:0 12px;
+}
+.eon-book .book-cal-placeholder p{ font-size:14px; line-height:1.7; }
+.eon-book .book-cal-placeholder-help{
+  margin-block:16px 0; padding-top:16px; border-top:1px solid var(--border);
+  font-size:13.5px;
+}
+.eon-book .book-cal-placeholder a{ color:var(--brand-deep); font-weight:700; }
+
+/* ---- reassurance under the calendar ---- */
+.eon-book .book-cal-reassure{
+  display:flex; align-items:center; justify-content:center; gap:9px;
+  margin-top:20px; font-size:13.5px; font-weight:600; color:var(--ink-soft);
+}
+.eon-book .book-cal-reassure svg{ width:14px; height:14px; color:var(--book-good); flex:0 0 14px; }
+
+/* ---- what the booking covers ---- */
+.eon-book .book-cards{
+  display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px;
+}
+.eon-book .book-card{
+  background:var(--bg-alt); border:1px solid var(--border); border-radius:12px;
+  padding:24px 22px 22px;
+}
+.eon-book .book-card-n{
+  display:block; font-family:var(--fh); font-weight:700; font-size:26px;
+  line-height:1; color:var(--brand); margin-bottom:12px;
+}
+.eon-book .book-card p{ margin:0; font-size:14.5px; line-height:1.65; }
+
+/* ---- who you are talking to ---- */
+.eon-book .book-coach{
+  background:var(--grad-guarantee); border:1px solid var(--border-dark-strong);
+  border-radius:14px; padding:36px 34px; text-align:center;
+}
+.eon-book .book-coach-role{
+  font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--brand-bright); margin-block:0 24px;
+}
+.eon-book .book-coach-creds{
+  display:flex; flex-direction:column; gap:12px; text-align:left;
+  max-width:660px; margin:0 auto;
+}
+.eon-book .book-coach-creds li{
+  display:flex; gap:11px; align-items:flex-start;
+  font-size:14.5px; line-height:1.6; color:var(--ink-dark-soft);
+}
+.eon-book .book-coach-tick{
+  flex:0 0 18px; width:18px; height:18px; border-radius:50%; margin-top:2px;
+  display:grid; place-items:center;
+  background:rgba(var(--brand-rgb),.22); color:var(--brand-bright);
+}
+.eon-book .book-coach-tick svg{ width:9px; height:9px; }
+.eon-book .book-stat-row{
+  display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px;
+  margin-top:30px; padding-top:26px; border-top:1px solid var(--border-dark-strong);
+}
+.eon-book .book-stat-n{
+  font-family:var(--fh); font-weight:700; font-size:26px; line-height:1;
+  color:var(--ink-dark); letter-spacing:.02em;
+}
+.eon-book .book-stat-l{
+  margin-top:7px; font-size:10px; font-weight:800; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--muted-dark);
+}
+
+/* ---- the withheld state ---- */
+.eon-book .book-blocked{
+  background:var(--bg-alt); border:1px solid var(--border);
+  border-left:3px solid var(--danger); border-radius:0 12px 12px 0;
+  padding:30px 28px; text-align:left;
+}
+.eon-book .book-blocked h2{ font-size:clamp(20px,3vw,28px); margin-block:0 14px; }
+.eon-book .book-blocked p{ font-size:14.5px; line-height:1.7; }
+.eon-book .book-blocked a{
+  color:var(--brand-deep); font-weight:700;
+  border-bottom:1px solid rgba(var(--brand-rgb),.4);
+}
+.eon-book .book-blocked .book-btn{ margin-top:8px; border-bottom:0; }
+
+/* ---- buttons ---- */
+.eon-book .book-btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:11px;
+  padding:15px 30px 13px; border-radius:999px;
+  background:var(--grad-cta); color:var(--cta-ink-btn);
+  font-family:var(--fh); font-weight:700; font-size:15px;
+  letter-spacing:.05em; text-transform:uppercase; line-height:1.1; white-space:nowrap;
+  box-shadow:var(--glow-cta), var(--inset-hi);
+  transition:transform .2s, box-shadow .2s, filter .2s;
+}
+.eon-book .book-btn:hover{
+  transform:translateY(-2px); box-shadow:var(--glow-cta-hover); filter:brightness(1.08);
+}
+.eon-book .book-btn-lg{ padding:18px 38px 16px; font-size:17px; }
+.eon-book .book-btn-arrow{ display:inline-flex; }
+.eon-book .book-btn-arrow svg{ width:16px; height:16px; }
+/* Charcoal on charcoal is invisible, so the close inverts: ivory fill, ink
+   label. It is the most premium beat on the page and it should read that way. */
+.eon-book .book-dark-alt .book-btn,
+.eon-book .book-stuck .book-btn{
+  background:var(--ink-dark); color:var(--ink); box-shadow:0 10px 30px rgba(0,0,0,.35);
+}
+
+/* ---- final ---- */
+.eon-book .book-final-h{
+  font-family:var(--fh); font-weight:var(--fh-weight); text-transform:uppercase;
+  font-size:clamp(26px,4vw,42px); letter-spacing:.03em; line-height:1.05;
+  color:var(--ink-dark); text-align:center; margin-block:0 14px;
+}
+.eon-book .book-dark-alt .book-wrap{ text-align:center; }
+.eon-book .book-final-sub{ max-width:520px; margin:0 auto 26px; font-size:15.5px; }
+.eon-book .book-support{
+  margin-block:30px 0; font-size:12.5px; color:var(--muted-dark);
+}
+.eon-book .book-support a{ color:var(--brand-bright); }
+.eon-book .book-support a:hover{ text-decoration:underline; text-underline-offset:2px; }
+
+/* ---- docked bar ---- */
+.eon-book .book-stuck{
+  position:fixed; left:0; right:0; bottom:0; z-index:999;
+  background:linear-gradient(180deg,rgba(var(--ink-rgb),.92),rgba(var(--ink-rgb),.98));
+  -webkit-backdrop-filter:blur(20px) saturate(140%); backdrop-filter:blur(20px) saturate(140%);
+  border-top:1px solid rgba(var(--brand-rgb),.35);
+  box-shadow:0 -16px 40px rgba(0,0,0,.4), inset 0 1px 0 rgba(var(--brand-rgb),.15);
+  padding:12px 0 calc(12px + env(safe-area-inset-bottom));
+  transform:translateY(120%); transition:transform .45s cubic-bezier(.16,1,.3,1);
+}
+.eon-book .book-stuck.is-on{ transform:translateY(0); }
+.eon-book .book-stuck-inner{
+  max-width:1000px; margin:0 auto; padding:0 22px;
+  display:flex; align-items:center; justify-content:space-between; gap:18px;
+}
+.eon-book .book-stuck-text{
+  display:inline-flex; align-items:center; gap:10px; min-width:0;
+  font-size:13.5px; color:var(--ink-dark-soft);
+}
+.eon-book .book-stuck-text strong{ color:var(--ink-dark); font-weight:700; }
+.eon-book .book-stuck-pulse{
+  width:7px; height:7px; border-radius:50%; flex:0 0 7px; background:var(--brand);
+  animation:eonBookPulse 1.8s ease-in-out infinite;
+}
+@keyframes eonBookPulse{
+  0%,100%{ box-shadow:0 0 0 0 rgba(var(--brand-rgb),.55); }
+  50%    { box-shadow:0 0 0 6px rgba(var(--brand-rgb),0); }
+}
+.eon-book .book-stuck .book-btn{ padding:12px 24px 10px; font-size:14px; }
+
+/* ---- responsive ---- */
+@media (max-width:900px){
+  .eon-book .book-cards{ grid-template-columns:1fr; }
+  .eon-book .book-stat-row{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px 14px; }
+}
+@media (max-width:720px){
+  /* Every scheduler's mobile layout stacks the month and the times, so the
+     frame has to grow or the buyer scrolls inside an iframe to reach the
+     confirm button. Same number drives the stand-in, so nothing shifts. */
+  .eon-book{ --book-cal-h:1080px; }
+  .eon-book .book-section{ padding:48px 0; }
+  .eon-book .book-hero{ padding:40px 0 38px; }
+  .eon-book .book-coach{ padding:28px 20px; }
+  .eon-book .book-step-line{ width:40px; }
+  .eon-book .book-stuck-text{ font-size:12.5px; }
+  .eon-book .book-stuck .book-btn{ padding:11px 18px 9px; font-size:13px; }
+}
+@media (max-width:420px){
+  .eon-book .book-stuck-text{ display:none; }
+  .eon-book .book-stuck-inner{ justify-content:center; }
+  .eon-book .book-stuck .book-btn{ width:100%; }
+}
+@media (prefers-reduced-motion: reduce){
+  .eon-book .book-cal-spin,
+  .eon-book .book-stuck-pulse{ animation:none !important; }
+  .eon-book .book-stuck{ transition:none; }
+  .eon-book .book-btn:hover{ transform:none; }
+}
