@@ -85,11 +85,16 @@
   /* ---- layout ---- */
   --wrap:1180px;
   --vsl-max:620px;
+  /* The docked CTA is fixed and now always visible, so the page has to reserve
+     its height or the bar covers the finale's own CTA. Taller on a phone, where
+     the button goes full width and the meta block is hidden. */
+  --stuck-h:86px;
 
 }
 
 /* The landing page's own root: element-level properties only, no tokens. */
 .sdp-root {
+  padding-bottom:var(--stuck-h);
   font-family:var(--fb); color:var(--ink); background:var(--bg);
   line-height:1.6; font-size:16px; -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
@@ -219,23 +224,40 @@ h2.sdp-h2{
    either way, so nothing is lost when they drop out. */
 br.sdp-br-lg{ display:inline; }
 @media (max-width:640px){ br.sdp-br-lg{ display:none; } }
+/* Set to the hero headline's own scale, so the promise and its timeframe read
+   as one lockup rather than a headline with a caption under it. Size, tracking
+   and line-height now match `.sdp-h1-l1.is-long` exactly; the two things that
+   stay different are deliberate and were asked for: weight 700 against the
+   headline's 600, and copper against ink, which is what makes the timeframe
+   land as the point rather than as decoration.
+
+   It fits: "IN JUST 90-120 DAYS" is 8.83em in Oswald 700, so 477px of the
+   1000px measure at the 54px cap, and it would not wrap until 113px. */
 .sdp-h1-l2{
-  display:block; font-family:var(--fh); font-size:clamp(20px,3vw,36px);
-  font-weight:700; letter-spacing:.03em;
-  color:var(--brand-deep); line-height:1.1; margin-top:10px; text-wrap:balance;
+  display:block; font-family:var(--fh); font-size:clamp(29px,4.5vw,54px);
+  font-weight:700; letter-spacing:.02em;
+  color:var(--brand-deep); line-height:1.04; margin-top:12px; text-wrap:balance;
 }
 
 /* ---------------------------------------------------------------------
    Announcement / trust banner (beat 0a), copper bar, white ink
    --------------------------------------------------------------------- */
+/* ONE LINE AT EVERY WIDTH. Measured, not guessed: the full string is 35.45em
+   in Inter 800 at the desktop .08em tracking, which needs 443px and fits no
+   phone at all, so it used to wrap to two lines. Below 560px the tracking
+   halves to .04em (that alone gives back 2em of the 35) and the size becomes
+   fluid, sized so the line still fits a 320px screen. nowrap makes a regression
+   obvious: if the copy ever grows, it clips rather than silently re-wrapping. */
 .sdp-announce{
   background:var(--grad-announce); color:var(--cta-ink);
   display:flex; align-items:center; justify-content:center; gap:12px;
-  flex-wrap:wrap; padding:9px 16px; line-height:1.2;
+  flex-wrap:nowrap; white-space:nowrap; overflow:hidden;
+  padding:9px 16px; line-height:1.2;
   border-bottom:1px solid rgba(var(--ink-rgb),.14);
   font-family:var(--fb); font-weight:800; font-size:12.5px;
   letter-spacing:.08em; text-transform:uppercase;
 }
+
 .sdp-announce-dot{
   width:7px; height:7px; border-radius:50%; flex:0 0 7px;
   background:var(--cta-ink); animation:sdpPulseInk 1.8s ease-in-out infinite;
@@ -251,9 +273,24 @@ br.sdp-br-lg{ display:inline; }
   background:var(--bg-dark); color:var(--brand-bright); font-weight:800; letter-spacing:.06em;
 }
 .sdp-announce-sep{ opacity:.45; }
-@media (max-width:520px){
-  .sdp-announce{ font-size:10.5px; gap:8px; letter-spacing:.06em; padding:8px 12px; }
+/* ONE mobile block, because there were two and the later one silently won.
+   The line clipped at a fixed 10.5px. The text is 31.78em, but the CHROME
+   around it was 93px on a phone: the two figure chips carry 9px of padding a
+   side, each item an 8px inner gap, plus the dot, the flex gaps and the bar's
+   own padding. 93px is a quarter of a 390px screen, so shrinking the type alone
+   would have meant 7px. The chrome comes down to 52px instead and the type
+   stays legible: the line then needs 362px of a 390px phone. */
+@media (max-width:560px){
+  .sdp-announce{
+    font-size:clamp(8px,2.5vw,11px); letter-spacing:.04em;
+    gap:6px; padding:8px 8px;
+  }
+  .sdp-root .sdp-announce-num{ padding:3px 5px 2px; letter-spacing:.04em; }
+  .sdp-announce-item{ gap:5px; }
   .sdp-announce-sep{ display:none; }
+  /* The pulsing dot is decoration, and decoration is what a 390px line cannot
+     afford: it costs its own 7px plus a flex gap. */
+  .sdp-announce-dot{ display:none; }
 }
 
 /* ---------------------------------------------------------------------
@@ -595,6 +632,18 @@ br.sdp-br-lg{ display:inline; }
   color:var(--brand); display:grid; place-items:center;
 }
 .sdp-who-list .ck svg{ width:14px; height:14px; }
+
+/* The rows are centred on desktop, by Atul's call, and LEFT-aligned from here
+   down. Each one runs three to four lines, and once the column is this narrow
+   centred text gives every line a different starting edge, so the eye has to
+   re-find the start on each one. The tick returns to the top-left of the copy,
+   marking the row instead of floating in the middle of it.
+
+   768px, not a phone width: the problem is the measure, not the device. A small
+   tablet at 600px has exactly the same four-line rows. */
+@media (max-width:768px){
+  .sdp-who-list li{ justify-content:flex-start; text-align:left; }
+}
 
 /* ---------------------------------------------------------------------
    GUARANTEE card: dark gradient, accent top bar, rotated icon tile
@@ -1304,6 +1353,7 @@ br.sdp-br-lg{ display:inline; }
   .sdp-colophon-name{ font-size:11.5px; letter-spacing:.18em; gap:8px; }
 }
 @media (max-width:720px){
+  :root{ --stuck-h:96px; }
   .sdp-stuck-meta{ display:none; }
   .sdp-stuck-inner{ justify-content:stretch; }
   .sdp-root .sdp-stuck-btn{ width:100%; font-size:13.5px; letter-spacing:.04em; padding:13px 16px 11px; white-space:normal; }

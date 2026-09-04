@@ -1,6 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import { ArrowGlyph, CHECKOUT_URL } from "./sdp";
 
 /**
@@ -9,10 +6,11 @@ import { ArrowGlyph, CHECKOUT_URL } from "./sdp";
  * The skin's sweeping dark-glass bar: fixed to the bottom, blurred graphite
  * glass, a 1px accent seam sweeping across the top, sliding up from below.
  *
- * WHEN IT SHOWS: once the hero has scrolled out of view, and it hides again the
- * moment the finale is on screen: the page's own CTA is right there, and two
- * buttons competing at the close is the standard way this component turns into
- * clutter. Because it hides at the finale, it needs no spacer in normal flow.
+ * WHEN IT SHOWS: always. Atul's call. It previously appeared past the hero and
+ * hid over the finale, so that two CTAs never competed at the close; it is now
+ * unconditional, so the offer is one tap away wherever the reader stops.
+ * Because it no longer hides, the page must RESERVE its height: `--stuck-h` is
+ * padded onto .sdp-root, or the bar sits on top of the finale's own CTA.
  *
  * ─────────────────────────────────────────────────────────────────────────
  * COPY FLAG: THE LABEL IS TRIMMED, AND THE TRIM IS A CHOICE TO APPROVE.
@@ -28,7 +26,8 @@ import { ArrowGlyph, CHECKOUT_URL } from "./sdp";
  * Atul wants a different trim.
  * ─────────────────────────────────────────────────────────────────────────
  *
- * Fail-safe: if JS never runs the bar simply stays off-screen (it is chrome, not
+ * Fail-safe: there is nothing to fail. It is a link and a heading, rendered on
+ * the server, with no state and no observer. (Previously
  * content, so nothing is lost). While it is off-screen it is `inert` and
  * aria-hidden, so it is never a phantom tab stop or a duplicate reading of the
  * offer.
@@ -41,47 +40,23 @@ const PRICE = "₹97";
 const NOTE = "100% MONEY-BACK GUARANTEE";
 const TITLE = "Extreme or Nothing Protocol";
 
+/**
+ * The docked CTA. Present on every scroll position, by Atul's call.
+ *
+ * It used to appear only past the hero and hide again over the finale, to avoid
+ * sitting under a CTA that was already on screen. It is now unconditional, so
+ * the offer is one tap away wherever the reader stops. The page reserves room
+ * for it (`--stuck-h` on .sdp-root), which the conditional version did not need
+ * because it hid before the last section arrived.
+ *
+ * No IntersectionObserver, no state, and nothing to hydrate: it renders the
+ * same on the server and the client.
+ */
 export function StickyCta() {
-  const [pastHero, setPastHero] = useState(false);
-  const [atFinale, setAtFinale] = useState(false);
 
-  useEffect(() => {
-    if (!("IntersectionObserver" in window)) {
-      setPastHero(true);
-      return;
-    }
-
-    const observers: IntersectionObserver[] = [];
-
-    const hero = document.getElementById("top");
-    if (hero) {
-      const io = new IntersectionObserver(
-        ([entry]) => setPastHero(!entry.isIntersecting),
-        { threshold: 0 },
-      );
-      io.observe(hero);
-      observers.push(io);
-    } else {
-      setPastHero(true);
-    }
-
-    const finale = document.getElementById("finale");
-    if (finale) {
-      const io = new IntersectionObserver(
-        ([entry]) => setAtFinale(entry.isIntersecting),
-        { threshold: 0.12 },
-      );
-      io.observe(finale);
-      observers.push(io);
-    }
-
-    return () => observers.forEach((io) => io.disconnect());
-  }, []);
-
-  const on = pastHero && !atFinale;
 
   return (
-    <div className={`sdp-stuck${on ? " on" : ""}`} inert={!on} aria-hidden={!on}>
+    <div className="sdp-stuck on">
       <div className="sdp-wrap sdp-stuck-inner">
         <div className="sdp-stuck-meta">
           <span className="sdp-stuck-title">{TITLE}</span>
