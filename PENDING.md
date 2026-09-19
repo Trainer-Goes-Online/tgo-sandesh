@@ -85,6 +85,56 @@ one line of microcopy next to the price, not a change to either document.
   confirmed rather than assumed.
 - **Finale headline** is currently a reprise of the guarantee line.
 - **Names and a one-line result** under each before/after and each testimonial.
+  **Partly answered for the films:** 4 of the 15 came with names (Nithin,
+  Aseem, Anish, Vishwas) and those render as a caption on the card. The other
+  11 run uncaptioned rather than with an invented name. Send the names and
+  they appear on their own.
+
+## 3a. The VSL, as built (2026-09-10)
+
+`https://vimeo.com/1225511943`, id in `src/components/VSLFrame.tsx`. The player
+is mounted DIRECTLY, same as the testimonials below and same as tgo-deepti.
+
+Retired with the poster: the click-to-swap (so the component lost its state and
+is a server component now, and the hero's focal object costs no JS), the custom
+play disc and its ripple ping (both sat exactly where Vimeo draws its own play
+button), and the `poster` prop.
+
+It also retires the honesty problem the old version was built around: there is
+no longer a decorative play affordance that might front nothing, because the
+only play control on the stage is the real player's.
+
+NOT lazy, deliberately: it is above the fold and is the beat the page hands off
+to. The fifteen testimonial players are.
+
+`.sdp-play` in globals.css now styles nothing. Left in place rather than
+removed; it is the locked skin's component layer, not this build's to edit.
+
+## 3b. Video testimonials, as built (2026-09-10)
+
+15 Vimeo ids wired into `src/components/VideoTestimonials.tsx`, where the build
+was scaffolded for 4.
+
+**The players are mounted DIRECTLY**, matching how tgo-deepti was set up on
+Atul's instruction: Vimeo draws its own thumbnail and its own play control, so
+there are no poster frames to source. That retired three things:
+- the **lightbox** the card used to open, so playback now happens in the rail;
+- the **client island**, so the card is a server component and the row costs
+  no JS at all;
+- the `poster` prop and the inert placeholder branch.
+
+Two consequences worth knowing:
+- The rail now pauses on **focus-within** as well as hover. It only paused on
+  hover before, which was fine for posters and wrong for focusable players: a
+  keyboard user would have been operating a control sliding away from them.
+- `repeat` dropped from 2 to 1. It existed because 4 cards could not fill a
+  wide rail; 15 fill it alone, and each extra copy is 15 more players in the
+  DOM. Even at 1 the seamless loop doubles the track, so 30 iframes exist.
+  All are `loading="lazy"`.
+
+**Unverified:** the 9:16 portrait ratio is still the scaffold's assumption and
+the ids could not be checked against Vimeo from the build sandbox. If the films
+are landscape it is one constant, `RATIO` in `VideoTestimonialCard.tsx`.
 
 ## 4. Legal pages
 
@@ -102,12 +152,13 @@ one line of microcopy next to the price, not a change to either document.
 
 ## 5. Assets
 
-Nothing exists. Every slot is a labelled reserved frame at final ratio.
+**The VSL film and 15 client video testimonials landed 2026-09-10 and are
+LIVE.** Everything else is still a labelled reserved frame at final ratio.
 
 | Qty | What | Ratio |
 |---|---|---|
-| 1 | The VSL film + poster | 16:9 |
-| 4 | Client video testimonials | 9:16 |
+| ~~1~~ | ~~The VSL film + poster~~ **DONE: Vimeo 1225511943, player mounted directly** | 16:9 |
+| ~~4~~ | ~~Client video testimonials~~ **DONE: 15 Vimeo ids wired** | 9:16 |
 | 5 | Trust-strip faces | 1:1 |
 | 13 | Creator / athlete portraits | 4:5 |
 | 18 | 9 before/after **pairs** | 4:5 |

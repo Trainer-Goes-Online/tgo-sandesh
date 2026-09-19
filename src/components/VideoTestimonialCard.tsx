@@ -1,120 +1,64 @@
-"use client";
-
-import { useCallback, useEffect, useRef, useState } from "react";
-import { MediaPlaceholder, PlayGlyph } from "./sdp";
-
 /**
- * BEAT 4b (unit), one video testimonial card, plus the lightbox it opens.
+ * BEAT 4b (unit), one video testimonial card.
  *
- * The card is a poster in a framed stage with the accent play disc; clicking it
- * opens a dimmed, scroll-locked lightbox and plays there, so the proof row
- * itself stays calm and nothing autoplays. That is the §6 "lightbox
- * testimonial" option: deliberately NOT the option used by the before/after
- * row above it (§6 vary-adjacent-proof rule).
+ * ── REBUILT 2026-09-10, films delivered ───────────────────────────────────
+ * The Vimeo player is mounted DIRECTLY, matching how tgo-deepti was set up on
+ * Atul's instruction: Vimeo draws its own thumbnail and its own play control,
+ * so there is no poster frame to source and no placeholder to maintain.
  *
- * NOTHING IS FAKED WHILE THE FILMS ARE MISSING. No testimonial video has been
- * delivered, so a card with no `vimeoId` renders as a labelled placeholder at
- * the exact final size with the disc dimmed and inert: there is no click target
- * that does nothing, and no fake poster. Supply `vimeoId` (and ideally
- * `poster`) and the same card becomes the real, clickable one with no layout
- * change.
+ * WHAT THAT RETIRED, and it is worth knowing rather than discovering:
+ *  · The LIGHTBOX. The card used to be a button opening a dimmed, scroll
+ *    locked overlay. With the player in the card there is nothing to open.
+ *    Playback now happens in the rail, which is why the rail pauses on hover
+ *    and on focus-within: you cannot press play on a moving target.
+ *  · The client island. No lightbox means no state, no Escape handler and no
+ *    focus juggling, so this is a server component now and the row costs no
+ *    JS at all.
+ *  · The `poster` prop and the inert placeholder branch. Neither has anything
+ *    left to do.
  *
- * Escape closes, the backdrop closes, focus moves to the close button on open
- * and returns to the card on close, and the page behind cannot scroll while it
- * is open.
+ * §6's vary-adjacent-proof rule still holds: the row above is a before/after
+ * pair track, this is a set of faces talking. Different evidence, different
+ * shape. Only the way the video opens has changed.
+ *
+ * LAZY, deliberately. Fifteen films doubled by the rail's seamless loop is
+ * thirty players in the DOM, and eager iframes would be thirty third-party
+ * requests before a reader has scrolled anywhere near the proof beat.
  */
 
 export type Testimonial = {
   /** Stable key. */
   id: string;
-  /** Vimeo id. Absent = the card stays an inert placeholder. */
+  /** Vimeo id. */
   vimeoId?: string;
-  /** Poster frame URL. Absent = the placeholder shows instead. */
-  poster?: string;
-  /** What belongs in this frame, for whoever supplies the footage. */
-  ask: string;
+  /** The client's first name, where it was supplied. Absent = no caption,
+   *  rather than an invented one. */
+  name?: string;
+  /** What belongs in this frame, for whoever supplies the footage. Kept for
+   *  the type's sake; nothing renders it now the films are in. */
+  ask?: string;
 };
 
-/** Portrait: these are phone-recorded client videos. Change in ONE place if the
- *  delivered footage turns out to be landscape. */
+/** Portrait: these are phone-recorded client videos. Change in ONE place if
+ *  the delivered footage turns out to be landscape. */
 const RATIO = "9/16";
 
-export function VideoTestimonialCard({ vimeoId, poster, ask }: Omit<Testimonial, "id">) {
-  const [open, setOpen] = useState(false);
-  const cardRef = useRef<HTMLButtonElement | null>(null);
-  const closeRef = useRef<HTMLButtonElement | null>(null);
-  const playable = Boolean(vimeoId);
-
-  const close = useCallback(() => {
-    setOpen(false);
-    cardRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-    };
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.addEventListener("keydown", onKey);
-    closeRef.current?.focus();
-    return () => {
-      document.body.style.overflow = prev;
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open, close]);
-
-  const stage = (
-    <span className="sdp-vt-stage">
-      {poster ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img className="sdp-vt-poster" src={poster} alt="" width={720} height={1280} loading="lazy" decoding="async" />
-      ) : (
-        <MediaPlaceholder ratio={RATIO} tag="Video needed" label={ask} />
-      )}
-      <span className="sdp-vt-play" aria-hidden>
-        <PlayGlyph size={22} />
-      </span>
-    </span>
-  );
-
-  if (!playable) {
-    return <div className="sdp-vt-card is-inert">{stage}</div>;
-  }
+export function VideoTestimonialCard({ vimeoId, name }: Omit<Testimonial, "id">) {
+  if (!vimeoId) return null;
 
   return (
-    <>
-      <button
-        type="button"
-        ref={cardRef}
-        className="sdp-vt-card"
-        onClick={() => setOpen(true)}
-        aria-label="Play this client's video testimonial"
-      >
-        {stage}
-      </button>
-
-      {open && (
-        <div className="sdp-lb" role="dialog" aria-modal="true" aria-label="Video testimonial" onClick={close}>
-          <div className="sdp-lb-frame" onClick={(e) => e.stopPropagation()}>
-            <button type="button" ref={closeRef} className="sdp-lb-close" onClick={close} aria-label="Close video">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
-              </svg>
-            </button>
-            <div className="sdp-lb-ratio">
-              <iframe
-                src={`https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0`}
-                title="Client video testimonial"
-                allow="autoplay; fullscreen; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+    <div className="sdp-vt-card is-live">
+      <span className="sdp-vt-stage" style={{ aspectRatio: RATIO }}>
+        <iframe
+          src={`https://player.vimeo.com/video/${vimeoId}?title=0&byline=0&portrait=0`}
+          title={name ? `${name}'s video testimonial` : "Client video testimonial"}
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen
+          loading="lazy"
+        />
+        {name && <span className="sdp-vt-name">{name}</span>}
+      </span>
+    </div>
   );
 }
 

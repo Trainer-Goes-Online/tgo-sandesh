@@ -731,6 +731,11 @@ br.sdp-br-lg{ display:inline; }
 .sdp-rail-track{ display:flex; gap:16px; width:max-content; animation:sdpRailLeft 46s linear infinite; }
 .sdp-rail-track.reverse{ animation-name:sdpRailRight; }
 .sdp-rail:hover .sdp-rail-track{ animation-play-state:paused; }
+/* Focus pauses it too, added 2026-09-10 when live players went into the
+   testimonial rail. Hover alone covers a mouse; a keyboard user tabbing into
+   a Vimeo player would otherwise be operating a control that is still
+   sliding away from them. */
+.sdp-rail:focus-within .sdp-rail-track{ animation-play-state:paused; }
 @keyframes sdpRailLeft{  from{ transform:translateX(0); }    to{ transform:translateX(-50%); } }
 @keyframes sdpRailRight{ from{ transform:translateX(-50%); } to{ transform:translateX(0); } }
 
@@ -2358,4 +2363,51 @@ br.sdp-br-lg{ display:inline; }
   .eon-book .book-stuck-pulse{ animation:none !important; }
   .eon-book .book-stuck{ transition:none; }
   .eon-book .book-btn:hover{ transform:none; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PART 6: LIVE VIDEO TESTIMONIALS (beat 4b)
+
+   Fifteen films landed 2026-09-10 and the players are mounted directly, so
+   the card stops being a poster with a decorative disc and becomes a player.
+   Three things PART 3 never had to give it.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* 1. A ratio of its own. The stage used to take its height from the poster
+      or the placeholder inside it. An iframe has no intrinsic ratio, so the
+      stage has to hold the shape itself (set inline from RATIO, so the
+      aspect lives in ONE constant in the component). */
+.sdp-vt-card.is-live .sdp-vt-stage{ display:block; width:100%; }
+.sdp-vt-card.is-live .sdp-vt-stage iframe{
+  position:absolute; inset:0; width:100%; height:100%; border:0; display:block;
+}
+
+/* 2. The scrim and the play disc go. PART 3 draws a gradient over the bottom
+      of the stage and a gold disc in the middle of it; both were furniture
+      for a poster, and over a live player the scrim dims Vimeo's own controls
+      while the disc sits on top of its play button. */
+.sdp-vt-card.is-live .sdp-vt-stage::after{ content:none; }
+.sdp-vt-card.is-live .sdp-vt-play{ display:none; }
+
+/* 3. The card is no longer a control. It was a <button> opening a lightbox;
+      it is a plain container now, so the pointer and the hover lift that
+      promised a click go with it. The border still lights on hover: that is
+      the rail telling you it has paused, which is true and useful. */
+.sdp-vt-card.is-live{ cursor:default; }
+
+/* The name, where one was supplied. Only four of the fifteen came with one.
+   pointer-events:none is load-bearing, not tidiness: the caption sits ON TOP
+   of a live third-party player, and without it the chip would swallow every
+   click landing in that corner, Vimeo's own chrome included. */
+.sdp-vt-name{
+  position:absolute; top:9px; left:9px; z-index:3; pointer-events:none;
+  max-width:calc(100% - 18px);
+  font-family:var(--fb); font-size:10.5px; font-weight:700;
+  letter-spacing:.08em; text-transform:uppercase;
+  color:#fff; background:rgba(var(--ink-rgb),.62);
+  border:1px solid rgba(255,255,255,.16); border-radius:6px;
+  padding:4px 8px;
+  -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
