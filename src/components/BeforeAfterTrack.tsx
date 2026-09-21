@@ -1,4 +1,4 @@
-import { MediaPlaceholder, Section, SectionHeading, revealDelay } from "./sdp";
+import { Section, SectionHeading, revealDelay } from "./sdp";
 import { Rail } from "./Rail";
 
 /**
@@ -13,34 +13,50 @@ import { Rail } from "./Rail";
  * §6's vary-adjacent rule is why this row and the video testimonials below it
  * are DIFFERENT options: silent paired stills here, lightbox video there.
  *
- * NO PHOTOGRAPHY EXISTS. Every frame is a 4:5 placeholder at the exact final
- * size, labelled with which man and which side of the pair it is, so nothing
- * reflows when the crops land.
+ * ── THE ARTWORK LANDED 2026-09-21 (Atul) ─────────────────────────────────
+ * The placeholders are gone. What replaced them is NOT what this beat was
+ * built for, and the card changed shape to match.
+ *
+ * EACH FILE IS ALREADY A PAIR. These are Sandesh's own "Success Stories"
+ * graphics from @transformmebro, so the before and the after are composed
+ * into one image, side by side, with the words BEFORE and AFTER set into the
+ * artwork. So the card is ONE image now, not two halves, and it carries no
+ * chips of its own: printing "Before" over a picture that already says
+ * BEFORE is the page arguing with its own evidence.
+ *
+ * FIXED HEIGHT, NATURAL WIDTH, NO CROP. They arrive at two different ratios
+ * (six near 0.89, three near 1.07) and several carry a client quote burned
+ * into the top of the image. A uniform tile with object-fit:cover would slice
+ * those lines off, which on a proof beat means cropping away the actual
+ * testimony. Ragged widths are the correct outcome: it reads as a set of real
+ * posts rather than a designed grid, which is what this evidence is.
  *
  * COPY NOTE: the source gives this beat as "Before/After (× 9)" only, no
- * names, no starting stats, no timeframes. The pairs therefore carry no claims
- * at all; nothing has been invented to fill them. See the build notes.
+ * names, no starting stats, no timeframes. Whatever claim each pair makes, it
+ * makes inside its own artwork; nothing has been added around them.
  *
  * Server component.
  */
 
-const PAIR_COUNT = 9;
+/* Nine files, renamed from the supplied screenshots on import: the originals
+   were "Screenshot 2026-09-21 at 3.38.05 PM.png", which is a timestamp rather
+   than a name and links back to nothing. Converted to WebP at 900px tall
+   (10.5MB of PNG became 0.43MB) which is past 2x for the rail's height. */
+const PAIRS = Array.from({ length: 9 }, (_, i) => `ba-${String(i + 1).padStart(2, '0')}.webp`);
 
-function BeforeAfterCard({ index }: { index: number }) {
-  const n = index + 1;
+function BeforeAfterCard({ src }: { src: string }) {
   return (
-    <article className="sdp-ba-card">
-      <div className="sdp-ba-pair">
-        <figure className="sdp-ba-half">
-          <MediaPlaceholder ratio="4/5" tag="Photo needed" label={`Client ${n}, day 1`} />
-          <figcaption className="sdp-ba-tag is-before">Before</figcaption>
-        </figure>
-        <figure className="sdp-ba-half">
-          <MediaPlaceholder ratio="4/5" tag="Photo needed" label={`Client ${n}, final condition`} />
-          <figcaption className="sdp-ba-tag is-after">After</figcaption>
-        </figure>
-      </div>
-    </article>
+    <figure className="sdp-ba-card">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        className="sdp-ba-shot"
+        src={`/before-after/${src}`}
+        alt="A client's before and after transformation"
+        height={900}
+        loading="lazy"
+        decoding="async"
+      />
+    </figure>
   );
 }
 
@@ -62,8 +78,8 @@ export function BeforeAfterTrack() {
 
       <div data-sdp-reveal style={revealDelay(".06s")}>
         <Rail direction="left" seconds={86} label="Client before and after transformations">
-          {Array.from({ length: PAIR_COUNT }, (_, i) => (
-            <BeforeAfterCard key={i} index={i} />
+          {PAIRS.map((src) => (
+            <BeforeAfterCard key={src} src={src} />
           ))}
         </Rail>
       </div>

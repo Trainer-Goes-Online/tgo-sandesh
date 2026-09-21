@@ -1,4 +1,4 @@
-import { MediaPlaceholder, Section, revealDelay } from "./sdp";
+import { Section, revealDelay } from "./sdp";
 import { Rail } from "./Rail";
 
 /**
@@ -20,9 +20,26 @@ import { Rail } from "./Rail";
  * the `igsh=` share tokens in the md are session tracking parameters, and one
  * of them (Chintu's) is truncated in the source. Same profile, no dead link.
  *
- * NO PHOTOGRAPHY EXISTS. Each face is a 4:5 placeholder holding the exact final
- * size, labelled with whose portrait belongs there, so the rails do not reflow
- * when the crops land.
+ * FACES are each person's Instagram profile photo, saved to
+ * /public/creators/<handle>.jpg (pulled 2026-09-19), shown whole in a square
+ * frame because the source is square.
+ *
+ * ── THE CARD IS 150px WIDE, NOT 210px (2026-09-21, Atul: "very blurred") ──
+ * The files are 100x100 (ten of them) and 150x150 (three). At 210px the worst
+ * of them was being blown up 2.1x on a normal screen and 4.2x on a retina one,
+ * and no amount of styling puts back pixels that are not in the file. Dropping
+ * the card to 150px takes that to 1.5x, and the three 150px files now land
+ * pixel for pixel. The layout is unchanged: photo on top, name and handle
+ * beneath, rounded corners, exactly as before.
+ *
+ * THE REAL FIX IS THE FILES, not the CSS. A crisp retina render wants sources
+ * at twice the rendered width: 300px for this card, 420px to go back to 210px.
+ * Anything at or above that drops straight into /public/creators/ under the
+ * same filenames and the width in globals.css can go back up.
+ *
+ * Not re-fetched from Instagram here: these are the sizes Instagram serves
+ * publicly for a profile photo, and going after larger copies means going
+ * around their platform rather than asking the client for the originals.
  *
  * Server component.
  */
@@ -69,7 +86,14 @@ function CreatorCard({ name, handle }: Creator) {
       rel="noopener noreferrer"
     >
       <div className="sdp-creator-shot">
-        <MediaPlaceholder ratio="4/5" tag="Photo needed" label={`${name}, portrait crop`} />
+        <img
+          className="sdp-creator-photo"
+          src={`/creators/${handle}.jpg`}
+          alt={`${name}, Instagram profile photo`}
+          width={150}
+          height={150}
+          loading="lazy"
+        />
       </div>
       <div className="sdp-creator-meta">
         <span className="sdp-creator-name">{name}</span>

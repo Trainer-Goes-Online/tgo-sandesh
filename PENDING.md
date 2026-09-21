@@ -160,7 +160,7 @@ LIVE.** Everything else is still a labelled reserved frame at final ratio.
 | ~~1~~ | ~~The VSL film + poster~~ **DONE: Vimeo 1225511943, player mounted directly** | 16:9 |
 | ~~4~~ | ~~Client video testimonials~~ **DONE: 15 Vimeo ids wired** | 9:16 |
 | 5 | Trust-strip faces | 1:1 |
-| 13 | Creator / athlete portraits | 4:5 |
+| ~~13~~ | ~~Creator / athlete portraits~~ **DONE 2026-09-19: IG profile photos in public/creators/, shown whole in a 1:1 frame (sources only 100-150px, may look soft). Sai Kiran (fitness_muchatlu) profile pic is a logo, not a face** | 1:1 |
 | 18 | 9 before/after **pairs** | 4:5 |
 | 1 | Sandesh solo portrait | 4:5 |
 | 6 | Story beats | 4:5 |

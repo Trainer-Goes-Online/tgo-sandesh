@@ -856,30 +856,60 @@ br.sdp-br-lg{ display:inline; }
    lift on hover. Photo runs edge to edge; the name is DISPLAY, the handle
    is BODY, so the pair reads as "who / where to check it".
    --------------------------------------------------------------------- */
+/* ── THE STACKED SQUARE CARD, SIZED DOWN (2026-09-21, Atul) ───────────
+   Photo on top edge to edge, name and handle beneath, rounded corners:
+   the shape this always had. What changed is the WIDTH, 210px to 150px,
+   and that is the whole blur fix available without new files.
+
+   The sources are 100px (ten of them) and 150px (three). At 210px the
+   worst of them was being blown up 2.1x on a normal screen; at 150px it
+   is 1.5x, and the three 150px files now land pixel for pixel. Nothing
+   in CSS can do better than that, because the pixels are simply not in
+   the file.
+
+   THE REAL FIX IS THE FILES. At 150px a crisp retina render wants 300px
+   sources; for the old 210px card it wants 420px. Drop anything that
+   size into /public/creators/ under the same names and the width here
+   can go straight back up. See the note in CreatorRails.tsx. */
 .sdp-creator-card{
-  display:flex; flex-direction:column; width:210px; flex:0 0 210px;
+  display:flex; flex-direction:column; width:150px; flex:0 0 150px;
   background:var(--bg); border:1px solid var(--border); border-radius:10px;
   overflow:hidden; box-shadow:var(--shadow-card);
   transition:border-color .22s, transform .22s, box-shadow .22s;
 }
 .sdp-creator-card:hover{ border-color:var(--brand); box-shadow:var(--shadow-card); }
 .sdp-creator-card:focus-visible{ outline:2px solid var(--brand-deep); outline-offset:3px; }
-.sdp-creator-shot{ position:relative; display:block; }
-/* the placeholder is edge-to-edge inside the card, so it drops its own
-   rounding and keeps only the rule that separates it from the meta row */
-.sdp-creator-shot .sdp-ph{
-  border-radius:0; border-width:0 0 1px 0; border-bottom-style:solid; border-bottom-color:var(--border);
+/* The face: the square Instagram profile photo, whole, edge to edge. */
+.sdp-creator-shot{
+  display:block; aspect-ratio:1/1; overflow:hidden; background:var(--bg-dark);
+  border-bottom:1px solid var(--border);
 }
-.sdp-creator-meta{ display:flex; flex-direction:column; gap:4px; padding:12px 14px 14px; }
+/* Scoped for the same reason as .sdp-ba-shot: `.sdp-root img{ height:auto }`
+   is (0,1,1) and an unscoped `.sdp-creator-photo` is (0,1,0), so the height
+   and the object-fit here were both being discarded. It LOOKED correct only
+   because every source happens to be square, which makes width:100% +
+   height:auto produce the right box by accident. The first non-square file
+   would have broken it. */
+.sdp-root .sdp-creator-photo{
+  display:block; width:100%; height:100%; max-width:none; object-fit:cover;
+}
+/* min-width:0 lets the two lines below actually truncate. Without it a long
+   handle would push the card past its fixed rail width, and at 150px there
+   is no slack left for that. */
+.sdp-creator-meta{
+  display:flex; flex-direction:column; gap:3px; padding:10px 11px 12px; min-width:0;
+}
 .sdp-creator-name{
-  font-family:var(--fh); font-size:17px; letter-spacing:.03em; text-transform:uppercase;
+  font-family:var(--fh); font-size:14px; letter-spacing:.03em; text-transform:uppercase;
   color:var(--ink); line-height:1.1;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 .sdp-creator-handle{
-  display:inline-flex; align-items:center; gap:6px; min-width:0;
-  font-family:var(--fb); font-size:11.5px; font-weight:600; color:var(--muted); line-height:1.3;
+  display:inline-flex; align-items:center; gap:5px; min-width:0;
+  font-family:var(--fb); font-size:10.5px; font-weight:600; color:var(--muted); line-height:1.3;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
-.sdp-creator-handle svg{ flex:0 0 13px; width:13px; height:13px; color:var(--brand-deep); }
+.sdp-creator-handle svg{ flex:0 0 12px; width:12px; height:12px; color:var(--brand-deep); }
 .sdp-creator-card:hover .sdp-creator-handle{ color:var(--accent-text-light); }
 
 /* ---------------------------------------------------------------------
@@ -918,23 +948,41 @@ br.sdp-br-lg{ display:inline; }
    --------------------------------------------------------------------- */
 /* No card. Atul's call, and the right one: on the stone band the photographs
    ARE the proof, and a bordered, shadowed, lifting container around each pair
-   competes with them. What is left is the frame's own edge and the pairing. */
+   competes with them. What is left is the frame's own edge and the pairing.
+
+   ── HEIGHT-DRIVEN, NOT WIDTH-DRIVEN (2026-09-21) ───────────────────────
+   This was `width:360px` holding a two-column grid, because the beat was
+   built to take two separate 4:5 crops per client. The artwork that landed
+   is one composed image per client, at two different ratios, with words set
+   into it. So the card is now sized by HEIGHT and lets each file keep its
+   own width: a fixed width would have to crop, and cropping these removes
+   the burned-in BEFORE / AFTER labels and the client quotes, which is the
+   evidence itself.
+
+   `.sdp-ba-pair`, `.sdp-ba-half` and `.sdp-ba-tag` were deleted with the
+   change rather than left sitting here. Nothing rendered them any more, and
+   a dead ruleset for a live class name is how a stale rule silently wins a
+   property fight later. */
 .sdp-ba-card{
-  width:360px; flex:0 0 360px; padding:0;
+  flex:0 0 auto; margin:0; padding:0;
   background:transparent; border:0; border-radius:0; box-shadow:none;
 }
-.sdp-ba-pair{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.sdp-ba-half{ position:relative; margin:0; }
-.sdp-ba-half .sdp-ph{ border-radius:10px; }
-.sdp-ba-tag{
-  position:absolute; top:8px; left:8px; z-index:2;
-  padding:4px 10px 3px; border-radius:999px; font-family:var(--fb);
-  font-size:9.5px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; line-height:1.2;
-}
-.sdp-ba-tag.is-before{ background:rgba(var(--ink-rgb),.74); color:#fff; }
-.sdp-ba-tag.is-after{
-  background:var(--brand); color:var(--cta-ink);
-  box-shadow:0 2px 10px rgba(var(--brand-rgb),.5);
+/* 300 (Atul, 2026-09-21: "double the size"), the first number on this rule
+   that was ever actually applied: see the scoping note below for why 400,
+   300 and 150 all rendered identically before it.
+
+   At 300 the burned-in type comes back. These carry BEFORE / AFTER labels and
+   three of them a client quote, and half that height had them present but
+   past reading. Resolution is still not the constraint: the source is 900px
+   tall, so a 300px render has 3x in hand. */
+/* SCOPED TO .sdp-root ON PURPOSE, and this is the load-bearing part.
+   `.sdp-root img{ height:auto }` at the top of this file is specificity
+   (0,1,1); a bare `.sdp-ba-shot` is (0,1,0) and LOSES to it. So the height
+   set here was silently discarded and every card rendered at the file's own
+   size, which is why three rounds of shrinking this number changed nothing
+   on screen. `max-width:none` for the same reason. */
+.sdp-root .sdp-ba-shot{
+  display:block; height:300px; width:auto; max-width:none; border-radius:10px;
 }
 
 /* ---------------------------------------------------------------------
@@ -1001,12 +1049,10 @@ br.sdp-br-lg{ display:inline; }
    Pass-2 responsive
    --------------------------------------------------------------------- */
 @media (max-width:640px){
-  .sdp-creator-card{ width:158px; flex:0 0 158px; }
-  .sdp-creator-name{ font-size:15px; }
+  .sdp-creator-card{ width:132px; flex:0 0 132px; }  .sdp-creator-name{ font-size:13px; }
   .sdp-creator-handle{ font-size:10.5px; }
   .sdp-creator-meta{ padding:10px 11px 12px; }
-  .sdp-ba-card{ width:274px; flex:0 0 274px; }
-  .sdp-ba-pair{ gap:6px; }
+  .sdp-root .sdp-ba-shot{ height:264px; }
   .sdp-vt-card{ width:196px; flex:0 0 196px; }
   .sdp-vt-play{ width:48px; height:48px; }
   .sdp-rail-group{ gap:12px; padding-right:12px; }
@@ -1061,6 +1107,14 @@ br.sdp-br-lg{ display:inline; }
   background:linear-gradient(90deg,transparent,var(--brand),transparent);
 }
 .sdp-founder-frame .sdp-ph{ border-radius:var(--r-lg); }
+/* Scoped to .sdp-root for the same reason as the rail shots: the base
+   `.sdp-root img` rule is (0,1,1) and would out-specify a bare class here.
+   width:100% + height:auto keeps the file's own 1025x1822, which is the
+   point: this slot was specced 4:5 and the photograph is nearer 9:16. */
+.sdp-root .sdp-founder-photo{
+  display:block; width:100%; height:auto;
+  border-radius:var(--r-lg);
+}
 .sdp-founder-sticky{ position:sticky; top:28px; }
 
 /* nameplate */
@@ -1129,6 +1183,16 @@ br.sdp-br-lg{ display:inline; }
   background:linear-gradient(90deg,transparent,var(--brand),transparent); opacity:.85;
 }
 .sdp-story-frame .sdp-ph{ border-radius:10px; }
+/* Scoped to .sdp-root: the base `.sdp-root img` rule is (0,1,1) and would
+   out-specify a bare class here, which is what silently ate the before/after
+   sizing. width:100% + height:auto keeps each file's own ratio: these arrive
+   between 0.56 and 0.75 against a slot specced 4:5, and one of them is an
+   Instagram post with its caption in the picture. A uniform crop would cut
+   that caption off, and the caption is the proof. */
+.sdp-root .sdp-story-photo{
+  display:block; width:100%; height:auto;
+  border-radius:10px;
+}
 /* alternate: on the flipped beat the photo moves to the right column */
 .sdp-story-beat.is-flip .sdp-story-frame{ order:2; }
 /* the prose: tight leading between the writer's own short lines, so the
@@ -1438,6 +1502,7 @@ br.sdp-br-lg{ display:inline; }
 .sdp-dark .sdp-creator-card:hover,.sdp-dark-alt .sdp-creator-card:hover{
   border-color:var(--brand);
 }
+.sdp-dark .sdp-creator-shot,.sdp-dark-alt .sdp-creator-shot{ border-bottom-color:var(--border-dark); }
 .sdp-dark .sdp-creator-name,.sdp-dark-alt .sdp-creator-name{ color:var(--ink-dark); }
 .sdp-dark .sdp-creator-handle,.sdp-dark-alt .sdp-creator-handle{ color:var(--brand-bright); }
 .sdp-dark 

@@ -1,4 +1,4 @@
-import { CheckGlyph, MediaPlaceholder, Section, SectionHeading, revealDelay } from "./sdp";
+import { CheckGlyph, Section, SectionHeading, revealDelay } from "./sdp";
 
 /**
  * BEAT 5a: FOUNDER AUTHORITY. The page's first DARK band.
@@ -65,10 +65,22 @@ export function Founder() {
       <div className="sdp-founder-grid">
         <div className="sdp-founder-sticky" data-sdp-reveal style={revealDelay(".06s")}>
           <div className="sdp-founder-frame">
-            <MediaPlaceholder
-              ratio="4/5"
-              tag="Photo needed"
-              label="SANDESH’S SOLO PICTURE, vertical portrait crop, stage or gym lighting"
+            {/* Supplied 2026-09-21 (IMG_6257), converted to WebP at 950px wide:
+                802KB became 106KB, and 950 is 2x the widest this column gets.
+
+                SHOWN AT ITS OWN RATIO, NOT THE 4:5 THIS SLOT ASKED FOR. The
+                file is 1025x1822, nearer 9:16, and the subject is seated and
+                framed head to feet. Forcing 4:5 would have to cut roughly a
+                third off, and every candidate crop takes either the face or
+                the legs. The frame is happy to be taller; the photograph is
+                not happy to be shorter. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="sdp-founder-photo"
+              src="/sandesh-portrait.webp"
+              alt="Sandesh Soans"
+              width={950}
+              height={1689}
             />
           </div>
         </div>

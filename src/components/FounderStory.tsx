@@ -1,4 +1,4 @@
-import { MediaPlaceholder, Section, SectionHeading, revealDelay } from "./sdp";
+import { Section, SectionHeading, revealDelay } from "./sdp";
 
 /**
  * BEAT 5b: "MY STORY IN MY OWN WORDS".
@@ -110,8 +110,25 @@ export function FounderStory() {
             data-sdp-reveal
             style={revealDelay(".04s")}
           >
+            {/* Supplied 2026-09-21 as 1-6 in /public, numbered to the beat
+                order above, and converted on import: 15.3MB of mixed JPG, PNG
+                and HEIC became 0.57MB of WebP at 900px wide (2x the widest
+                this column gets). TWO OF THE SIX WERE .HEIC, which no browser
+                renders; shipping them as supplied would have been six slots
+                with two silent blanks.
+
+                `beat.brief` stays as the alt text. It is the photo brief from
+                the source md, so it describes the picture the beat asked for,
+                which is what alt text is for. */}
             <figure className="sdp-story-frame">
-              <MediaPlaceholder ratio="4/5" tag="Photo needed" label={beat.brief} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="sdp-story-photo"
+                src={`/story-${i + 1}.webp`}
+                alt={beat.brief}
+                loading="lazy"
+                decoding="async"
+              />
             </figure>
             <div className="sdp-story-copy">
               {beat.lines.map((line) => (
