@@ -10,6 +10,7 @@ import { LEGAL, PRICE, inr } from "@/app/_legal/legal";
    value import from it would drag a module that mentions the secret into the
    client graph. */
 import type { BookingState } from "@/app/book/order-status";
+import { WHAT_THE_CALL_COVERS } from "@/lib/call-copy";
 import { trackPurchase } from "@/lib/track";
 
 /**
@@ -83,13 +84,14 @@ function isCalendly(url: string): boolean {
    pull the whole checkout form module into this page's bundle. EDIT BOTH.
 
    These three lines were written during the build, not supplied by Sandesh.
-   They still need his sign-off: they are the page's only description of what
-   the call actually contains. */
-const WHAT_THE_CALL_COVERS = [
-  "A personalised assessment of your current physique, training and nutrition to identify exactly what’s holding back your progress",
-  "A clear 90–120 day transformation roadmap to reduce body fat, build visible muscle and push your natural physique towards its peak",
-  "A walkthrough of the Extreme or Nothing Protocol and an honest assessment of whether it’s the right fit for your body, goals and commitment level",
-];
+   They still need his sign-off: they are this page's only description of what
+   the call actually contains.
+
+   MOVED TO @/lib/call-copy ON 2026-09-22. They were a second literal here,
+   kept in step with the checkout's copy by hand; the thank-you page would
+   have made a third. That module imports nothing, so reading it does not drag
+   the checkout's Razorpay config into this bundle, which was the reason for
+   the duplicate in the first place. */
 
 /* Verbatim from funnel-copy/01-landing-vsl.md, the source of truth. Nothing
    below is inferred, rounded or restated. */
@@ -273,10 +275,232 @@ function CalendarPlaceholder() {
   );
 }
 
+/** What stands where the calendar was, once a slot is taken. Deliberately
+ *  short and free of new promises: it states what the buyer just did, points
+ *  at the confirmation Cal itself sends, and gives a human to contact. The
+ *  detail of what the call covers is already on this page, below. */
+function BookedPanel() {
+  return (
+    <div className="book-cal-standin">
+      <div className="book-cal-placeholder">
+        <div className="book-cal-placeholder-tag">Slot confirmed</div>
+        <p className="book-cal-placeholder-lead">Your call is booked.</p>
+        <p>
+          The confirmation is on its way to the email address you gave the calendar, with the
+          joining link and the option to reschedule.
+        </p>
+        <p className="book-cal-placeholder-help">
+          Nothing arrived, or need to move it? Email{" "}
+          <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a> or call{" "}
+          <a href={`tel:${LEGAL.phoneHref}`}>{LEGAL.phone}</a>.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------
+   Cal.com, the real scheduler (supplied 2026-09-22)
+   --------------------------------------------------------------------- */
+
+/** From the client's own embed snippet. One event, so these are constants
+ *  rather than env: there is nothing here that varies by environment. */
+const CAL_LINK = "transformmebro/1-1-physique-transformation";
+const CAL_ORIGIN = "https://app.cal.com";
+/** cal.com namespaces per EVENT, so the namespace IS the slug. */
+const CAL_NS = CAL_LINK.split("/")[1];
+/** The public booking page, for the "did not load" escape hatch only. */
+const CAL_URL = `https://cal.com/${CAL_LINK}`;
+
+type CalQueue = ((...args: unknown[]) => void) & {
+  loaded?: boolean;
+  ns?: Record<string, (...args: unknown[]) => void>;
+  q?: unknown[][];
+  config?: { forwardQueryParams?: boolean };
+};
+
+/** Cal's own loader, verbatim from the snippet apart from taking the script
+ *  url as an argument. It defines window.Cal as a QUEUE immediately and
+ *  appends the real script itself, so calls made before the script lands are
+ *  replayed when it arrives. */
+function loadCal(scriptSrc: string) {
+  const C = window as unknown as { Cal?: CalQueue; document: Document };
+  const A = scriptSrc;
+  const L = "init";
+  const p = (a: { q?: unknown[][] }, ar: unknown[]) => {
+    (a.q = a.q || []).push(ar);
+  };
+  const d = C.document;
+  C.Cal =
+    C.Cal ||
+    function (this: unknown, ...ar: unknown[]) {
+      const cal = C.Cal as CalQueue;
+      if (!cal.loaded) {
+        cal.ns = {};
+        cal.q = cal.q || [];
+        (d.head.appendChild(d.createElement("script")) as HTMLScriptElement).src = A;
+        cal.loaded = true;
+      }
+      if (ar[0] === L) {
+        const api = function (...a: unknown[]) {
+          p(api as unknown as { q?: unknown[][] }, a);
+        } as unknown as ((...a: unknown[]) => void) & { q?: unknown[][] };
+        const namespace = ar[1];
+        api.q = api.q || [];
+        if (typeof namespace === "string") {
+          cal.ns![namespace] = cal.ns![namespace] || (api as (...a: unknown[]) => void);
+          p(cal.ns![namespace] as unknown as { q?: unknown[][] }, ar);
+          p(cal as unknown as { q?: unknown[][] }, ["initNamespace", namespace]);
+        } else {
+          p(cal as unknown as { q?: unknown[][] }, ar);
+        }
+        return;
+      }
+      p(cal as unknown as { q?: unknown[][] }, ar);
+    };
+  return C.Cal as CalQueue;
+}
+
+function CalEmbed({ prefill }: { prefill: Prefill }) {
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  /* ── THE EMBED BOOTS ONCE, AND ONLY ONCE ────────────────────────────
+     Cal's `inline` command MOUNTS an instance into the host element.
+     Calling it twice does not refresh the first, it puts a SECOND instance
+     in the same container, and the two then fight over what shows: one
+     advances to the questions after a slot is tapped, the other re-renders
+     the month view underneath. What the buyer sees is the form appear and
+     snap straight back to slot selection, every time.
+
+     reactStrictMode runs every effect, cleans it up and runs it again in
+     development precisely to surface this. The ref survives that remount,
+     so the second pass skips the boot. Learned on tgo-deepti, where it was
+     a live bug. */
+  const booted = useRef(false);
+
+  useEffect(() => {
+    /* The embed reports nothing on success or failure, so the only honest
+       readiness signal is whether an iframe actually appeared. Polled, then
+       given up on, rather than assumed. Same twelve-second ceiling as the
+       paths this replaced. */
+    const started = Date.now();
+    const poll = window.setInterval(() => {
+      if (document.querySelector("#eon-cal iframe")) {
+        setLoaded(true);
+        window.clearInterval(poll);
+      } else if (Date.now() - started > 12000) {
+        setFailed(true);
+        window.clearInterval(poll);
+      }
+    }, 300);
+
+    if (booted.current) return () => window.clearInterval(poll);
+    booted.current = true;
+
+    try {
+      const Cal = loadCal(`${CAL_ORIGIN}/embed/embed.js`);
+      Cal("init", CAL_NS, { origin: CAL_ORIGIN });
+
+      /* From the supplied snippet: forwards the parent page's query string
+         into the embed, which carries ?o= and ?p= across the seam. */
+      Cal.config = Cal.config || {};
+      Cal.config.forwardQueryParams = true;
+
+      const ns = Cal.ns![CAL_NS];
+
+      ns("inline", {
+        elementOrSelector: "#eon-cal",
+        config: {
+          layout: "month_view",
+          /* From the snippet: on a narrow screen Cal leads with the time
+             list instead of the month grid, which is the right first thing
+             to show when the grid would be unreadable. */
+          useSlotsViewOnSmallScreen: "true",
+          /* INERT TODAY. bookingHref() carries only the two ids, so neither
+             key is ever present. Wired anyway, because the moment the
+             checkout forwards a name and an email the calendar prefills with
+             no further change here, and a buyer typing details in twice is
+             the commonest reason a paid slot never gets booked. */
+          ...(prefill.name ? { name: prefill.name } : {}),
+          ...(prefill.email ? { email: prefill.email } : {}),
+        },
+        calLink: CAL_LINK,
+      });
+
+      ns("ui", { hideEventTypeDetails: false, layout: "month_view" });
+
+      /* ── THE REDIRECT (added here, not in the snippet) ───────────────
+         Cal fires this when a booking completes inside the embed, and it is
+         the only reliable in-page signal that the buyer actually picked a
+         slot. Without it they sit on a confirmed calendar with nowhere to
+         go, and the page cannot tell a booked buyer from an unbooked one.
+
+         It goes to /thank-you, the sixth surface, added 2026-09-22. For the
+         few hours in between it returned to THIS page with `booked=1`,
+         because the build had no thank-you route at all; that fallback is
+         still wired below and is explained there.
+
+         Keeping the existing query string preserves `o` and `p`, so the
+         payment ids travel with the buyer and `booked=1` rides along with
+         them. /thank-you does not re-check the payment: by this point
+         Razorpay has confirmed it once on /book and Cal has confirmed the
+         booking, and a confirmation page that can fail its own check is a
+         worse outcome than one that simply confirms.
+
+         Belt and braces: a redirect can also be set on the event type in
+         Cal's own dashboard. If one is ever set it WINS over this, so leave
+         that field empty or point it at the same url. */
+      ns("on", {
+        action: "bookingSuccessful",
+        callback: () => {
+          const q = new URLSearchParams(window.location.search);
+          q.set("booked", "1");
+          window.location.href = `/thank-you?${q.toString()}`;
+        },
+      });
+    } catch {
+      setFailed(true);
+      window.clearInterval(poll);
+    }
+
+    return () => window.clearInterval(poll);
+    /* Deliberately empty: the embed mounts once and reads nothing that
+       changes. Re-running this is what mounts the second embed. */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    /* `is-cal` opts out of the fixed --book-cal-h box the two iframe paths
+       need. Cal measures its own content and sets the iframe height itself,
+       so a fixed container is wrong in BOTH directions: the month view is
+       shorter than 780px and leaves dead space, and the questions step is
+       taller and gets clipped by the frame's overflow:hidden with nothing to
+       scroll.
+
+       `is-live` drops the min-height once the embed is really there. Until
+       then the box has to hold its height or the loading overlay, which is
+       inset:0, has nothing to sit in. */
+    <div className="book-cal-frame">
+      <div className={`book-cal-embed is-cal${loaded ? " is-live" : ""}`}>
+        <div id="eon-cal" />
+      </div>
+      <CalendarOverlay loaded={loaded} failed={failed && !loaded} href={CAL_URL} />
+    </div>
+  );
+}
+
+/* CALENDAR_URL stays the escape hatch, not the default. The scheduler is
+   Cal.com now and is wired above; the env var is only consulted if someone
+   points this build at a different tool, and the placeholder is unreachable
+   while CAL_LINK is set. */
 function Calendar({ prefill }: { prefill: Prefill }) {
-  if (!CALENDAR_URL) return <CalendarPlaceholder />;
-  if (isCalendly(CALENDAR_URL)) return <CalendlyEmbed url={CALENDAR_URL} prefill={prefill} />;
-  return <GenericEmbed url={CALENDAR_URL} />;
+  if (CALENDAR_URL) {
+    if (isCalendly(CALENDAR_URL)) return <CalendlyEmbed url={CALENDAR_URL} prefill={prefill} />;
+    return <GenericEmbed url={CALENDAR_URL} />;
+  }
+  if (CAL_LINK) return <CalEmbed prefill={prefill} />;
+  return <CalendarPlaceholder />;
 }
 
 /* ---------------------------------------------------------------------
@@ -416,18 +640,41 @@ function NotPaid() {
   );
 }
 
-function CalendarSection({ state, prefill }: { state: BookingState; prefill: Prefill }) {
+function CalendarSection({
+  state,
+  prefill,
+  booked,
+}: {
+  state: BookingState;
+  prefill: Prefill;
+  booked: boolean;
+}) {
   return (
     <section className="book-section book-light-alt" id="calendar">
       <div className="book-wrap">
         <div className="book-head">
-          <div className="book-eyebrow">CHOOSE YOUR TIME</div>
+          <div className="book-eyebrow">{booked ? "YOU ARE BOOKED" : "CHOOSE YOUR TIME"}</div>
           <h2 className="book-h2">
-            Pick A Slot That <em>Works For You.</em>
+            {booked ? (
+              <>
+                Your Slot Is <em>Confirmed.</em>
+              </>
+            ) : (
+              <>
+                Pick A Slot That <em>Works For You.</em>
+              </>
+            )}
           </h2>
         </div>
 
-        <Calendar prefill={prefill} />
+        {/* A GUARD NOW, NOT THE HAPPY PATH. Cal's booking redirect goes to
+            /thank-you, so almost nobody sees this. It stays for the buyer who
+            gets back HERE after booking, by the back button, their own
+            history, or a redirect configured on the Cal event type that
+            overrides ours. Handing that person the picker again is how a paid
+            call gets booked twice, and they cannot tell from a calendar
+            whether the first one worked. */}
+        {booked ? <BookedPanel /> : <Calendar prefill={prefill} />}
 
         {state.status === "paid" && (
           <div className="book-cal-reassure">
@@ -584,9 +831,12 @@ function StickyBar() {
 export default function BookingPage({
   state,
   prefill,
+  booked = false,
 }: {
   state: BookingState;
   prefill: Prefill;
+  /** `?booked=1`, set by the redirect Cal fires on a completed booking. */
+  booked?: boolean;
 }) {
   /* GA4's browser-side purchase. Ref-guarded on top of the durable key inside
      trackPurchase(), so StrictMode's double effect never reaches storage
@@ -611,7 +861,7 @@ export default function BookingPage({
     <>
       <AnnounceStrip confirmed={state.status === "paid"} />
       <Hero state={state} />
-      {blocked ? <NotPaid /> : <CalendarSection state={state} prefill={prefill} />}
+      {blocked ? <NotPaid /> : <CalendarSection state={state} prefill={prefill} booked={booked} />}
       {!blocked && <IncludedSection />}
       <CoachSection />
       <FinalCTA blocked={blocked} />

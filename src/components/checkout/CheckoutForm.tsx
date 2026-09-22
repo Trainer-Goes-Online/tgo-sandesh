@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { COUNTRIES } from "@/lib/countries";
+import { WHAT_THE_CALL_COVERS } from "@/lib/call-copy";
 import { LEGAL, PRICE, inr } from "@/app/_legal/legal";
 import { collectSignals } from "@/lib/client-signals";
 import { bookingHref } from "@/lib/funnel";
@@ -66,13 +67,13 @@ const POLL_INTERVAL_MS = 2500;
 const POLL_BUDGET_WHILE_OPEN_MS = 5 * 60 * 1000;
 const POLL_BUDGET_AFTER_DISMISS_MS = 90 * 1000;
 
-/* Atul's checkout copy, verbatim. The ✔️ becomes a drawn tick, per the skin's
-   ban on emoji in chrome; the wording is untouched. */
-const VALUE_BULLETS = [
-  "A personalised assessment of your current physique, training and nutrition to identify exactly what’s holding back your progress",
-  "A clear 90–120 day transformation roadmap to reduce body fat, build visible muscle and push your natural physique towards its peak",
-  "A walkthrough of the Extreme or Nothing Protocol and an honest assessment of whether it’s the right fit for your body, goals and commitment level",
-];
+/* The ✔️ becomes a drawn tick, per the skin's ban on emoji in chrome; the
+   wording is untouched.
+
+   MOVED TO @/lib/call-copy ON 2026-09-22. The booking page carried a hand-kept
+   duplicate of this list and the thank-you page would have made a third, so
+   the three surfaces now read one constant. */
+const VALUE_BULLETS = WHAT_THE_CALL_COVERS;
 
 const SAVING = PRICE.anchor - PRICE.amount;
 

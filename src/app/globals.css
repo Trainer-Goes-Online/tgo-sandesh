@@ -2214,6 +2214,28 @@ br.sdp-br-lg{ display:inline; }
 }
 .eon-book .book-cal-embed{ height:var(--book-cal-h); }
 .eon-book .book-cal-embed iframe{ width:100%; height:100%; border:0; display:block; }
+
+/* ---- the Cal.com path sizes ITSELF (2026-09-22) --------------------
+   The fixed --book-cal-h box above is right for the two plain-iframe
+   paths, which cannot report their own height. Cal can: it measures its
+   content and writes the height onto its own iframe.
+
+   Forcing 780px on it is wrong in both directions at once. The month view
+   is shorter, which is the dead space under the calendar; the questions
+   step is TALLER, and .book-cal-frame has overflow:hidden, so the
+   questions were being cut off with nothing to scroll. A buyer who picked
+   a slot could not see the form they were meant to fill in.
+
+   min-height holds the box up only while the embed is still arriving, so
+   the loading overlay (inset:0) has something to sit in. `is-live` drops
+   it the moment the iframe is really there, and from then on the height
+   is entirely Cal's. */
+.eon-book .book-cal-embed.is-cal{ height:auto; min-height:var(--book-cal-h); }
+.eon-book .book-cal-embed.is-cal.is-live{ min-height:0; }
+/* Cal sets an inline pixel height on its own iframe, which beats any rule
+   here; this only stops the 100% above fighting it before that lands. */
+.eon-book .book-cal-embed.is-cal iframe{ height:auto; }
+.eon-book #eon-cal{ width:100%; }
 .eon-book .book-cal-overlay{
   position:absolute; inset:0; display:flex; flex-direction:column;
   align-items:center; justify-content:center; gap:14px;
@@ -2289,9 +2311,16 @@ br.sdp-br-lg{ display:inline; }
   background:var(--grad-guarantee); border:1px solid var(--border-dark-strong);
   border-radius:14px; padding:36px 34px; text-align:center;
 }
+/* 14px above, which is THE page's heading-to-subline gap: .book-hero h1 and
+   .book-final-h both carry `margin-block:0 14px` and the line under them
+   carries none. This block could not inherit that, because it uses the shared
+   .book-h2, which is deliberately zero-margin so .book-head can own the
+   spacing in every other section. So nothing supplied the gap at all and the
+   role line sat welded to the name. Set here rather than on .book-h2, which
+   would move every other heading on the page. */
 .eon-book .book-coach-role{
   font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
-  color:var(--brand-bright); margin-block:0 24px;
+  color:var(--brand-bright); margin-block:14px 24px;
 }
 .eon-book .book-coach-creds{
   display:flex; flex-direction:column; gap:12px; text-align:left;
@@ -2475,4 +2504,122 @@ br.sdp-br-lg{ display:inline; }
   padding:4px 8px;
   -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+
+/* =====================================================================
+   /thank-you  ·  .eon-ty
+   ---------------------------------------------------------------------
+   Scoped ON TOP of .eon-book, not beside it: the page carries both
+   classes, so the band tones, wrap widths, section padding, headings and
+   dark-band colour flips are all inherited rather than restated. Only
+   what the confirmation adds lives here.
+   ===================================================================== */
+.eon-ty .ty-hero,
+.eon-ty .ty-close{ text-align:center; }
+
+/* The seal. Built like the guarantee card's icon tile rather than a tick
+   on its own: a confirmation is the one moment this funnel is allowed to
+   feel like an award. */
+/* `display:grid`, NOT inline-grid, and that is the whole fix for the pill.
+   The seal and the badge under it were both inline-level, so they sat side
+   by side on one line: a tick with "Booking confirmed" next to it rather
+   than above it. A block-level seal centred with `margin:auto` pushes the
+   badge onto its own line, where it belongs. */
+.eon-ty .ty-seal{
+  display:grid; place-items:center;
+  width:62px; height:62px; border-radius:50%;
+  background:rgba(var(--brand-rgb),.16);
+  border:1px solid rgba(var(--brand-rgb),.45);
+  color:var(--brand-bright);
+  margin:0 auto 16px;
+}
+.eon-ty .ty-seal svg{ width:30px; height:30px; }
+
+.eon-ty .ty-badge{
+  display:inline-flex; align-items:center;
+  padding:7px 15px; border-radius:999px;
+  border:1px solid rgba(var(--brand-rgb),.45);
+  background:rgba(var(--brand-rgb),.14);
+  font-family:var(--fb); font-size:10.5px; font-weight:700;
+  letter-spacing:.14em; text-transform:uppercase; line-height:1;
+  color:var(--brand-bright);
+}
+.eon-ty .ty-h1{
+  font-family:var(--fh);
+  font-size:clamp(28px,4.4vw,46px); line-height:1.12; letter-spacing:-.015em;
+  color:var(--ink-dark); margin:16px 0 0; text-wrap:balance;
+}
+.eon-ty .ty-h1 em{ font-style:normal; color:var(--brand-bright); }
+.eon-ty .ty-sub{
+  max-width:56ch; margin:14px auto 0;
+  font-size:15px; line-height:1.72; color:var(--ink-dark-soft);
+}
+.eon-ty .ty-sub a{ color:var(--brand-bright); }
+
+/* Two facts, not a list of features: what arrives, and when. */
+.eon-ty .ty-chips{
+  display:flex; flex-wrap:wrap; justify-content:center; gap:10px 14px;
+  margin:26px 0 0; padding:0; list-style:none;
+}
+.eon-ty .ty-chips li{
+  display:inline-flex; align-items:center; gap:9px;
+  padding:9px 16px; border-radius:999px;
+  border:1px solid var(--border-dark-strong);
+  font-family:var(--fb); font-size:12.5px; color:var(--ink-dark-soft);
+}
+.eon-ty .ty-tick{
+  display:grid; place-items:center;
+  width:16px; height:16px; flex:0 0 16px; border-radius:50%;
+  background:var(--brand); color:#fff;
+}
+.eon-ty .ty-tick svg{ width:9px; height:9px; }
+
+/* The three things the call covers, as display ordinals. Same treatment
+   as the programme beat's pillar numbers on the landing page. */
+.eon-ty .ty-ord-grid{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:26px;
+  margin:0; padding:0; list-style:none;
+}
+/* Boxed, the same card as .ty-ready below, so the two lists on this page
+   read as one system. bg-alt rather than bg because this section sits on
+   the LIGHT band (var(--bg)), and a card the colour of its own ground is
+   not a card. .ty-ready can use bg for the opposite reason: it sits on
+   light-alt. */
+.eon-ty .ty-ord-grid li{
+  margin:0; padding:22px 20px;
+  background:var(--bg-alt); border:1px solid var(--border); border-radius:var(--r-lg);
+}
+.eon-ty .ty-ord{
+  display:block; font-family:var(--fh);
+  font-size:34px; line-height:1; color:var(--brand);
+  padding-bottom:10px; margin-bottom:12px;
+  border-bottom:2px solid rgba(var(--brand-rgb),.3);
+  width:fit-content;
+}
+.eon-ty .ty-ord-grid p{ margin:0; font-size:14px; line-height:1.68; }
+
+/* What to have ready. Bordered cards, not ruled rows: each one is a
+   separate thing to go and find. */
+.eon-ty .ty-ready{
+  display:grid; grid-template-columns:repeat(2,1fr); gap:16px;
+  margin:0; padding:0; list-style:none;
+}
+.eon-ty .ty-ready li{
+  margin:0; padding:18px 20px;
+  background:var(--bg); border:1px solid var(--border); border-radius:var(--r-lg);
+}
+.eon-ty .ty-ready h3{
+  margin:0 0 6px; font-family:var(--fh);
+  font-size:16px; line-height:1.2; color:var(--ink);
+}
+.eon-ty .ty-ready p{ margin:0; font-size:13.5px; line-height:1.65; }
+
+.eon-ty .ty-note{
+  max-width:60ch; margin:22px auto 0; text-align:center;
+  font-size:13.5px; line-height:1.7; color:var(--ink-soft);
+}
+
+@media (max-width:860px){
+  .eon-ty .ty-ord-grid{ grid-template-columns:1fr; gap:20px; }
+  .eon-ty .ty-ready{ grid-template-columns:1fr; }
 }

@@ -59,9 +59,15 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
     email: first(sp.email),
   };
 
+  /* Set by the redirect Cal fires on a completed booking, which returns to
+     THIS page rather than a thank-you route because this build has no
+     thank-you route. Read on the server so the confirmed state survives a
+     refresh and so the payment is re-checked on the way back in. */
+  const booked = first(sp.booked) === "1";
+
   return (
     <div className="eon-book">
-      <BookingPage state={state} prefill={prefill} />
+      <BookingPage state={state} prefill={prefill} booked={booked} />
       <SiteFooter />
     </div>
   );
