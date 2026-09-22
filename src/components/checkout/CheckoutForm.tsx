@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { COUNTRIES } from "@/lib/countries";
+import { ArrowGlyph } from "@/components/sdp";
 import { WHAT_THE_CALL_COVERS } from "@/lib/call-copy";
 import { LEGAL, PRICE, inr } from "@/app/_legal/legal";
 import { collectSignals } from "@/lib/client-signals";
@@ -482,7 +483,13 @@ export default function CheckoutForm() {
             </p>
           </div>
 
-          <form noValidate onSubmit={startPayment}>
+          {/* id is load-bearing: the mobile docked bar lives OUTSIDE this form
+              (it has to, to be position:fixed against the viewport without the
+              form's stacking context) and submits it by `form="checkout-form"`.
+              That routes it through the same startPayment, the same validation
+              and the same busy guard, so there is one payment path and not two
+              to keep in step. */}
+          <form id="checkout-form" noValidate onSubmit={startPayment}>
             <div className="checkout-fields">
               <div className="checkout-fields-row">
                 <div className="checkout-field">
@@ -544,7 +551,7 @@ export default function CheckoutForm() {
                 aria-busy={busy || undefined}
               >
                 Pay {inr(PRICE.amount)} &amp; Book My Call
-                <span className="cta-arrow" aria-hidden>→</span>
+                <span className="cta-arrow" aria-hidden><ArrowGlyph size={13} /></span>
               </button>
 
               {/* One line under the CTA, and only ever one of the three. The
@@ -576,6 +583,45 @@ export default function CheckoutForm() {
         </div>
 
         <OrderSummary />
+      </div>
+
+      {/* ── THE MOBILE DOCKED BAR (2026-09-22) ──────────────────────────
+          Required by SHAPE's VSL blueprint. It was missing here because the
+          rule was filed on 2026-09-19, from the tgo-deepti build; this
+          funnel is the one the ORIGINAL five-surface entry was reverse-
+          engineered from on 2026-09-04, so it predates its own spec.
+
+          IT SUBMITS, IT DOES NOT LINK. The landing page's sticky bar sends
+          someone to /checkout, which is where this reader already is. This
+          one is a real submit button for the form above, via
+          `form="checkout-form"`.
+
+          ON AT 960px, which is where .checkout-main collapses to one column
+          AND .checkout-summary (the sticky one) is hidden outright. Above
+          that the summary is still on screen holding the price and the
+          context, so a docked bar would be the second thing doing one job.
+
+          THE PRICE IS A FIGURE BESIDE THE BUTTON, NOT ON IT (Atul,
+          2026-09-22: the price comes off the CTA everywhere). The total
+          still has to be visible here, because once the mobile summary
+          accordion is scrolled past this is the only place it shows. */}
+      <div className="checkout-stuck">
+        <div className="checkout-stuck-inner">
+          <span className="checkout-stuck-fig">
+            <span className="checkout-stuck-cap">Total due today</span>
+            <strong>{inr(PRICE.amount)}</strong>
+          </span>
+          <button
+            type="submit"
+            form="checkout-form"
+            className="checkout-stuck-go"
+            disabled={busy}
+            aria-busy={busy || undefined}
+          >
+            <span>{busy ? "Opening payment" : "Book My Call"}</span>
+            <span className="cta-arrow" aria-hidden><ArrowGlyph size={13} /></span>
+          </button>
+        </div>
       </div>
     </>
   );

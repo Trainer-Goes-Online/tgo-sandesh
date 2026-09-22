@@ -16,14 +16,14 @@ import { ArrowGlyph, CHECKOUT_URL } from "./sdp";
  * COPY FLAG: THE LABEL IS TRIMMED, AND THE TRIM IS A CHOICE TO APPROVE.
  * The page's CTA sentence is "CLICK HERE TO GET YOUR PERSONALISED DIAGNOSIS &
  * TRANSFORMATION ROADMAP →". At bar height that wraps to three lines on a
- * phone, so this uses a shortened form built only from the source's own words,
- * with the ₹97 from the hero's stat band welded on:
+ * phone, so this uses a shortened form built only from the source's own words:
  *
- *      GET YOUR DIAGNOSIS & ROADMAP · ₹97
+ *      GET YOUR DIAGNOSIS & ROADMAP
  *
- * Nothing new is claimed and nothing is added; "Click here to", "Personalised"
- * and "Transformation" are dropped for width. Change LABEL / PRICE below if
- * Atul wants a different trim.
+ * Nothing new is claimed; "Click here to", "Personalised" and
+ * "Transformation" are dropped for width. Change LABEL below for a
+ * different trim. The price came off 2026-09-22 (Atul: remove it from the
+ * CTA everywhere); it still shows in the hero stat band and at checkout.
  * ─────────────────────────────────────────────────────────────────────────
  *
  * Fail-safe: there is nothing to fail. It is a link and a heading, rendered on
@@ -36,7 +36,6 @@ import { ArrowGlyph, CHECKOUT_URL } from "./sdp";
  */
 
 const LABEL = "Get Your Diagnosis & Roadmap";
-const PRICE = "₹97";
 const NOTE = "100% MONEY-BACK GUARANTEE";
 const TITLE = "Extreme or Nothing Protocol";
 
@@ -67,9 +66,7 @@ export function StickyCta() {
         </div>
 
         <a className="sdp-stuck-btn" href={CHECKOUT_URL}>
-          <span>
-            {LABEL} · {PRICE}
-          </span>
+          <span>{LABEL}</span>
           <span className="arrow" aria-hidden>
             <ArrowGlyph />
           </span>

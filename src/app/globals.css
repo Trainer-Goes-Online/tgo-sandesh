@@ -1884,10 +1884,26 @@ br.sdp-br-lg{ display:inline; }
 }
 .eon-checkout .checkout-cta:hover:not(:disabled){ transform:translateY(-2px); filter:brightness(1.08); }
 .eon-checkout .checkout-cta:disabled{ opacity:.45; cursor:not-allowed; transform:none; }
+/* `flex:0 0 24px` is not decoration. This disc is a FLEX ITEM inside the CTA,
+   and without a basis it keeps the default flex-shrink:1. On the full-width
+   pay button there is always room, so it never shrank and the omission never
+   showed. In the docked bar the button shares a narrow row with the price
+   figure, the disc compressed into an ellipse, and the arrow inside it went
+   off-centre with it.
+
+   VERTICALLY, the fix is the GLYPH, not the CSS. This held a text arrow, and
+   place-items centres a character's LINE BOX rather than its ink: where the
+   arrow sits inside that box is the font's decision, so it rode high in the
+   disc and no amount of line-height or padding reliably fixed it. It is an
+   SVG now (ArrowGlyph, the same one the landing bar uses), which centres
+   exactly because the viewBox has no baseline. `display:block` on it kills
+   the inline descender gap that would otherwise reintroduce the offset. */
 .eon-checkout .cta-arrow{
-  display:grid; place-items:center; width:24px; height:24px; border-radius:50%;
-  background:var(--brand); color:var(--cta-ink); font-size:13px;
+  display:grid; place-items:center;
+  flex:0 0 24px; width:24px; height:24px; border-radius:50%;
+  background:var(--brand); color:var(--cta-ink); line-height:1;
 }
+.eon-checkout .cta-arrow svg{ display:block; }
 .eon-checkout .checkout-wiring{
   font-size:10.5px; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
   color:var(--brand-deep); text-align:center; margin:12px 0 0;
@@ -2622,4 +2638,57 @@ br.sdp-br-lg{ display:inline; }
 @media (max-width:860px){
   .eon-ty .ty-ord-grid{ grid-template-columns:1fr; gap:20px; }
   .eon-ty .ty-ready{ grid-template-columns:1fr; }
+}
+
+/* ---- the mobile docked pay bar (2026-09-22) ------------------------
+   Required by SHAPE's VSL blueprint. It was absent because the rule was
+   filed on 2026-09-19 from tgo-deepti, and this build predates it.
+
+   ON AT 960px, which is not a guess: that is where .checkout-main drops
+   to one column AND .checkout-summary is display:none'd outright. Above
+   it the sticky summary still holds the price and the context on screen,
+   so a docked bar there would be the second thing doing one job.
+
+   The button SUBMITS the form above by `form="checkout-form"`, so there
+   is one payment path. It carries no price: the figure sits beside it,
+   because once the mobile summary accordion is scrolled past this bar is
+   the only place the total still shows. */
+.eon-checkout .checkout-stuck{ display:none; }
+
+@media (max-width:960px){
+  .eon-checkout .checkout-stuck{
+    display:block;
+    position:fixed; z-index:40; left:0; right:0; bottom:0;
+    background:var(--bg);
+    border-top:1px solid var(--border);
+    box-shadow:0 -6px 22px rgba(var(--ink-rgb),.12);
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+  .eon-checkout .checkout-stuck-inner{
+    display:flex; align-items:center; gap:14px;
+    max-width:560px; margin:0 auto;
+  }
+  .eon-checkout .checkout-stuck-fig{ display:flex; flex-direction:column; line-height:1.1; }
+  .eon-checkout .checkout-stuck-cap{
+    font-family:var(--fb); font-size:10px; font-weight:700; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--muted);
+  }
+  .eon-checkout .checkout-stuck-fig strong{
+    font-family:var(--fh); font-weight:var(--fh-weight);
+    font-size:20px; color:var(--brand-deep); margin-top:3px;
+  }
+  .eon-checkout .checkout-stuck-go{
+    flex:1 1 auto;
+    display:inline-flex; align-items:center; justify-content:center; gap:9px;
+    padding:14px 18px; border:0; border-radius:999px; cursor:pointer;
+    background:var(--grad-cta); color:var(--cta-ink-btn);
+    font-family:var(--fh); font-weight:700; font-size:14px;
+    letter-spacing:.06em; text-transform:uppercase; line-height:1.1;
+  }
+  .eon-checkout .checkout-stuck-go:disabled{ opacity:.45; cursor:not-allowed; }
+
+  /* The spacer. Without it the bar sits permanently over the end of the
+     page, and the end of a checkout is the footer carrying the registered
+     name, address, phone and email Razorpay's merchant review looks for. */
+  .eon-checkout{ padding-bottom:calc(76px + env(safe-area-inset-bottom, 0px)); }
 }
