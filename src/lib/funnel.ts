@@ -19,10 +19,8 @@
  *
  * BUILT (pass 2): src/app/book/page.tsx, a Server Component that confirms the
  * order with Razorpay before it renders anything, and src/components/book/
- * BookingPage.tsx, which holds the calendar embed and fires GA4's browser-side
- * purchase. The calendar destination itself is
- * NEXT_PUBLIC_BOOKING_CALENDAR_URL; until that is set the page shows a labelled
- * stand-in where the slot picker goes.
+ * BookingPage.tsx, which holds the Cal.com embed and fires GA4's browser-side
+ * purchase.
  *
  * The checkout's own notice promises the buyer this: pay, wait up to ten
  * seconds without closing the tab, get taken to the calendar automatically.

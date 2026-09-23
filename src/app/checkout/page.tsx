@@ -20,9 +20,7 @@ export const metadata: Metadata = {
  *
  * The redirect target /book is built (pass 2). It confirms the order with
  * Razorpay before it shows anything, so a typed or stale link cannot walk
- * someone into the calendar. ⚠️ It still needs NEXT_PUBLIC_BOOKING_CALENDAR_URL:
- * without the scheduling link it renders a labelled stand-in rather than a slot
- * picker, so do not point ads here until that value is set.
+ * someone into the calendar.
  */
 export default function CheckoutPage() {
   return (

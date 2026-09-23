@@ -42,38 +42,6 @@ import { trackPurchase } from "@/lib/track";
  */
 
 /* ---------------------------------------------------------------------
-   The calendar destination.
-
-   ⚠️ NOT SUPPLIED. Sandesh's scheduling link does not exist anywhere in this
-   repo or in the source copy, and it is not something that can be guessed:
-   the wrong link books a stranger's calendar. So it is an env var, and when it
-   is unset this page renders a labelled stand-in exactly where the slot picker
-   will go, rather than an empty box or a dead iframe.
-
-   Works with whatever the team already uses. A calendly.com link gets
-   Calendly's own inline widget, which sizes itself and supports prefill;
-   anything else (Cal.com, Zoho Bookings, GoHighLevel, a Google Appointment
-   schedule) is embedded as a plain iframe. Both get the same shell, the same
-   loading state and the same "open in a new tab" fallback.
-   --------------------------------------------------------------------- */
-const CALENDAR_URL = (process.env.NEXT_PUBLIC_BOOKING_CALENDAR_URL || "").trim();
-
-const CALENDLY_WIDGET_SRC = "https://assets.calendly.com/assets/external/widget.js";
-const CALENDLY_WIDGET_CSS = "https://assets.calendly.com/assets/external/widget.css";
-/* Calendly's own chrome removed, and the widget tinted to this skin: copper
-   accent, charcoal text, ivory ground. */
-const CALENDLY_QUERY =
-  "hide_landing_page_details=1&hide_gdpr_banner=1&primary_color=FF5E14&text_color=151515&background_color=F4F0E8";
-
-function isCalendly(url: string): boolean {
-  try {
-    return /(^|\.)calendly\.com$/i.test(new URL(url).hostname);
-  } catch {
-    return false;
-  }
-}
-
-/* ---------------------------------------------------------------------
    Copy sources, all named so nothing here is mistaken for invented.
    --------------------------------------------------------------------- */
 
@@ -135,95 +103,6 @@ function Arrow() {
 
 type Prefill = { name: string; email: string };
 
-/** Calendly's inline widget: its own script, its own sizing, its own prefill. */
-function CalendlyEmbed({ url, prefill }: { url: string; prefill: Prefill }) {
-  const hostRef = useRef<HTMLDivElement>(null);
-  const [loaded, setLoaded] = useState(false);
-  const [failed, setFailed] = useState(false);
-  const [target, setTarget] = useState(url);
-
-  useEffect(() => {
-    const host = hostRef.current;
-    if (!host) return;
-
-    const parts = [CALENDLY_QUERY];
-    if (prefill.name) parts.push(`name=${encodeURIComponent(prefill.name)}`);
-    if (prefill.email) parts.push(`email=${encodeURIComponent(prefill.email)}`);
-    /* The supplied link may already carry its own query string. */
-    const full = `${url}${url.includes("?") ? "&" : "?"}${parts.join("&")}`;
-
-    setTarget(full);
-    host.setAttribute("data-url", full);
-
-    if (!document.querySelector(`link[href="${CALENDLY_WIDGET_CSS}"]`)) {
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = CALENDLY_WIDGET_CSS;
-      document.head.appendChild(link);
-    }
-    if (!document.querySelector(`script[src="${CALENDLY_WIDGET_SRC}"]`)) {
-      const script = document.createElement("script");
-      script.src = CALENDLY_WIDGET_SRC;
-      script.async = true;
-      document.body.appendChild(script);
-    }
-
-    /* The widget replaces the host's contents with an iframe when it
-       initialises. There is no load callback to hook, so watch for the iframe
-       and give up after twelve seconds into the fallback link, rather than
-       leaving a paid buyer looking at a spinner forever. */
-    let tries = 0;
-    const poll = window.setInterval(() => {
-      if (host.querySelector("iframe")) {
-        setLoaded(true);
-        window.clearInterval(poll);
-      } else if (++tries > 60) {
-        setFailed(true);
-        window.clearInterval(poll);
-      }
-    }, 200);
-
-    return () => window.clearInterval(poll);
-  }, [url, prefill.name, prefill.email]);
-
-  return (
-    <div className="book-cal-frame">
-      <div className="book-cal-embed">
-        <div
-          ref={hostRef}
-          className="calendly-inline-widget"
-          style={{ minWidth: 300, width: "100%", height: "100%" }}
-        />
-      </div>
-      <CalendarOverlay loaded={loaded} failed={failed} href={target} />
-    </div>
-  );
-}
-
-/** Everything that is not Calendly: a plain iframe, which every scheduling
- *  tool worth using supports. */
-function GenericEmbed({ url }: { url: string }) {
-  const [loaded, setLoaded] = useState(false);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    /* Same twelve-second ceiling as the Calendly path. An iframe that is
-       blocked by the vendor's frame-ancestors policy fires neither load nor
-       error in some browsers, so a timer is the only reliable escape. */
-    const t = window.setTimeout(() => setFailed(true), 12000);
-    return () => window.clearTimeout(t);
-  }, []);
-
-  return (
-    <div className="book-cal-frame">
-      <div className="book-cal-embed">
-        <iframe src={url} title="Booking calendar" onLoad={() => setLoaded(true)} />
-      </div>
-      <CalendarOverlay loaded={loaded} failed={failed && !loaded} href={url} />
-    </div>
-  );
-}
-
 /** The spinner, and the escape hatch it turns into. Sits over the frame and
  *  disappears the moment the calendar is really there. */
 function CalendarOverlay({ loaded, failed, href }: { loaded: boolean; failed: boolean; href: string }) {
@@ -243,34 +122,6 @@ function CalendarOverlay({ loaded, failed, href }: { loaded: boolean; failed: bo
           <p>Loading available slots…</p>
         </>
       )}
-    </div>
-  );
-}
-
-/** ⚠️ Stands in for the slot picker until the scheduling link is supplied.
- *  Deliberately loud, at the exact height the real calendar will occupy, so
- *  nothing on the page moves when it lands. It also gives a buyer who reaches
- *  it something to do, because this frame can be live-facing. */
-function CalendarPlaceholder() {
-  return (
-    <div className="book-cal-standin">
-      <div className="book-cal-placeholder">
-        <div className="book-cal-placeholder-tag">Calendar not connected</div>
-        <p className="book-cal-placeholder-lead">
-          The slot picker goes here.
-        </p>
-        <p>
-          Set <code>NEXT_PUBLIC_BOOKING_CALENDAR_URL</code> in <code>.env.local</code> to Sandesh’s
-          scheduling link. A Calendly link is embedded with Calendly’s own widget; any other
-          scheduler is embedded as an iframe.
-        </p>
-        <p className="book-cal-placeholder-help">
-          If you are seeing this after paying, nothing is lost. Email{" "}
-          <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a> or call{" "}
-          <a href={`tel:${LEGAL.phoneHref}`}>{LEGAL.phone}</a> with your name and we will book your
-          call.
-        </p>
-      </div>
     </div>
   );
 }
@@ -490,17 +341,8 @@ function CalEmbed({ prefill }: { prefill: Prefill }) {
   );
 }
 
-/* CALENDAR_URL stays the escape hatch, not the default. The scheduler is
-   Cal.com now and is wired above; the env var is only consulted if someone
-   points this build at a different tool, and the placeholder is unreachable
-   while CAL_LINK is set. */
 function Calendar({ prefill }: { prefill: Prefill }) {
-  if (CALENDAR_URL) {
-    if (isCalendly(CALENDAR_URL)) return <CalendlyEmbed url={CALENDAR_URL} prefill={prefill} />;
-    return <GenericEmbed url={CALENDAR_URL} />;
-  }
-  if (CAL_LINK) return <CalEmbed prefill={prefill} />;
-  return <CalendarPlaceholder />;
+  return <CalEmbed prefill={prefill} />;
 }
 
 /* ---------------------------------------------------------------------

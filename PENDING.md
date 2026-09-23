@@ -26,11 +26,11 @@ Built and wired:
 
 Still to do:
 
-- **`NEXT_PUBLIC_BOOKING_CALENDAR_URL` is not set and the scheduling link has
-  not been supplied.** Until it is, `/book` renders a clearly labelled
-  stand-in at the calendar's exact height instead of a slot picker, so a paid
-  buyer still cannot book a time. This is the last thing between the funnel
-  and a live ad.
+- ~~Scheduling link~~ DONE. `/book` embeds Cal.com directly
+  (`transformmebro/1-1-physique-transformation`, hardcoded in
+  `src/components/book/BookingPage.tsx`). The `NEXT_PUBLIC_BOOKING_CALENDAR_URL`
+  escape hatch and its stand-in were removed on 23 Sep: unreachable once the
+  link was hardcoded.
 - Fill `.env.local` from `.env.example`, register the Razorpay webhook, and
   remove `META_CAPI_TEST_EVENT_CODE` before launch.
 - The fulfilment hand-off IS built: `src/lib/pabbly.ts`, fired from the
