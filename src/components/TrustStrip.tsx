@@ -1,4 +1,4 @@
-import { MediaPlaceholder, ShieldGlyph, StarGlyph } from "./sdp";
+import { ShieldGlyph, StarGlyph } from "./sdp";
 
 /**
  * BEAT 0b: trust row (page chrome, directly under the announcement bar).
@@ -6,34 +6,35 @@ import { MediaPlaceholder, ShieldGlyph, StarGlyph } from "./sdp";
  * Copy, verbatim from the source md's second line:
  *   "[Photos] ★★★★★ 5.0 Review | 100% Money-Back Guarantee"
  *
- * The md marks the reviewer portraits as "[Photos]" and none have been
- * supplied, so each face is a 1:1 placeholder holding its exact final size:
- * when the crops land, the strip does not move. The stars are drawn glyphs,
- * not the copy's ★ characters, so they inherit the rating colour and stay
- * crisp at any weight.
+ * The faces are the first five creators from CreatorRails, in that component's
+ * order, served from the same /public/creators files. The stars are drawn
+ * glyphs, not the copy's ★ characters, so they inherit the rating colour and
+ * stay crisp at any weight.
  *
  * Server component. No client JS: this paints above the fold.
  */
-const AVATAR_COUNT = 5;
+/* Same handles and same order as CreatorRails, so the strip and the rail below
+   never show a different set of people. */
+const AVATAR_HANDLES = [
+  "prathap.kannadigaa",
+  "biharibeast_27",
+  "bhaskar_b_g_",
+  "prakash.patel.__",
+  "__sravan.__",
+] as const;
 
-function AvatarPlaceholder({ index }: { index: number }) {
+function Avatar({ handle, index }: { handle: string; index: number }) {
   return (
-    <MediaPlaceholder
-      ratio="1/1"
-      round
-      compact
-      tag="Photo needed"
-      label={`Client face ${index + 1} of ${AVATAR_COUNT}, square 1:1 crop, ideally the same men who appear in the video testimonials`}
-      style={{
-        width: 32,
-        height: 32,
-        flex: "0 0 32px",
-        marginLeft: index === 0 ? 0 : -6,
-        borderStyle: "solid",
-        borderColor: "var(--bg)",
-        borderWidth: "1.5px",
-        boxShadow: "0 0 0 1px rgba(var(--ink-rgb),.08)",
-      }}
+    <img
+      className="sdp-trust-avatar"
+      src={`/creators/${handle}.jpg`}
+      alt=""
+      aria-hidden
+      width={32}
+      height={32}
+      loading="eager"
+      decoding="async"
+      style={{ marginLeft: index === 0 ? 0 : -6, zIndex: AVATAR_HANDLES.length - index }}
     />
   );
 }
@@ -42,8 +43,8 @@ export function TrustStrip() {
   return (
     <div className="sdp-trust-strip">
       <div className="sdp-trust-avatars">
-        {Array.from({ length: AVATAR_COUNT }, (_, i) => (
-          <AvatarPlaceholder key={i} index={i} />
+        {AVATAR_HANDLES.map((handle, i) => (
+          <Avatar key={handle} handle={handle} index={i} />
         ))}
       </div>
 

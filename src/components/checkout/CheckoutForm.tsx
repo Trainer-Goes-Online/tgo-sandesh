@@ -393,7 +393,10 @@ export default function CheckoutForm() {
            the GA4 client id and the first-touch campaign. All of it is written
            into the Razorpay order's notes, because the webhook that fires
            Purchase sees only what Razorpay stored. */
-        body: JSON.stringify({ ...person, ...collectSignals() }),
+        /* `dialCode` travels beside the E.164 number rather than inside it:
+           +1 and +91 both begin with a 1, so it cannot be recovered from the
+           number downstream. */
+        body: JSON.stringify({ ...person, dialCode: dial, ...collectSignals() }),
       });
       const order = await res.json();
 
@@ -429,7 +432,7 @@ export default function CheckoutForm() {
            in its own iframe, so it cannot read a CSS variable: this is the one
            place a hex has to be repeated, and it has to be changed with the
            token if the brand colour ever moves. */
-        theme: { color: "#A75E3B" },
+        theme: { color: "#FF5E14" },
         modal: {
           ondismiss: () => {
             if (leaving.current) return;

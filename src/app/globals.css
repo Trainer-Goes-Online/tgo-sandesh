@@ -3,7 +3,7 @@
 
    SKIN: "SDP VSL Component System" (design-system.skin.sdp-vsl.md), re-themed.
    PART 1 below is the ONLY thing that differs from the locked skin: the token
-   block is swapped to IVORY x CHARCOAL x BURNT COPPER (#A75E3B on #F4F0E8), with
+   block is swapped to IVORY x CHARCOAL x ORANGE (#FF5E14 on #F4F0E8), with
    Oswald as the DISPLAY voice and Inter as the BODY voice.
    PART 2 is the skin's component design, reproduced token-only. Anatomy,
    spacing, radii, motion curves, hover/open states and the light / light-alt /
@@ -24,10 +24,10 @@
    a property of the SITE, so it belongs at the document root, and any number of
    component roots can then read it. */
 :root {
-  /* ---- ACCENT: copper. Spent sparingly, as a luxury accent, never as the
-     page's workhorse. It marks emphasis, rules and small print, not surfaces. */
-  --brand:#A75E3B; --brand-rgb:167,94,59;
-  --brand-bright:#C68A68; --brand-deep:#8A4B2E;
+  /* ---- ACCENT: orange. Spent sparingly, never as the page's workhorse.
+     It marks emphasis, rules and small print, not surfaces. */
+  --brand:#FF5E14; --brand-rgb:255,94,20;
+  --brand-bright:#FFAA00; --brand-deep:#FF5E14;
   --brand-soft:rgba(var(--brand-rgb),.10); --brand-ring:rgba(var(--brand-rgb),.25);
 
   /* ---- LIGHT NEUTRALS: warm ivory and stone, never white ---- */
@@ -42,7 +42,7 @@
   --border-dark:#2C2B29; --border-dark-strong:#3D3B38;
 
   /* ---- FUNCTIONAL (not brand: kept from the skin) ---- */
-  --success:#10B981; --danger:#DC2626; --danger-rgb:220,38,38; --star:#C68A68; --gold:#A75E3B;
+  --success:#10B981; --danger:#DC2626; --danger-rgb:220,38,38; --star:#FFAA00; --gold:#FF5E14;
 
   /* ---- TYPE (faces swap; the ROLES in Part 2 never change) ----
      Oswald carries real weights, unlike Anton, so --fh-weight exists and the
@@ -63,14 +63,17 @@
   --cta-ink-btn:#F4F0E8;    /* on the BLACK button: ivory, not a clinical white */
   --accent-text-light:var(--brand-deep);
   --accent-text-dark:var(--brand-bright);
+  /* Title accents are never a flat colour. Orange holds the first two thirds,
+     yellow only arrives at the tail. */
+  --grad-title: linear-gradient(90deg,var(--brand) 0%,var(--brand) 62%,var(--brand-bright) 100%);
 
   /* ---- DERIVED DESIGN TOKENS ----
      One deliberate departure from the skin's formulas: --grad-cta is CHARCOAL,
      not the accent. A copper button on ivory is the orange fitness page we are
      avoiding; charcoal with copper around it reads as the premium version of
      the same instruction. The CTA glow follows it to ink. */
-  --grad-brand:     linear-gradient(135deg,var(--brand-deep),var(--brand));
-  --grad-announce:  linear-gradient(90deg,#7E4327,var(--brand-deep) 50%,#7E4327);
+  --grad-brand:     linear-gradient(135deg,var(--brand),var(--brand-bright));
+  --grad-announce:  linear-gradient(90deg,var(--brand-bright) 0%,var(--brand) 12%,var(--brand) 88%,var(--brand-bright) 100%);
   --grad-cta:       linear-gradient(180deg,#242322 0%,var(--ink) 55%,#0B0B0B 100%);
   --grad-urgency:   linear-gradient(135deg,var(--danger) 0%,#EF4444 100%);
   --grad-guarantee: linear-gradient(135deg,var(--bg-dark-alt),var(--bg-dark-elev));
@@ -199,6 +202,25 @@ h2.sdp-h2{
 }
 .sdp-light h2.sdp-h2 em,.sdp-light-alt h2.sdp-h2 em{ font-style:normal; color:var(--accent-text-light); }
 .sdp-dark h2.sdp-h2 em,.sdp-dark-alt h2.sdp-h2 em{ font-style:normal; color:var(--accent-text-dark); }
+
+/* Title accents are a gradient, never a flat colour: orange for the first two
+   thirds, yellow only at the tail. Placed AFTER the .sdp-light/.sdp-dark rules
+   above, which set `color` at the same specificity and would otherwise win on
+   source order and paint the glyphs flat again.
+   The @supports guard matters: without it a browser that cannot clip the
+   background to the text renders transparent glyphs on a transparent fill,
+   which is invisible rather than merely unstyled. */
+@supports (background-clip:text) or (-webkit-background-clip:text){
+  .sdp-root .sdp-accent,
+  .sdp-root h1.sdp-h1 em,
+  .sdp-light h2.sdp-h2 em,.sdp-light-alt h2.sdp-h2 em,
+  .sdp-dark h2.sdp-h2 em,.sdp-dark-alt h2.sdp-h2 em{
+    background-image:var(--grad-title);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+}
 .sdp-root .sdp-sub{
   width:100%; text-align:center; max-width:680px; margin-left:auto; margin-right:auto;
   margin-bottom:44px; font-size:15px; line-height:1.65; color:var(--ink-soft);
@@ -302,16 +324,16 @@ br.sdp-br-lg{ display:inline; }
   border-bottom:1px solid rgba(var(--ink-rgb),.07);
 }
 .sdp-trust-avatars{ display:inline-flex; align-items:center; }
-.sdp-trust-avatar{
+/* Scoped to .sdp-root: the base `.sdp-root img` rule is (0,1,1) and would
+   out-specify a bare class here, putting height back to auto and collapsing
+   the circles into ovals. */
+.sdp-root .sdp-trust-avatar{
   display:inline-block; width:32px; height:32px; flex:0 0 32px; aspect-ratio:1/1;
   border-radius:50%; border:1.5px solid var(--bg); background-color:var(--border);
-  background-size:cover; background-position:center 18%; background-repeat:no-repeat;
+  object-fit:cover; object-position:center 18%;
   box-shadow:0 0 0 1px rgba(var(--ink-rgb),.08); margin-left:-6px;
 }
-.sdp-trust-avatar:first-child{ margin-left:0; }
-.sdp-trust-avatar.is-empty{
-  background-image:repeating-linear-gradient(135deg,var(--border) 0 3px,var(--bg-alt) 3px 6px);
-}
+.sdp-root .sdp-trust-avatar:first-child{ margin-left:0; }
 .sdp-trust-item{
   display:inline-flex; align-items:center; gap:6px;
   font-family:var(--fb); font-size:13px; font-weight:600; color:var(--ink); line-height:1.2;
@@ -324,7 +346,7 @@ br.sdp-br-lg{ display:inline; }
 @media (max-width:520px){
   .sdp-trust-strip{ gap:12px; padding:9px 12px; }
   .sdp-trust-item{ font-size:11.5px; }
-  .sdp-trust-avatar{ width:26px; height:26px; flex:0 0 26px; }
+  .sdp-root .sdp-trust-avatar{ width:26px; height:26px; flex:0 0 26px; }
 }
 
 /* ---------------------------------------------------------------------

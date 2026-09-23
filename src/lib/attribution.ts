@@ -1,62 +1,27 @@
 "use client";
 
+/* The shared shape and the storage key live in the SERVER-SAFE sibling, and
+   this file imports from it rather than the other way round. A `'use client'`
+   module cannot be called from middleware or an API route: the import
+   succeeds, the call throws. Keep the arrow pointing this way. */
+import { CAP, EMPTY, KEY, cut, type Attribution } from "@/lib/attribution-edge";
+
+export type { Attribution };
+
 /**
- * First-touch attribution, captured once and remembered.
+ * First-touch attribution, THE BROWSER HALF and the BACKUP: `middleware.ts`
+ * writes the same values into a cookie at the edge, before any JavaScript
+ * runs, because an in-app browser can navigate away before hydration and is
+ * also the first thing to restrict localStorage.
  *
- * The problem this solves: reading UTMs off the CURRENT url returns nothing on
- * /checkout, because the buyer navigated there from the landing page by
- * clicking a link. So every UTM, the fbclid and the referrer (the entire
- * answer to "which ad produced this sale") evaporates one click after arrival,
- * and the order is written with blank campaign fields. Every paid sale then
- * reports as organic.
- *
- * So the campaign context is stamped into localStorage on FIRST landing, on
- * whichever page that happens to be, and read back at checkout.
+ * Both halves exist because the checkout url has no query string: the buyer
+ * navigated there by clicking a link, so the answer to "which ad produced this
+ * sale" evaporates one click after arrival unless it is stamped on arrival.
  *
  * Overwrite rule: a visit carrying a utm_source or an fbclid is a new ad click
- * and replaces what is stored. Last paid click wins, which is what the ad
- * account is judged on. A visit with neither (a direct return, a bookmark, an
- * organic search) leaves the stored campaign alone rather than blanking it.
+ * and replaces what is stored. A visit with neither leaves the stored campaign
+ * alone rather than blanking it, which is what makes paid sales look organic.
  */
-
-const KEY = "eon_attr";
-
-export type Attribution = {
-  utmSource: string;
-  utmMedium: string;
-  utmCampaign: string;
-  utmContent: string;
-  utmTerm: string;
-  fbclid: string;
-  referrer: string;
-  landingUrl: string;
-};
-
-const EMPTY: Attribution = {
-  utmSource: "",
-  utmMedium: "",
-  utmCampaign: "",
-  utmContent: "",
-  utmTerm: "",
-  fbclid: "",
-  referrer: "",
-  landingUrl: "",
-};
-
-/* Capped at the point of CAPTURE, not at the point of sending. These values
-   ride to the webhook inside the Razorpay order notes, which Razorpay caps at
-   256 characters per entry, and a landing url with five utm params and an
-   fbclid on it routinely runs past 400. Trimming here keeps the cap a known
-   quantity instead of a silent truncation later. */
-const CAP = {
-  utm: 100,
-  fbclid: 200,
-  referrer: 200,
-  landingUrl: 300,
-} as const;
-
-const cut = (v: string | null | undefined, max: number) => (v ?? "").slice(0, max);
-
 export function captureAttribution(): void {
   if (typeof window === "undefined") return;
   try {

@@ -3,24 +3,19 @@ import crypto from "crypto";
 import { NextResponse } from "next/server";
 
 import { CHECKOUT_CONFIG, capiReady, isTestMode } from "@/lib/checkout-config";
-import { GA4_ITEM_ID, bookingHref } from "@/lib/funnel";
+import { GA4_ITEM_ID, ORDER_KIND, bookingHref } from "@/lib/funnel";
 import { ga4ServerReady, sendGa4Purchase } from "@/lib/ga4-server";
 import { sendCapiEvent } from "@/lib/meta-capi";
-import { unpackContext } from "@/lib/order-notes";
+import { readOrderContext } from "@/lib/order-notes";
 import { pabblyReady, sendPabblyPurchase } from "@/lib/pabbly";
 
 /**
  * Razorpay webhook to Meta CAPI Purchase and GA4 purchase.
  *
- * PURCHASE IS SENT FROM HERE AND NOWHERE ELSE. A browser-side Purchase would
- * miss every UPI payer who completes inside their bank app and never returns
- * to the tab, which in India is most of them. It is also the only place the
- * payment is proven rather than merely attempted: the checkout's Razorpay
- * success handler and the order-status poll both only navigate.
- *
- * The signature check is not optional. Without it anyone who learns this URL
- * can post a fake payment and inflate Meta's conversion data, which then
- * teaches the ad account to buy the wrong people.
+ * PURCHASE IS SENT FROM HERE AND NOWHERE ELSE: a browser-side Purchase misses
+ * every UPI payer who completes inside a bank app, and this is the only place
+ * the payment is proven rather than attempted. This request's own IP and user
+ * agent are deliberately NOT read; they are Razorpay's.
  *
  * Register at: <site>/api/razorpay/webhook, event `payment.captured`, with a
  * secret from Razorpay Settings -> Webhooks (a DIFFERENT value from the API
@@ -57,6 +52,24 @@ export async function POST(req: Request) {
 
   const payment = parsed.payload?.payment?.entity ?? {};
   const notes = payment.notes ?? {};
+
+  /* IS THIS SALE EVEN OURS? A signature proves the call came from Razorpay,
+     never that the payment came from THIS checkout. Razorpay registers
+     webhooks per URL on an ACCOUNT and sends every subscribed event to every
+     registered URL, so this endpoint also receives another funnel's payments,
+     dashboard payment links, invoices and renewals. `notes.kind` is this
+     funnel's mark, written on the order at create time.
+
+     200, not an error: a non-200 makes Razorpay retry the same foreign
+     payment for hours. This is a correct, final "not mine". */
+  const kind = String(notes.kind ?? "");
+  if (kind !== ORDER_KIND) {
+    console.warn(
+      `[rzp-webhook] ignored payment ${String(payment.id ?? "")}: kind="${kind || "none"}", expected "${ORDER_KIND}"`,
+    );
+    return NextResponse.json({ ok: true, ignored: "not-this-funnel" });
+  }
+
   const paymentId = String(payment.id ?? "");
   const orderId = String(payment.order_id ?? "");
   const amountRupees = Number(payment.amount ?? 0) / 100;
@@ -65,11 +78,18 @@ export async function POST(req: Request) {
      The configured price is the fallback for a malformed payload only. */
   const valueRupees = amountRupees || CHECKOUT_CONFIG.amountRupees;
 
-  /* Everything the browser knew, written into the order at create time and
-     unpacked here. This is the ONLY route back to the buyer's own IP, user
-     agent, campaign and landing page: THIS request came from Razorpay, so its
-     own headers describe Razorpay. */
-  const ctx = unpackContext(notes);
+  /* Razorpay's own capture time, in Unix seconds, so no date has to be ferried
+     through the notes. For a UPI buyer it is minutes after the form was
+     submitted, which is what the record used to carry. */
+  const capturedAt = Number(payment.created_at ?? 0);
+  const createdAt =
+    Number.isFinite(capturedAt) && capturedAt > 0
+      ? new Date(capturedAt * 1000).toISOString()
+      : new Date().toISOString();
+
+  /* The only route back to the buyer's own IP, user agent, campaign and
+     landing page: this request came from Razorpay. */
+  const ctx = readOrderContext(notes);
   const country = ctx.country || "in";
 
   /* Razorpay is the authority on email and phone: it holds what the buyer
@@ -81,10 +101,8 @@ export async function POST(req: Request) {
      description, and this offer is sold against a body. */
   const eventSourceUrl = CHECKOUT_CONFIG.fallbackEventSourceUrl;
 
-  /* GA4 purchase, server side. The browser copy on the booking page only
-     counts buyers who reach it, which a UPI payer may not. Both are keyed on
-     the payment id, so GA4 collapses the pair rather than counting the sale
-     twice when someone does arrive. */
+  /* Keyed on the payment id, like the browser copy on the booking page, so GA4
+     collapses the pair rather than counting the sale twice. */
   const ga4 = ga4ServerReady()
     ? await sendGa4Purchase({
         clientId: ctx.gaCid,
@@ -96,25 +114,20 @@ export async function POST(req: Request) {
       })
     : { ok: false, status: 0 };
 
-  /* FULFILMENT HAND-OFF, and it sits ABOVE the CAPI guard below on purpose.
-     That guard returns early when Meta is not configured, so a hand-off placed
-     after it would mean a missing Meta token stops a paying buyer from being
-     recorded and contacted. Fulfilment must never depend on analytics being
-     switched on.
-
-     Its own failure is swallowed. A non-200 returned from this webhook makes
-     Razorpay retry the whole thing, which re-fires Meta and GA4 and
-     double-counts the sale. sendPabblyPurchase therefore retries in process
-     (nothing else ever will) and reports rather than throws. */
+  /* FULFILMENT HAND-OFF, ABOVE the CAPI guard below on purpose: that guard
+     returns early when Meta is not configured, and fulfilment must never
+     depend on analytics being switched on. Its failure is swallowed, because a
+     non-200 from here makes Razorpay retry and double-count the sale. */
   const pabbly = pabblyReady()
     ? await sendPabblyPurchase({
         leadId: String(notes.lead_id ?? ""),
-        createdAt: ctx.createdAt,
+        createdAt,
         firstName: ctx.firstName,
         lastName: ctx.lastName,
         email,
         phone,
         city: ctx.city,
+        dialCode: ctx.dialCode,
         countryCode: country,
         fbc: ctx.fbc,
         fbp: ctx.fbp,
@@ -124,9 +137,8 @@ export async function POST(req: Request) {
         eventSourceUrl: `${eventSourceUrl}/checkout`,
         amountRupees: valueRupees,
         isTest: isTestMode(),
-        /* The same id sent to Meta as the Purchase event_id, so a conversion
-           can be traced from the sheet back to a specific row in Events
-           Manager, or replayed against it. */
+        /* The same id Meta gets as the Purchase event_id, so a conversion can
+           be traced from the sheet or replayed against it. */
         purchaseEventId: paymentId,
         utmSource: ctx.utmSource,
         utmMedium: ctx.utmMedium,
@@ -141,14 +153,12 @@ export async function POST(req: Request) {
         currency: CHECKOUT_CONFIG.currency,
         product: CHECKOUT_CONFIG.itemName,
 
-        /* Always "" here: this checkout asks no qualifying question. Emitted so the
-
-           Pabbly column set matches the other funnels. */
-
+        /* Always "" here: this checkout asks no qualifying question. Emitted
+           so the Pabbly column set matches the other funnels. */
         occupation: "",
-        /* Absolute, because whatever re-sends this (an email, a WhatsApp
-           message) is not on our domain. Built from the same helper the
-           checkout redirects with, so the two can never drift. */
+        /* Absolute, because whatever re-sends it is not on our domain. Built
+           from the helper the checkout redirects with, so the two cannot
+           drift. */
         bookingUrl: `${eventSourceUrl}${bookingHref(paymentId, orderId)}`,
       })
     : { ok: false, status: 0 };
@@ -181,18 +191,15 @@ export async function POST(req: Request) {
       externalId: ctx.externalId || undefined,
       fbc: ctx.fbc || undefined,
       fbp: ctx.fbp || undefined,
-      /* Captured from the BUYER's request at create-order and carried here.
-         Purchase is the one event where a missing device match costs the most:
-         these two are worth roughly a point of EMQ on their own. */
+      /* Captured from the BUYER's request at create-order and carried here. */
       clientIp: ctx.clientIp || undefined,
       clientUserAgent: ctx.clientUserAgent || undefined,
     },
     valueRupees,
     currency: CHECKOUT_CONFIG.currency,
     /* The only descriptive field Meta receives, and it is an opaque Razorpay
-       id. The product name, the UTMs and the path are deliberately NOT sent:
-       custom_data is unhashed and IS read during dataset classification, and
-       those are the values that describe what is being sold. */
+       id. custom_data is unhashed and IS read during dataset classification,
+       so the product name, the UTMs and the path are never sent. */
     orderId: orderId || undefined,
     testEventCode: CHECKOUT_CONFIG.meta.testEventCode || undefined,
   });

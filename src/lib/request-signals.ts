@@ -1,26 +1,7 @@
 /**
- * The two signals only the SERVER can read honestly: the caller's IP and their
- * user agent.
- *
- * Meta counts `client_ip_address` and `client_user_agent` as match keys, and
- * they are the two that cost the most when missing: an event without them
- * loses the browser-fingerprint half of the match and the EMQ score drops
- * accordingly. A browser cannot supply its own IP, and a user agent sent up in
- * a JSON body is trivially forgeable, so both are taken from request headers.
- *
- * WHERE they are read is the whole trick. The Razorpay webhook is a request
- * from Razorpay, not from the buyer, so its headers carry Razorpay's IP and
- * Razorpay's agent. Reading them there would ship a confidently wrong value,
- * which is worse for matching than shipping nothing, because nothing looks
- * broken. So they are captured at create-order time, the last request the
- * buyer's own browser makes before the payment sheet takes over, and carried
- * to the webhook inside the order notes.
- *
- * Header order matters. `x-forwarded-for` is a comma-separated chain in which
- * the ORIGINAL client is first and every proxy appends itself; taking the last
- * entry yields the CDN's own address. Vercel's `x-vercel-forwarded-for` and
- * Cloudflare's `cf-connecting-ip` are single-value and already resolved, so
- * they are preferred where present.
+ * Signals read off the BUYER's own request, at create-order only: the Razorpay
+ * webhook's headers describe Razorpay's server, not the buyer's device, and a
+ * confidently wrong device signature is worse for matching than none.
  */
 
 const IP_HEADERS = [
@@ -48,4 +29,23 @@ export function readClientIp(req: Request): string {
 
 export function readClientUserAgent(req: Request): string {
   return (req.headers.get("user-agent") ?? "").trim();
+}
+
+/** Read one cookie off the request, server side. create-order is same-origin,
+ *  so the buyer's `_fbc`, `_fbp` and attribution cookie are already on it. */
+export function readRequestCookie(req: Request, name: string): string {
+  const header = req.headers.get("cookie") ?? "";
+  if (!header) return "";
+  for (const part of header.split(";")) {
+    const eq = part.indexOf("=");
+    if (eq < 0) continue;
+    if (part.slice(0, eq).trim() !== name) continue;
+    const raw = part.slice(eq + 1).trim();
+    try {
+      return decodeURIComponent(raw);
+    } catch {
+      return raw;
+    }
+  }
+  return "";
 }

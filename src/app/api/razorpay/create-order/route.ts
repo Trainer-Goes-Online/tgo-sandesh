@@ -3,36 +3,35 @@ import crypto from "crypto";
 import { NextResponse } from "next/server";
 
 import {
+  ATTR_COOKIE,
+  packJsonNote,
+  readAttrCookie,
+} from "@/lib/attribution-edge";
+import {
   CHECKOUT_CONFIG,
   isTestMode,
   razorpayAuthHeader,
   razorpayReady,
 } from "@/lib/checkout-config";
 import { ORDER_KIND } from "@/lib/funnel";
-import { packContext } from "@/lib/order-notes";
-import { readClientIp, readClientUserAgent } from "@/lib/request-signals";
+import {
+  readClientIp,
+  readClientUserAgent,
+  readRequestCookie,
+} from "@/lib/request-signals";
 
 /**
  * Creates the Razorpay order the browser then pays.
  *
- * Called with the Razorpay REST API over fetch rather than the `razorpay` npm
- * package: order creation is one authenticated POST, and the package brings a
- * transitive tree for no benefit here.
- *
- * THE NOTES ARE THE POINT. Everything Meta needs to match the eventual
- * Purchase to a person and a campaign is written into the order here, because
- * the webhook that fires Purchase receives only what Razorpay stores. Signals
- * not written now are gone by then: the buyer may complete inside a bank app
- * and never return to a page that could report them.
- *
- * This is ALSO the last request the buyer's own browser makes before the
- * payment sheet takes over, which makes it the only honest place to read their
- * IP and user agent. The webhook is a request from Razorpay, so reading those
- * headers there would record Razorpay's server as the buyer's device.
+ * THE NOTES ARE THE POINT. The webhook that fires Purchase receives only what
+ * Razorpay stored, and this is also the last request the buyer's own browser
+ * makes, so it is the only honest place to read their IP, user agent and
+ * cookies.
  *
  * Razorpay allows 15 note keys at 256 chars each and REJECTS the order if
- * either limit is passed, so the machine-readable half of the record is packed
- * into chunked keys by lib/order-notes.ts rather than spread one field per key.
+ * either limit is passed. The record is written ONE FIELD PER KEY, with three
+ * small packJsonNote bundles, so an oversized value can only cost its own
+ * field.
  */
 
 const truncate = (v: unknown, max = 256) => {
@@ -73,53 +72,95 @@ export async function POST(req: Request) {
 
   const utm = (body.utm ?? {}) as Record<string, string | undefined>;
 
-  /* Identity and timestamp for the record. Generated HERE, not in the webhook:
-     `createdAt` must mean "when this person submitted their details", and a
-     webhook stamp would instead record when Razorpay got round to calling us,
-     which for a UPI payment can be minutes later. */
+  /* Identity for the fulfilment record, minted before payment. No timestamp
+     travels with it: the webhook reads Razorpay's `payment.created_at`. */
   const leadId = crypto.randomUUID();
-  const createdAt = new Date().toISOString();
 
   /* Read from headers, never from the request body: the browser cannot know
      its own IP, and a user agent sent up in JSON is trivially forged. */
   const clientIp = readClientIp(req);
   const clientUserAgent = readClientUserAgent(req);
 
-  /* FIVE READABLE KEYS + TEN CHUNK KEYS = the 15 Razorpay allows, exactly.
-     Nothing further can be added at this level; new fields go into the packed
-     context instead, which has headroom. */
+  /* Same-origin, so the buyer's cookies arrive on this request. Body first,
+     because it may hold an `_fbc` synthesised from an fbclid before Meta's own
+     cookie existed; cookie second, because it survives a blocked pixel. */
+  const fbc = truncate(body.fbc) || truncate(readRequestCookie(req, "_fbc"));
+  const fbp = truncate(body.fbp) || truncate(readRequestCookie(req, "_fbp"));
+
+  /* The attribution the EDGE recorded, before any JavaScript ran. The body's
+     copy comes from localStorage, which in-app browsers restrict, so this is
+     the reliable half and the body is the fallback. */
+  const edge = readAttrCookie(readRequestCookie(req, ATTR_COOKIE));
+
+  /* 256, not 300: that is Razorpay's own per-note ceiling and `lp` is one
+     note. Everything past it is query string, and every part of that which
+     matters already rides in `utm` and `clid`. */
+  const landingUrl =
+    truncate(body.landingUrl, 256) || truncate(edge.landingUrl, 256);
+  const referrer = truncate(body.referrer, 200) || truncate(edge.referrer, 200);
+  const fbclid = truncate(body.fbclid, 200) || truncate(edge.fbclid, 200);
+  const utmOf = (bodyVal: string | undefined, edgeVal: string | undefined) =>
+    truncate(bodyVal, 100) || truncate(edgeVal, 100);
+
+  /* FOURTEEN KEYS against Razorpay's limit of fifteen. One field per key, so
+     an oversized value can only ever cost its own field. */
   const notes: Record<string, string> = {
+    /* One constant, read by the webhook too, so the funnel gate there cannot
+       drift from what is written here. */
     kind: ORDER_KIND,
     lead_id: leadId,
+    /* Readable in the Razorpay dashboard, for whoever opens a payment trying
+       to work out whose refund it is. */
     name: truncate(`${firstName} ${lastName}`.trim()),
     email: truncate(email),
-    phone: truncate(phone),
-    ...packContext({
-      createdAt,
-      firstName,
-      lastName,
-      city,
-      country,
-      externalId: truncate(body.externalId, 64),
-      fbc: truncate(body.fbc),
-      fbp: truncate(body.fbp),
-      gaCid: truncate(body.gaClientId, 64),
-      clientIp,
-      clientUserAgent,
-      utmSource: truncate(utm.source, 100),
-      utmMedium: truncate(utm.medium, 100),
-      utmCampaign: truncate(utm.campaign, 100),
-      utmContent: truncate(utm.content, 100),
-      utmTerm: truncate(utm.term, 100),
-      fbclid: truncate(body.fbclid, 200),
-      referrer: truncate(body.referrer, 200),
-      landingUrl: truncate(body.landingUrl, 300),
+    /* No `phone` key: Razorpay returns `payment.contact`, the number the buyer
+       actually paid with. */
+
+    /* The per-field caps below are the real fix, not packJsonNote: that is a
+       last resort which shortens a bundle's LONGEST value until it fits, so a
+       bundle crowded at theoretical maxima loses several fields at once. */
+    cust: packJsonNote({
+      fn: truncate(firstName, 40),
+      ln: truncate(lastName, 40),
+      ct: truncate(city, 40),
+      co: country,
+      dl: truncate(body.dialCode, 6),
     }),
+    meta: packJsonNote({
+      xid: truncate(body.externalId, 40),
+      ga: truncate(body.gaClientId, 40),
+    }),
+    /* TGO's ad urls carry Meta NAMES in medium, campaign and content
+       ({{campaign.name}}, {{adset.name}}, {{ad.name}}), which run to sixty
+       characters in an agency account, and the ad id in term. 20/55/55/55/25
+       serialises to 246 of the 256 available; the id gets 25 because a
+       truncated id joins to nothing while still looking valid. */
+    utm: packJsonNote({
+      s: truncate(utmOf(utm.source, edge.utmSource), 20),
+      m: truncate(utmOf(utm.medium, edge.utmMedium), 55),
+      c: truncate(utmOf(utm.campaign, edge.utmCampaign), 55),
+      n: truncate(utmOf(utm.content, edge.utmContent), 55),
+      t: truncate(utmOf(utm.term, edge.utmTerm), 25),
+    }),
+    fbc,
+    fbp,
+    ip: clientIp,
+    ua: truncate(clientUserAgent, 256),
+    clid: fbclid,
+    ref: referrer,
+    lp: landingUrl,
   };
 
-  /* A rejected order is an unpaid buyer, so the cap is asserted rather than
-     assumed. packContext cannot exceed ten keys by construction; this catches
-     the case where someone adds a sixth readable key above. */
+  /* A rejected order is an unpaid buyer, so the length limit is repaired
+     rather than merely logged. */
+  for (const [k, v] of Object.entries(notes)) {
+    if (v.length > 256) {
+      console.error(
+        `[create-order] note "${k}" over 256 chars (${v.length}), trimming`,
+      );
+      notes[k] = v.slice(0, 256);
+    }
+  }
   if (Object.keys(notes).length > 15) {
     console.error(
       "[create-order] notes over Razorpay 15-key cap",
@@ -144,18 +185,14 @@ export async function POST(req: Request) {
 
     const order = await res.json();
     if (!res.ok || !order?.id) {
-      /* Flattened onto ONE line on purpose. Logging the raw object makes the
-         host's log viewer pretty-print it across many lines and truncate the
-         tail, which is exactly where Razorpay puts `description` and `field`,
-         the only two values that say what was actually wrong. */
+      /* Flattened onto ONE line on purpose: a pretty-printed object gets its
+         tail truncated by the host's log viewer, and the tail is where
+         Razorpay puts `description` and `field`. */
       const err = order?.error ?? {};
-      /* A 401 is never about the payload, so print the SHAPE of the
-         credentials beside it. The key id is publishable by design (it is
-         handed to the browser below), and a length plus a trimmed-flag says
-         nothing about the secret's value while catching all four causes of a
-         bad pair: mixed test/live modes, a stray space or quote pasted into
-         the host's env UI, a regenerated secret, and the two values entered
-         the wrong way round. */
+      /* A 401 is never about the payload, so the credentials' SHAPE is logged
+         beside it: lengths and trimmed-flags say nothing about the secret
+         while catching a mixed test/live pair, a pasted space, a regenerated
+         secret and the two values entered the wrong way round. */
       if (res.status === 401) {
         console.error(
           `[create-order] auth shape keyIdPrefix=${keyId.slice(0, 9)} ` +

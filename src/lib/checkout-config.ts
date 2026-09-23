@@ -22,18 +22,19 @@ export const CHECKOUT_CONFIG = {
      at the top of lib/meta-capi.ts. */
   itemName: LEGAL.product,
 
-  /* ⚠️ PLACEHOLDER FALLBACK. The launch domain is not in the source, so this
-     is still example.com. It is only reached when NEXT_PUBLIC_SITE_URL is
-     unset or blank, but when it IS reached the value is sent to Meta as
-     event_source_url, so an unset env var would quietly attribute live events
-     to a domain nobody owns. Replace this literal the moment the domain is
-     fixed, and set NEXT_PUBLIC_SITE_URL regardless.
+  /* ⚠️ PLACEHOLDER FALLBACK, only reached when NEXT_PUBLIC_SITE_URL is unset
+     or blank, but when it IS reached this value is sent to Meta as
+     event_source_url and would attribute live events to a domain nobody owns.
 
-     `||`, not `??`. A host that defines the key with a blank value yields an
-     empty string, which `??` passes straight through, and an empty
-     event_source_url is silently worthless to Meta. */
+     `||`, not `??`: a host that defines the key with a blank value yields an
+     empty string, which `??` passes straight through.
+
+     The trailing slash is stripped rather than trusted absent. The webhook
+     builds `${siteUrl}/checkout` and `${siteUrl}/book`, so one slash in the
+     env would put `//checkout` on every sale's fulfilment record. */
   fallbackEventSourceUrl:
-    (process.env.NEXT_PUBLIC_SITE_URL || "").trim() || "https://example.com",
+    (process.env.NEXT_PUBLIC_SITE_URL || "").trim().replace(/\/+$/, "") ||
+    "https://transformmebro.com",
 
   meta: {
     pixelId: process.env.META_PIXEL_ID ?? "",

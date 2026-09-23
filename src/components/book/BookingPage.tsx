@@ -63,7 +63,7 @@ const CALENDLY_WIDGET_CSS = "https://assets.calendly.com/assets/external/widget.
 /* Calendly's own chrome removed, and the widget tinted to this skin: copper
    accent, charcoal text, ivory ground. */
 const CALENDLY_QUERY =
-  "hide_landing_page_details=1&hide_gdpr_banner=1&primary_color=A75E3B&text_color=151515&background_color=F4F0E8";
+  "hide_landing_page_details=1&hide_gdpr_banner=1&primary_color=FF5E14&text_color=151515&background_color=F4F0E8";
 
 function isCalendly(url: string): boolean {
   try {

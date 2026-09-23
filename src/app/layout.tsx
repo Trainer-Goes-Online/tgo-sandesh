@@ -36,11 +36,9 @@ const inter = Inter({
    a host that defines the variable with a blank value (Vercel does exactly this
    when a key is added without one) gives new URL('') and ERR_INVALID_URL.
 
-   ⚠️ PLACEHOLDER. The launch domain is not in the source, so FALLBACK_ORIGIN is
-   still example.com. Replace it with the real origin and keep it identical to
-   `fallbackEventSourceUrl` in src/lib/checkout-config.ts, which is the value
-   Meta receives as event_source_url. */
-const FALLBACK_ORIGIN = "https://example.com";
+   Keep identical to `fallbackEventSourceUrl` in src/lib/checkout-config.ts,
+   which is the value Meta receives as event_source_url. */
+const FALLBACK_ORIGIN = "https://transformmebro.com";
 
 function resolveSiteUrl(): string {
   const raw = (process.env.NEXT_PUBLIC_SITE_URL || "").trim();
