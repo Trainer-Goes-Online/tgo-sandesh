@@ -58,7 +58,7 @@ export const metadata: Metadata = {
   title:
     "Sandesh Soans | Drop 8-10% Body Fat & Build Visible Abs In 90-120 Days",
   description:
-    "The Extreme or Nothing Protocol: a 90-120 day natural physique transformation for men 28-40. 1000+ success stories across 7 countries, 4x natural bodybuilding pro coach, 100% money-back guarantee.",
+    "The Extreme or Nothing Protocol: a 90-120 day natural physique transformation for men 28-40. 1000+ success stories across 7 countries, 4x natural bodybuilding pro coach, 100% money-back guarantee on the programme.",
   // Pre-launch: keep out of search until assets and the VSL land.
   robots: { index: false, follow: false },
 };

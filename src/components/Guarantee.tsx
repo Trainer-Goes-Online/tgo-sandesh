@@ -59,7 +59,7 @@ export function Guarantee() {
           <ShieldGlyph size={42} />
         </div>
 
-        <div className="sdp-eyebrow center">100% MONEY-BACK GUARANTEE</div>
+        <div className="sdp-eyebrow center">100% MONEY-BACK GUARANTEE ON THE PROGRAMME</div>
 
         <h2 className="sdp-guarantee-title">
           You Bring The Commitment.

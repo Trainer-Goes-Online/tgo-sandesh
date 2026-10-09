@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Section, SectionHeading, revealDelay } from "./sdp";
 import { Rail } from "./Rail";
 
@@ -60,20 +61,29 @@ function BeforeAfterCard({ src }: { src: string }) {
   );
 }
 
-export function BeforeAfterTrack() {
+const TITLE = (
+  <>
+    HOW FAR CAN AN EVERYDAY MAN TAKE HIS PHYSIQUE <em>NATURALLY</em>?
+    <br className="sdp-br-lg" /> SEE FOR YOURSELF.
+  </>
+);
+const SUB =
+  "These men weren’t chasing trophies or Pro Cards. They were chasing a physique most men never find out they’re capable of building.";
+
+/** The landing page renders the source copy. /checkout passes its own title
+ *  and `sub={null}`, because the reader there has already been sold the
+ *  promise and needs reassurance rather than the pitch again. */
+export function BeforeAfterTrack({
+  title = TITLE,
+  sub = SUB,
+}: {
+  title?: ReactNode;
+  sub?: ReactNode;
+}) {
   return (
     <Section id="transformations" band="light-alt">
       <div data-sdp-reveal>
-        <SectionHeading
-          title={
-            <>
-              HOW FAR CAN AN EVERYDAY MAN TAKE HIS PHYSIQUE{" "}
-              <em>NATURALLY</em>?
-              <br className="sdp-br-lg" /> SEE FOR YOURSELF.
-            </>
-          }
-          sub="These men weren’t chasing trophies or Pro Cards. They were chasing a physique most men never find out they’re capable of building."
-        />
+        <SectionHeading title={title} sub={sub} />
       </div>
 
       <div data-sdp-reveal style={revealDelay(".06s")}>

@@ -2,7 +2,7 @@
  * BEAT 0a: announcement strip (page chrome, above everything).
  *
  * Copy, verbatim from the source md's first line:
- *   "10+ Years of Coaching Experience | 1000+ Success Stories"
+ *   "8+ Years of Coaching Experience | 1000+ Success Stories"
  *
  * Rendered as the accent bar with a live pulsing dot. Two short credential
  * items, so this is the STATIC banner form of the strip rather than the
@@ -16,7 +16,7 @@
  * Server component, no client JS: the bar is static and above the fold.
  */
 const ITEMS = [
-  { num: "10+ Years", label: "of Coaching Experience" },
+  { num: "8+ Years", label: "of Coaching Experience" },
   { num: "1000+", label: "Success Stories" },
 ];
 

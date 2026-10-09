@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import BeforeAfterTrack from "@/components/BeforeAfterTrack";
 import CheckoutForm from "@/components/checkout/CheckoutForm";
 import SiteFooter from "@/components/SiteFooter";
 
@@ -54,6 +55,27 @@ export default function CheckoutPage() {
       <main className="checkout-page">
         <CheckoutForm />
       </main>
+
+      {/* The landing page's before/after beat, reused as-is so the proof is
+          one component in two places. `.sdp-root` gives it the landing
+          page's type and band styles; it reveals without SdpReveal, which
+          is fail-open. */}
+      <div className="sdp-root checkout-proof">
+        {/* Brief (2026-10-09): "if you still feel you can't do it,
+            these guys felt the same, and they did". Answers the doubt at the
+            point of paying rather than repeating the landing page's pitch. */}
+        <BeforeAfterTrack
+          title={
+            <>
+              “I’M NOT A GYM PERSON.”
+              {/* A real break at every width: released on phones, the quote and
+                  "THEY" share a line and the quote stops reading as a quote. */}
+              <br /> THEY ALL SAID IT. <em>LOOK AT THEM NOW.</em>
+            </>
+          }
+          sub={null}
+        />
+      </div>
 
       <SiteFooter />
     </div>

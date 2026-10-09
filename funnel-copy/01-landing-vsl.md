@@ -1,21 +1,21 @@
 # Sandesh Soans — Extreme or Nothing Protocol · VSL Landing Copy (SOURCE OF TRUTH, verbatim from Atul)
 
-10+ Years of Coaching Experience | 1000+ Success Stories
-[Photos] ★★★★★ 5.0 Review | 100% Money-Back Guarantee
-FOR MEN 28–40 WHO’VE NEVER TRAINED CONSISTENTLY & NOW WANT SERIOUS RESULTS FAST
+8+ Years of Coaching Experience | 1000+ Success Stories
+[Photos] ★★★★★ 5.0 Review | 100% Money-Back Guarantee On The Programme
+FOR BUSY MEN 30-45 WHO WANT TO FINALLY GET RID OF THEIR STUBBORN BELLY
 
-Drop 8–10% Body Fat
-Build Visible Abs &
-Achieve A Physique People
-Can’t Believe Is ‘Natural’
-In Just 90–120 Days
+Lose 8–10% Body Fat &
+Watch Your Belly Shrink
+In Just 90 Days
 
-Using our Extreme or Nothing Protocol, designed to maximise fat loss, muscle development and physique progression during one focused transformation phase.
+Even If You Have A Full-Time Job, Hate Complicated Diets & Have Never Been A Gym Person.
 
-1000+ men across India, US, UK, Australia, Germany, Ireland & Qatar have used the Extreme or Nothing Protocol to push their natural physiques to a completely different level, achieving:
+Using our No-Guesswork Transformation System where we tell you exactly what to eat, how to train and what to do each week to achieve your physique goals, without spending years figuring it out yourself.
 
-Single-Digit Body Fat       Visible 6-Pack Abs      3D Muscle Definition
-Athletic Muscle Mass       Top 1% Mindset      V-Taper Physique
+1000+ men across India, US, UK, Australia, Germany, Ireland & Qatar have trusted Sandesh to help them achieve their fitness goals with a simple, structured approach that includes:
+
+WORK-SCHEDULE FRIENDLY       STEP-BY-STEP 90-DAY PLAN      EXACTLY WHAT TO EAT
+EXACTLY HOW TO TRAIN       BEGINNER-FRIENDLY TRAINING      WEEKLY COACH SUPPORT
 
 WATCH THE SHORT VIDEO BELOW ⬇️
 
@@ -23,19 +23,17 @@ VSL VIDEO
 
 CLICK HERE TO GET YOUR PERSONALISED DIAGNOSIS & TRANSFORMATION ROADMAP →
 
-⭐100% Money-Back Guarantee 🔥1000+ Success Stories
+⭐100% Money-Back Guarantee On The Programme 🔥1000+ Success Stories
 💯 100% Natural Transformation Approach
 
 OFFER ENDS IN : TIMER OF 5 HOURS
 
-1000+
-Success Stories
-10+ Years
-Coaching Experience
-5.0 ★
-Client Rating
-₹97
-To Start
+[MOVED TO /checkout on 2026-10-09: right column, above the order summary, photo on the left]
+YOUR CALL IS WITH
+Sandesh Soans
+8+ YEARS OF EXPERIENCE | 1000+ MEN COACHED
+
+Sandesh created his No-Guesswork Transformation System to make getting fit simple, even for busy men who've struggled to stay consistent and lost hope of ever getting into shape.
 
 FOR MEN WHO ARE DONE LOOKING “FIT” & READY TO LOOK EXCEPTIONAL
 This Is For You if:
@@ -48,7 +46,7 @@ This Is For You if:
 
 CLICK HERE TO GET YOUR PERSONALISED DIAGNOSIS & TRANSFORMATION ROADMAP →
 
-⭐100% Money-Back Guarantee 🔥1000+ Success Stories
+⭐100% Money-Back Guarantee On The Programme 🔥1000+ Success Stories
 💯 100% Natural Transformation Approach
 
 OFFER ENDS IN : TIMER OF 5 HOURS
@@ -97,7 +95,7 @@ Video Testimonial (× 4)
 The Coach Behind The
 Extreme Or Nothing Protocol
 SANDESH SOANS
-10+ YEARS COACHING EXPERIENCE
+8+ YEARS COACHING EXPERIENCE
 4X NATURAL BODYBUILDING PRO
 1000+ SUCCESS STORIES
 SPECIALIST IN NATURAL BODY RECOMPOSITION
@@ -171,7 +169,7 @@ Your exercise execution is reviewed to make sure you're actually training the in
 6. PEAK PHYSIQUE & TRANSITION PLAN
 Your transformation has a defined deadline for reaching peak condition, so you’re never stuck endlessly “working on your physique.” As that deadline approaches, training and nutrition are tightened to maximise definition, muscularity and overall physique presentation, followed by a structured transition towards greater flexibility and long-term maintenance.
 
-100% MONEY-BACK GUARANTEE
+100% MONEY-BACK GUARANTEE ON THE PROGRAMME
 You Bring The Commitment.
 We’ll Guarantee The Transformation.
 If you don’t achieve the physique transformation agreed upon at the start of your programme, despite following your personalised protocol consistently, we’ll refund every rupee you paid us.

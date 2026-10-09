@@ -64,7 +64,7 @@ export function TrustStrip() {
           <ShieldGlyph size={18} />
         </span>
         <span>
-          <b>100%</b> Money-Back Guarantee
+          <b>100%</b> Money-Back Guarantee On The Programme
         </span>
       </span>
     </div>

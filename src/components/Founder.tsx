@@ -33,7 +33,7 @@ import { CheckGlyph, Section, SectionHeading, revealDelay } from "./sdp";
  */
 
 const CREDENTIALS = [
-  "10+ YEARS COACHING EXPERIENCE",
+  "8+ YEARS COACHING EXPERIENCE",
   "4X NATURAL BODYBUILDING PRO",
   "1000+ SUCCESS STORIES",
   "SPECIALIST IN NATURAL BODY RECOMPOSITION",

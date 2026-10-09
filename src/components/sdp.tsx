@@ -201,7 +201,7 @@ export const CTA_LABEL =
   "Click Here To Get Your Personalised Diagnosis & Transformation Roadmap";
 
 export const CTA_BADGES: { icon: "star" | "flame" | "leaf"; label: string }[] = [
-  { icon: "star", label: "100% Money-Back Guarantee" },
+  { icon: "star", label: "100% Money-Back Guarantee On The Programme" },
   { icon: "flame", label: "1000+ Success Stories" },
   { icon: "leaf", label: "100% Natural Transformation Approach" },
 ];

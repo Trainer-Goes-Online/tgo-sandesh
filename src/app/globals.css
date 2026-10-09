@@ -375,6 +375,13 @@ br.sdp-br-lg{ display:inline; }
   width:100%; text-align:center; max-width:760px; margin-left:auto; margin-right:auto;
   margin-bottom:18px; font-size:15px; line-height:1.65; color:var(--ink-soft);
 }
+/* The objection-killer under the headline: italic, in ink, one step up from
+   the body so it reads as part of the promise rather than as fine print. */
+.sdp-root .sdp-hero-even{
+  width:100%; text-align:center; max-width:720px; margin:0 auto 16px;
+  font-size:17px; line-height:1.55; font-style:italic; font-weight:500;
+  color:var(--ink); text-wrap:balance;
+}
 .sdp-root .sdp-hero-lead{
   width:100%; text-align:center; max-width:820px; margin-left:auto; margin-right:auto;
   margin-bottom:16px; font-size:15px; line-height:1.65; color:var(--ink-soft);
@@ -587,34 +594,6 @@ br.sdp-br-lg{ display:inline; }
 .sdp-dark .sdp-cta-note,.sdp-dark-alt .sdp-cta-note{ color:var(--muted-dark); }
 
 /* ---------------------------------------------------------------------
-   Credibility / stat band (hero), 4 cells
-   --------------------------------------------------------------------- */
-.sdp-cred-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; max-width:740px; margin:26px auto 0; }
-/* Editorial, not glossy: flat ivory surface, a solid copper rule across the
-   top, black numerals, no shadow and no lift. A masthead statistic in a men's
-   magazine, which is the register this page is aiming at. Layout unchanged. */
-.sdp-cred-card{
-  position:relative; background:var(--bg); border:1px solid var(--border); border-radius:8px;
-  padding:16px 12px 14px; text-align:center; box-shadow:none;
-  transition:border-color .3s;
-}
-.sdp-cred-card::before{
-  content:""; position:absolute; top:0; left:0; right:0; height:2px; border-radius:8px 8px 0 0;
-  background:var(--brand);
-}
-.sdp-cred-card:hover{ border-color:var(--brand); }
-.sdp-cred-num{
-  display:flex; align-items:center; justify-content:center; gap:5px;
-  font-family:var(--fh); font-size:clamp(20px,3vw,30px); color:var(--ink);
-  line-height:1; letter-spacing:.04em; margin-bottom:5px;
-}
-.sdp-cred-num svg{ color:var(--star); margin-top:-2px; }
-.sdp-cred-lbl{
-  font-family:var(--fb); font-size:10.5px; font-weight:700; color:var(--muted);
-  letter-spacing:.1em; text-transform:uppercase; line-height:1.3;
-}
-
-/* ---------------------------------------------------------------------
    CARD SYSTEM: white, soft border, accent-on-hover lift
    (shared DNA: cred / pillar / programme / proof cards)
    --------------------------------------------------------------------- */
@@ -804,8 +783,6 @@ br.sdp-br-lg{ display:inline; }
   .sdp-hero-markers{ display:grid; grid-template-columns:1fr 1fr; gap:8px; max-width:360px; margin:8px auto 14px; }
   .sdp-marker-chip{ width:100%; justify-content:center; font-size:11px; padding:7px 10px; letter-spacing:.04em; gap:6px; }
   .sdp-marker-dot{ width:6px; height:6px; flex:0 0 6px; }
-  .sdp-cred-row{ grid-template-columns:repeat(2,1fr); gap:10px; margin-top:20px; }
-  .sdp-cred-card{ padding:12px 10px; }
   .sdp-cta{ padding:15px 22px 13px; }
   .sdp-cta .cta-sub{ font-size:10px; }
   .sdp-guarantee-card{ padding:36px 22px; }
@@ -856,9 +833,21 @@ br.sdp-br-lg{ display:inline; }
    the animation stopped (reduced motion), everything past the fold would be
    unreachable. It also makes the copy's own "to move…" cue literally true.
    --------------------------------------------------------------------- */
+/* Hand-scrolling ONLY when the loop is stopped. While the track animates, a
+   swipe or trackpad scroll adds scrollLeft ON TOP of the transform, and the
+   two together carry the track past its own end: the row runs out into blank
+   space and never comes back until a reload (reported 2026-10-09 on mobile).
+   So the moving rail is clipped and the reduced-motion rail, whose loop is
+   off, is the scrollable one. `clip`, not just `hidden`: a hidden box is
+   still a scroll container, so keyboard focus on a card's link (the creator
+   rail's Instagram links) would scroll it and strand the row the same way.
+   `hidden` stays first as the fallback for browsers without `clip`. */
 .sdp-rail.is-scrollable{
-  overflow-x:auto; overscroll-behavior-x:contain;
+  overflow:hidden; overflow:clip;
   scrollbar-width:none; -ms-overflow-style:none;
+}
+@media (prefers-reduced-motion: reduce){
+  .sdp-rail.is-scrollable{ overflow-x:auto; overscroll-behavior-x:contain; }
 }
 .sdp-rail.is-scrollable::-webkit-scrollbar{ display:none; }
 
@@ -1795,7 +1784,7 @@ br.sdp-br-lg{ display:inline; }
 /* ---- two columns ---- */
 .eon-checkout .checkout-main{
   max-width:1180px; margin:0 auto;
-  display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);
+  display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr);
   gap:28px; align-items:start;
 }
 
@@ -1864,22 +1853,62 @@ br.sdp-br-lg{ display:inline; }
   border-color:var(--brand); box-shadow:0 0 0 3px rgba(var(--brand-rgb),.14);
 }
 
-/* The dial-code select. The real <select> is laid over the visible value at
-   zero opacity, so the OS gets a native picker while the field keeps the page's
-   type and spacing. */
+/* The dial-code picker (custom listbox, see PhoneField). The wrapper is the
+   positioning context; the panel hangs outside .checkout-phone-wrap because
+   that box clips for its rounded corners. */
+.eon-checkout .checkout-phone{ position:relative; }
 .eon-checkout .country-select{
-  position:relative; display:inline-flex; align-items:center; gap:6px;
-  padding:0 11px 0 13px; border-right:1px solid var(--border); background:var(--bg);
+  position:relative; display:inline-flex; align-items:center; gap:7px;
+  padding:0 11px 0 12px; border:0; border-right:1px solid var(--border);
+  background:var(--bg); color:var(--ink); font:inherit; cursor:pointer;
+  transition:background .2s;
 }
+.eon-checkout .country-select:hover{ background:rgba(var(--brand-rgb),.06); }
+.eon-checkout .country-select:focus-visible{ outline:2px solid var(--brand); outline-offset:-2px; }
 .eon-checkout .country-select-value{
   font-family:var(--fb); font-size:14px; font-weight:700; color:var(--ink); white-space:nowrap;
 }
-.eon-checkout .country-select-chevron{ font-size:10px; color:var(--muted); }
-.eon-checkout .country-select select{
-  position:absolute; inset:0; width:100%; height:100%;
-  opacity:0; cursor:pointer; font:inherit; border:0;
+.eon-checkout .country-select-chevron{
+  font-size:10px; color:var(--brand); transition:transform .2s;
 }
-.eon-checkout .country-select:focus-within{ outline:2px solid var(--brand); outline-offset:-2px; }
+.eon-checkout .country-select-chevron.is-open{ transform:rotate(180deg); }
+
+/* The ISO code as a chip: same on every platform, unlike flag emoji. */
+.eon-checkout .country-chip{
+  display:inline-grid; place-items:center; min-width:26px; padding:3px 5px 2px;
+  border-radius:4px; background:var(--ink); color:var(--cta-ink-btn);
+  font-family:var(--fb); font-size:9.5px; font-weight:800; letter-spacing:.08em; line-height:1.2;
+}
+
+.eon-checkout .country-panel{
+  position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:60;
+  background:var(--bg); border:1px solid var(--border); border-radius:10px;
+  box-shadow:0 22px 48px -18px rgba(var(--ink-rgb),.35), 0 2px 8px rgba(var(--ink-rgb),.06);
+  overflow:hidden;
+  animation:countryPanelIn .16s cubic-bezier(.16,1,.3,1);
+}
+@keyframes countryPanelIn{ from{ opacity:0; transform:translateY(-4px); } to{ opacity:1; transform:none; } }
+/* .checkout-field input styles this box too; only what differs is here. */
+.eon-checkout .checkout-field .country-search{
+  display:block; width:calc(100% - 20px); margin:10px; padding:10px 12px; font-size:14px;
+}
+.eon-checkout .country-list{
+  list-style:none; margin:0; padding:0 6px 6px; max-height:260px; overflow-y:auto;
+  overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:var(--border-strong) transparent;
+}
+.eon-checkout .country-option{
+  display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:7px;
+  font-size:14px; color:var(--ink); cursor:pointer;
+}
+.eon-checkout .country-option.is-active{ background:rgba(var(--brand-rgb),.10); }
+.eon-checkout .country-option.is-selected{ font-weight:700; }
+.eon-checkout .country-option.is-selected .country-chip{ background:var(--brand); color:var(--cta-ink); }
+.eon-checkout .country-option-name{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.eon-checkout .country-option-dial{ color:var(--muted); font-weight:600; font-variant-numeric:tabular-nums; }
+.eon-checkout .country-empty{ padding:12px 10px; font-size:13px; color:var(--muted); }
+@media (prefers-reduced-motion: reduce){
+  .eon-checkout .country-panel{ animation:none; }
+}
 
 .eon-checkout .checkout-phone-wrap input{
   border:0; border-radius:0; background:transparent; flex:1; min-width:0;
@@ -2016,18 +2045,64 @@ br.sdp-br-lg{ display:inline; }
   margin:14px 0 0; font-size:12px; line-height:1.6; color:var(--ink-soft);
 }
 
-.eon-checkout .checkout-coaches{
-  display:flex; align-items:center; gap:13px;
-  margin-top:22px; padding-top:20px; border-top:1px solid var(--border);
+/* ---- before/after proof under the form ----
+   .sdp-root pads its foot for the landing page's sticky bar; this page's own
+   docked bar is reserved for elsewhere, so the padding comes off here. */
+.eon-checkout .checkout-proof{ padding-bottom:0; }
+/* The form above already ends on .checkout-page's 64px foot, so the
+   section's own top padding would double it. It only needs a few px. */
+.eon-checkout .checkout-proof .sdp-section{ padding-top:4px; }
+/* keep the orange payoff in one piece: no lone "NOW." on a phone */
+.eon-checkout .checkout-proof .sdp-h2 em{ white-space:nowrap; }
+@media (max-width:768px){
+  .eon-checkout .checkout-page{ padding-bottom:36px; }
 }
-.eon-checkout .checkout-coach-avatars{ display:flex; flex:0 0 auto; }
-.eon-checkout .checkout-coach-avatar{
-  width:42px; height:42px; border-radius:50%; display:grid; place-items:center;
-  background:var(--ink); color:var(--cta-ink-btn);
-  font-family:var(--fh); font-weight:700; font-size:14px; letter-spacing:.06em;
+
+/* ---- right column: "your call is with" card + summary ----
+   The column is what sticks now, not the summary alone, so the card and the
+   price travel together. */
+.eon-checkout .checkout-side{
+  position:sticky; top:22px; display:flex; flex-direction:column; gap:18px;
 }
-.eon-checkout .checkout-coach-names{ font-size:12px; line-height:1.55; color:var(--ink-soft); }
-.eon-checkout .checkout-coach-names strong{ display:block; color:var(--ink); font-size:13.5px; }
+.eon-checkout .checkout-side .checkout-summary{ position:relative; top:auto; }
+
+/* Photo left, words right. A copper frame rather than the summary's plain
+   border: this is the one card on the page about a person. */
+.eon-checkout .checkout-callwith{
+  display:flex; gap:20px; align-items:stretch;
+  background:var(--bg); border:1.5px solid rgba(var(--brand-rgb),.55); border-radius:14px;
+  padding:18px;
+  box-shadow:0 18px 44px -32px rgba(var(--ink-rgb),.30);
+}
+/* Full card height, like the reference: the frame is a stretched flex item
+   and the photo covers it, anchored on the face so any extra height is taken
+   from the legs, not the head. */
+.eon-checkout .checkout-callwith-photo{
+  position:relative; flex:0 0 140px; width:140px; min-height:176px;
+  border-radius:8px; overflow:hidden; background:var(--bg-dark);
+}
+.eon-checkout .checkout-callwith-photo img{
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; object-position:50% 15%;
+}
+.eon-checkout .checkout-callwith-text{ min-width:0; }
+.eon-checkout .checkout-callwith-eyebrow{
+  font-size:10.5px; font-weight:800; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--brand-deep); margin:0;
+}
+.eon-checkout .checkout-callwith-name{
+  font-family:var(--fh); font-weight:700; text-transform:uppercase;
+  font-size:24px; letter-spacing:.03em; line-height:1.1; color:var(--ink); margin:6px 0 0;
+}
+.eon-checkout .checkout-callwith-creds{
+  font-size:10.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--brand-deep); margin:6px 0 0;
+  display:flex; flex-wrap:wrap; gap:2px 6px;
+}
+.eon-checkout .checkout-callwith-body{
+  font-size:12.5px; line-height:1.6; color:var(--ink-soft); margin:10px 0 0;
+}
+.eon-checkout .checkout-callwith-body strong{ color:var(--ink); font-weight:700; }
 
 /* ---- mobile summary bar ---- */
 .eon-checkout .checkout-summary-mobile{ display:none; }
@@ -2038,6 +2113,13 @@ br.sdp-br-lg{ display:inline; }
   font-family:var(--fb); font-size:13px; font-weight:700; text-align:left;
 }
 .eon-checkout .checkout-summary-mobile-title{ font-weight:700; }
+.eon-checkout .checkout-summary-mobile-head{ display:flex; flex-direction:column; gap:5px; min-width:0; }
+.eon-checkout .checkout-summary-mobile-guarantee{
+  display:inline-flex; align-items:center; gap:5px;
+  font-size:10.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+  color:#0E7C5A;  /* the trust strip's green, darkened to hold contrast as text on ivory */
+}
+.eon-checkout .checkout-summary-mobile-guarantee svg{ flex:0 0 auto; }
 .eon-checkout .checkout-summary-mobile-price{ font-family:var(--fh); font-size:20px; }
 .eon-checkout .checkout-summary-mobile-trail{
   display:inline-flex; align-items:center; gap:8px;
@@ -2056,6 +2138,18 @@ br.sdp-br-lg{ display:inline; }
   .eon-checkout .checkout-main{ grid-template-columns:1fr; gap:22px; }
   .eon-checkout .checkout-summary{ display:none; }
   .eon-checkout .checkout-summary-mobile{ display:block; max-width:1180px; margin:0 auto 20px; }
+  .eon-checkout .checkout-side{ position:static; order:-1; }
+}
+@media (max-width:420px){
+  .eon-checkout .checkout-callwith{ gap:14px; padding:14px; }
+  .eon-checkout .checkout-callwith-photo{ flex-basis:110px; width:110px; }
+  .eon-checkout .checkout-callwith-name{ font-size:21px; }
+}
+/* Where the credentials no longer fit on one line (a narrow desktop column
+   or a phone): two credentials, two lines, no orphaned divider. */
+@media (max-width:1100px){
+  .eon-checkout .checkout-callwith-creds{ flex-direction:column; }
+  .eon-checkout .checkout-callwith-sep{ display:none; }
 }
 @media (max-width:560px){
   .eon-checkout .checkout-fields-row{ grid-template-columns:1fr; }

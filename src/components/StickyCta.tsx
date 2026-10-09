@@ -36,7 +36,7 @@ import { ArrowGlyph, CHECKOUT_URL } from "./sdp";
  */
 
 const LABEL = "Get Your Diagnosis & Roadmap";
-const NOTE = "100% MONEY-BACK GUARANTEE";
+const NOTE = "100% MONEY-BACK GUARANTEE ON THE PROGRAMME";
 const TITLE = "Extreme or Nothing Protocol";
 
 /**

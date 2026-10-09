@@ -71,7 +71,7 @@ const COACH_CREDS = [
 ];
 
 const COACH_STATS = [
-  { n: "10+ Yrs", l: "Coaching Experience" },
+  { n: "8+ Yrs", l: "Coaching Experience" },
   { n: "1000+", l: "Success Stories" },
   { n: "4X", l: "Natural Bodybuilding Pro" },
   { n: "7", l: "Countries Coached" },
@@ -363,7 +363,7 @@ function AnnounceStrip({ confirmed }: { confirmed: boolean }) {
       )}
       <span className="book-announce-item">1:1 With Sandesh</span>
       <span className="book-announce-dot" aria-hidden />
-      <span className="book-announce-item">10+ Years Coaching</span>
+      <span className="book-announce-item">8+ Years Coaching</span>
       <span className="book-announce-dot" aria-hidden />
       <span className="book-announce-item">1000+ Success Stories</span>
     </div>

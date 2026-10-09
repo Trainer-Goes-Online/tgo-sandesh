@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 
 import { COUNTRIES } from "@/lib/countries";
-import { ArrowGlyph } from "@/components/sdp";
+import { ArrowGlyph, ShieldGlyph } from "@/components/sdp";
 import { WHAT_THE_CALL_COVERS } from "@/lib/call-copy";
 import { LEGAL, PRICE, inr } from "@/app/_legal/legal";
 import { collectSignals } from "@/lib/client-signals";
@@ -87,13 +87,24 @@ function Tick() {
 }
 
 /**
- * Phone field: a native <select> for the dial code, then the number.
+ * Phone field: a themed dial-code picker, then the number.
  *
- * Deliberately native rather than the custom searchable dropdown the SDP build
- * uses. A native select is one tap on a phone, gives the OS picker with its own
- * scrolling and type-ahead for free, needs no outside-click handling, and
- * cannot end up open behind another element. For twenty-five options, the
- * custom version is more machinery for a worse result.
+ * ── CUSTOM, NOT NATIVE (2026-10-09) ───────────────────────────────────
+ * This was a native <select>, chosen for the OS picker. On desktop that picker
+ * is the browser's own grey list, which broke the page's look at the one field
+ * a buyer touches last, so it was replaced with a listbox in the site's skin.
+ *
+ * What the native one gave for free is rebuilt here, deliberately:
+ *   · type-ahead: a search box, matching name, ISO code or dial code
+ *   · keyboard: ↑ ↓ Home End to move, Enter to pick, Esc to close
+ *   · closes on an outside press, on Tab away, and on pick
+ *   · combobox / listbox ARIA, so a screen reader hears the same thing
+ * The panel sits OUTSIDE .checkout-phone-wrap, which clips (overflow:hidden
+ * for its rounded corners); inside it, the panel would be cut off.
+ *
+ * Flags: shown as the ISO code in a chip, not the emoji. Windows has no flag
+ * emoji and renders them as bare letters ("IN", "US"), and the skin bans emoji
+ * in chrome anyway, so the chip is the same on every platform.
  */
 function PhoneField({
   value,
@@ -113,38 +124,165 @@ function PhoneField({
   invalid: boolean;
 }) {
   const selected = COUNTRIES.find((c) => c.code === code) ?? COUNTRIES[0];
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [active, setActive] = useState(0);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  const listId = useId();
+
+  const matches = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return COUNTRIES;
+    const digits = q.replace(/^\+/, "");
+    return COUNTRIES.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.code.toLowerCase() === q ||
+        (/^\d+$/.test(digits) && c.dial.slice(1).startsWith(digits)),
+    );
+  }, [query]);
+
+  const openList = () => {
+    setQuery("");
+    setActive(Math.max(0, COUNTRIES.findIndex((c) => c.code === code)));
+    setOpen(true);
+  };
+  const close = (refocus: boolean) => {
+    setOpen(false);
+    if (refocus) triggerRef.current?.focus();
+  };
+  const choose = (c: (typeof COUNTRIES)[number]) => {
+    onCode(c.code);
+    close(true);
+  };
+
+  /* Outside press closes it. pointerdown, not click, so the panel is gone
+     before whatever was pressed reacts. */
+  useEffect(() => {
+    if (!open) return;
+    searchRef.current?.focus();
+    const onDown = (e: PointerEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    listRef.current
+      ?.querySelector<HTMLElement>(`[data-i="${active}"]`)
+      ?.scrollIntoView({ block: "nearest" });
+  }, [open, active]);
+
+  const onSearchKey = (e: KeyboardEvent<HTMLInputElement>) => {
+    const last = matches.length - 1;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActive((i) => Math.min(last, i + 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive((i) => Math.max(0, i - 1));
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      setActive(0);
+    } else if (e.key === "End") {
+      e.preventDefault();
+      setActive(last);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (matches[active]) choose(matches[active]);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      close(true);
+    } else if (e.key === "Tab") {
+      close(false);
+    }
+  };
 
   return (
-    <div className="checkout-phone-wrap" data-invalid={invalid || undefined}>
-      <div className="country-select">
-        <span className="country-select-value" aria-hidden>
-          {selected.flag} {selected.dial}
-        </span>
-        <select
-          value={code}
-          onChange={(e) => onCode(e.target.value)}
-          aria-label="Country dialling code"
+    <div className="checkout-phone" ref={rootRef}>
+      <div className="checkout-phone-wrap" data-invalid={invalid || undefined}>
+        <button
+          ref={triggerRef}
+          type="button"
+          className="country-select"
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          aria-label={`Country dialling code: ${selected.name} ${selected.dial}`}
+          onClick={() => (open ? close(false) : openList())}
+          onKeyDown={(e) => {
+            if (!open && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+              e.preventDefault();
+              openList();
+            }
+          }}
         >
-          {COUNTRIES.map((c) => (
-            <option key={c.code} value={c.code}>
-              {c.flag} {c.name} ({c.dial})
-            </option>
-          ))}
-        </select>
-        <span className="country-select-chevron" aria-hidden>▾</span>
+          <span className="country-chip" aria-hidden>{selected.code}</span>
+          <span className="country-select-value" aria-hidden>{selected.dial}</span>
+          <span className={`country-select-chevron${open ? " is-open" : ""}`} aria-hidden>▾</span>
+        </button>
+
+        <input
+          id="phone"
+          type="tel"
+          inputMode="numeric"
+          autoComplete="tel-national"
+          placeholder={code === "IN" ? "98765 43210" : "Phone number"}
+          value={value}
+          onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))}
+          aria-label="Phone number"
+          aria-invalid={invalid || undefined}
+        />
       </div>
 
-      <input
-        id="phone"
-        type="tel"
-        inputMode="numeric"
-        autoComplete="tel-national"
-        placeholder={code === "IN" ? "98765 43210" : "Phone number"}
-        value={value}
-        onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))}
-        aria-label="Phone number"
-        aria-invalid={invalid || undefined}
-      />
+      {open && (
+        <div className="country-panel">
+          <input
+            ref={searchRef}
+            className="country-search"
+            type="text"
+            role="combobox"
+            aria-expanded
+            aria-controls={listId}
+            aria-autocomplete="list"
+            aria-activedescendant={matches[active] ? `${listId}-${matches[active].code}` : undefined}
+            aria-label="Search countries"
+            placeholder="Search country or code"
+            autoComplete="off"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setActive(0);
+            }}
+            onKeyDown={onSearchKey}
+          />
+          <ul className="country-list" role="listbox" id={listId} ref={listRef} aria-label="Countries">
+            {matches.map((c, i) => (
+              <li
+                key={c.code}
+                id={`${listId}-${c.code}`}
+                data-i={i}
+                role="option"
+                aria-selected={c.code === code}
+                className={`country-option${i === active ? " is-active" : ""}${c.code === code ? " is-selected" : ""}`}
+                /* mousedown is cancelled so the search box keeps focus */
+                onMouseDown={(e) => e.preventDefault()}
+                onMouseMove={() => setActive(i)}
+                onClick={() => choose(c)}
+              >
+                <span className="country-chip">{c.code}</span>
+                <span className="country-option-name">{c.name}</span>
+                <span className="country-option-dial">{c.dial}</span>
+              </li>
+            ))}
+            {matches.length === 0 && <li className="country-empty">No country matches</li>}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
@@ -186,18 +324,36 @@ function OrderSummary() {
         </p>
       </div>
 
-      <div className="checkout-divider" />
-
-      <div className="checkout-coaches">
-        <div className="checkout-coach-avatars">
-          <div className="checkout-coach-avatar">SS</div>
-        </div>
-        <div className="checkout-coach-names">
-          <strong>Sandesh Soans</strong>
-          10+ yrs coaching · 1000+ success stories · 7 countries
-        </div>
-      </div>
     </aside>
+  );
+}
+
+/** Who the call is with. Moved here from the landing hero on 2026-10-09, and
+ *  it replaced the summary's one-line "SS · Sandesh Soans" coach row. */
+function CallWithCard() {
+  return (
+    <section className="checkout-callwith" aria-label="Your call is with Sandesh Soans">
+      {/* The frame stretches to the text's height and the photo covers it, so
+          the picture always runs top to bottom however long the copy is. */}
+      <div className="checkout-callwith-photo">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/sandesh-call.jpg" alt="Sandesh Soans" width={948} height={1126} />
+      </div>
+      <div className="checkout-callwith-text">
+        <p className="checkout-callwith-eyebrow">Your call is with</p>
+        <p className="checkout-callwith-name">Sandesh Soans</p>
+        <p className="checkout-callwith-creds">
+          <span>8+ Years Of Experience</span>
+          <span className="checkout-callwith-sep" aria-hidden>·</span>
+          <span>1000+ Men Coached</span>
+        </p>
+        <p className="checkout-callwith-body">
+          Sandesh created his <strong>No-Guesswork Transformation System</strong> to make getting
+          fit simple, even for busy men who’ve struggled to stay consistent and lost hope of ever
+          getting into shape.
+        </p>
+      </div>
+    </section>
   );
 }
 
@@ -206,7 +362,16 @@ function MobileSummary() {
   return (
     <div className={`checkout-summary-mobile${open ? " is-open" : ""}`}>
       <button type="button" className="checkout-summary-mobile-bar" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
-        <span className="checkout-summary-mobile-title">{LEGAL.product}</span>
+        {/* The guarantee lives IN the bar, not in the expanding part, so it
+            is on screen whether the accordion is open or shut (client ask,
+            2026-10-09). Phone-only: desktop shows it in the summary card. */}
+        <span className="checkout-summary-mobile-head">
+          <span className="checkout-summary-mobile-title">{LEGAL.product}</span>
+          <span className="checkout-summary-mobile-guarantee">
+            <ShieldGlyph size={13} />
+            100% Money-Back Guarantee On The Programme
+          </span>
+        </span>
         <span className="checkout-summary-mobile-trail">
           <span className="checkout-summary-mobile-price">{inr(PRICE.amount)}</span>
           <span className="chev" aria-hidden>▾</span>
@@ -585,7 +750,13 @@ export default function CheckoutForm() {
           </form>
         </div>
 
-        <OrderSummary />
+        {/* The right column: who the call is with, then what is being
+            bought. Below 960px the summary hides and this column moves
+            above the form, so the card is the first thing on a phone. */}
+        <div className="checkout-side">
+          <CallWithCard />
+          <OrderSummary />
+        </div>
       </div>
 
       {/* ── THE MOBILE DOCKED BAR (2026-09-22) ──────────────────────────

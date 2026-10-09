@@ -22,10 +22,11 @@ import type { CSSProperties, ReactNode } from "react";
  * `aria-hidden`: they exist only to fill the loop, so they must never be read
  * by a screen reader or reachable by Tab (they hold real Instagram links).
  *
- * The rail is also natively scrollable (`is-scrollable`). That is not decoration:
- * with `overflow:hidden` alone, anyone with reduced motion (animation stopped)
- * could never reach the items past the fold. It also makes the copy's own cue
- * literally true: you can move it.
+ * The rail is natively scrollable (`is-scrollable`) ONLY under reduced motion,
+ * where the animation is stopped and the items past the fold would otherwise
+ * be unreachable. While the loop runs it is overflow:hidden: a hand scroll on
+ * top of the moving transform carries the track past its end into blank space
+ * (fixed 2026-10-09). See `.sdp-rail.is-scrollable` in globals.css.
  */
 
 type Direction = "left" | "right";
