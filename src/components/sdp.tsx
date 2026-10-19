@@ -6,20 +6,13 @@
  * every visual decision lives in the stylesheet's token block, so a re-brand is
  * a Part-1 edit and never a component edit.
  *
- * Server components throughout. The only client parts of the page are
- * `OfferTimer` (localStorage deadline) and `VSLFrame` (poster -> player swap).
+ * Server components throughout.
  */
 import type { CSSProperties, ReactNode } from "react";
-import { OfferTimer } from "./OfferTimer";
 
-/* ===================================================================
-   Funnel constants. The checkout route is LAUNCH's to build; the CTA
-   only needs to point at it.
-   =================================================================== */
-export const CHECKOUT_URL = "/checkout";
+import { BOOKING_HREF } from "@/lib/funnel";
 
-/* The countdown window (5 hours, per the copy) is owned by OfferTimer.tsx, 
-   one source of truth, and importing it here would make the two files cyclic. */
+export { BOOKING_HREF };
 
 /* ===================================================================
    Glyphs: line icons, never emoji. The source copy prints the CTA
@@ -92,6 +85,24 @@ export function ChevronDownGlyph({ size = 14 }: IconProps) {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M12 4v14" />
       <path d="M6 13l6 6 6-6" />
+    </svg>
+  );
+}
+
+export function PinGlyph({ size = 16 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21z" />
+      <circle cx="12" cy="9.5" r="2.5" />
+    </svg>
+  );
+}
+
+export function BowlGlyph({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M3 12h18a9 9 0 0 1-18 0z" />
+      <path d="M9 8c0-1.5 1-1.5 1-3M14 8c0-1.5 1-1.5 1-3" />
     </svg>
   );
 }
@@ -182,48 +193,13 @@ export function MarkerChips({ items, label }: { items: string[]; label?: string 
 }
 
 /* ===================================================================
-   THE CTA LOCKUP: button welded to its risk / timer / note stack.
-   Reused verbatim after every proof beat; the pieces never appear apart.
-   Order is fixed and matches the source copy: button -> three reassurance
-   badges -> the 5-hour offer countdown.
+   THE CTA LOCKUP: the button with an optional note line under it.
    =================================================================== */
-export const CTA_LABEL =
-  "Click Here To Get Your Personalised Diagnosis & Transformation Roadmap";
-
-export const CTA_BADGES: { icon: "star" | "flame" | "leaf"; label: string }[] = [
-  { icon: "star", label: "100% Money-Back Guarantee" },
-  { icon: "flame", label: "1000+ Success Stories" },
-  { icon: "leaf", label: "100% Natural Transformation Approach" },
-];
-
-function BadgeIcon({ name }: { name: "star" | "flame" | "leaf" }) {
-  if (name === "star") return <StarGlyph size={16} />;
-  if (name === "flame") return <FlameGlyph />;
-  return <LeafGlyph />;
-}
-
-export function RiskStrip() {
-  return (
-    <div className="sdp-risk-strip">
-      {CTA_BADGES.map((b, i) => (
-        <span className="sdp-risk-badge" key={b.label}>
-          <span
-            className={`sdp-risk-icon ${
-              i === 0 ? "sdp-risk-icon-gold" : i === 1 ? "sdp-risk-icon-blue" : "sdp-risk-icon-green"
-            }`}
-          >
-            <BadgeIcon name={b.icon} />
-          </span>
-          {b.label}
-        </span>
-      ))}
-    </div>
-  );
-}
+export const CTA_LABEL = "Book Your Free 1:1 Call";
 
 export function PrimaryCTA({ sub }: { sub?: ReactNode }) {
   return (
-    <a className="sdp-cta" href={CHECKOUT_URL}>
+    <a className="sdp-cta" href={BOOKING_HREF} data-qualify>
       <span className="sdp-cta-top">
         <span className="cta-label">{CTA_LABEL}</span>
         <span className="arrow" aria-hidden>
@@ -239,8 +215,6 @@ export function CtaLockup({ note, ctaSub }: { note?: ReactNode; ctaSub?: ReactNo
   return (
     <div className="sdp-lockup">
       <PrimaryCTA sub={ctaSub} />
-      <RiskStrip />
-      <OfferTimer />
       {note && <span className="sdp-cta-note">{note}</span>}
     </div>
   );

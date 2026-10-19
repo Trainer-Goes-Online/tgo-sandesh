@@ -1,39 +1,8 @@
-import { CtaLockup, revealDelay } from "./sdp";
-
-/**
- * BEAT 11: THE FINALE. The page's closing peak and its last dark band.
- *
- * Formatted lean, exactly as the blueprint locks it (tgo-sreshtha's shape):
- * eyebrow → identity headline → CTA lockup → centred colophon. No dense body
- * paragraphs, no second argument, no standalone footer, the colophon folds in
- * here.
- *
- * What makes it the premium beat is DEPTH, not more content: the Welds
- * "closing-stage background depth": mesh blooms over a floor ramp, a faint
- * edge-masked dot grid drifting slowly, a lit top seam marking the stage
- * boundary, and a centred fading hairline above the colophon. All background;
- * it adds nothing to read and it stops entirely under reduced motion.
- *
- * ─────────────────────────────────────────────────────────────────────────
- * COPY FLAG: THE HEADLINE IS A REPRISE, NOT NEW COPY, AND IT AWAITS A CALL.
- * The source md ends at the FAQ: it carries no finale copy at all. Rather than
- * write a closing line (that would be invention, on the single most important
- * beat on the page), this reprises the guarantee's own headline verbatim, 
- * "You Bring The Commitment. We’ll Guarantee The Transformation.", which is
- * the strongest identity line the client has already written, and it lands
- * correctly here because the reader has now read the terms it refers to.
- * Swap it for a purpose-written closing line whenever Atul has one.
- * ─────────────────────────────────────────────────────────────────────────
- *
- * The colophon's legal links are OFF by default. Those routes belong to the
- * checkout build, not to the landing page, and shipping anchors to pages that
- * do not exist yet would be worse than shipping none. Pass `links` once they
- * are live: <Finale links={[{ label: "Privacy Policy", href: "/privacy" }, …]} />
- *
- * Server component (the countdown inside the lockup is the only client piece).
- */
+import { CheckGlyph, CtaLockup, revealDelay } from "./sdp";
 
 export type ColophonLink = { label: string; href: string };
+
+const ASSURANCES = ["Free 1:1 call", "Kannada or English", "Limited slots each week"];
 
 export function Finale({ links = [] }: { links?: ColophonLink[] }) {
   return (
@@ -41,27 +10,34 @@ export function Finale({ links = [] }: { links?: ColophonLink[] }) {
       <div className="sdp-finale-glow" aria-hidden />
 
       <div className="sdp-wrap sdp-finale-inner">
-        <div className="sdp-eyebrow center" data-sdp-reveal>
-          EXTREME OR NOTHING PROTOCOL
+        <div className="sdp-finale-kn" lang="kn" data-sdp-reveal>
+          ನಮ್ಮ ಊಟ, ನಮ್ಮ ರೀತಿ
         </div>
 
         <h2 className="sdp-h2 sdp-finale-h2" data-sdp-reveal style={revealDelay(".06s")}>
-          You Bring The Commitment.
-          <br className="sdp-br-lg" /> <em>We’ll Guarantee The Transformation.</em>
+          Your Belly Didn’t Come In 90 Days.
+          <br className="sdp-br-lg" /> <em>But It Can Go In 90.</em>
         </h2>
 
-        <div data-sdp-reveal style={revealDelay(".12s")}>
+        <p className="sdp-sub sdp-finale-sub" data-sdp-reveal style={revealDelay(".1s")}>
+          Book a free call with Sandesh. You’ll know what’s been holding you back and what your next
+          90 days would look like. No pressure, and no pitch if it’s not right for you.
+        </p>
+
+        <div data-sdp-reveal style={revealDelay(".14s")}>
           <CtaLockup />
+          <ul className="sdp-finale-checks">
+            {ASSURANCES.map((a) => (
+              <li key={a}>
+                <CheckGlyph size={12} />
+                {a}
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className="sdp-colophon" data-sdp-reveal style={revealDelay(".18s")}>
-          <div className="sdp-colophon-name">
-            <span>Sandesh Soans</span>
-            <span className="sdp-colophon-star" aria-hidden>
-              ✦
-            </span>
-            <span>Extreme or Nothing Protocol</span>
-          </div>
+          <div className="sdp-colophon-meta">© 2026 TRANSFORMMEBRO PVT LTD · Bengaluru</div>
 
           {links.length > 0 && (
             <nav className="sdp-colophon-links" aria-label="Legal">
@@ -72,8 +48,6 @@ export function Finale({ links = [] }: { links?: ColophonLink[] }) {
               ))}
             </nav>
           )}
-
-          <div className="sdp-colophon-meta">© 2026 Sandesh Soans. All rights reserved.</div>
         </div>
       </div>
     </section>

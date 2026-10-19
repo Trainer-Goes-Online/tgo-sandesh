@@ -32,8 +32,7 @@ export const EMPTY: Attribution = {
   landingUrl: "",
 };
 
-/* Capped at CAPTURE, not at send: these values ride to the webhook inside
-   Razorpay notes, which are capped at 256 characters each. */
+/* Capped at CAPTURE, not at send, so the cookie stays small. */
 export const CAP = {
   utm: 100,
   fbclid: 200,
@@ -143,40 +142,4 @@ export function mergeAttribution(
   }
 
   return { attr, changed };
-}
-
-/**
- * Serialise a small object into ONE Razorpay note value, guaranteed valid JSON
- * and under the 256-character limit.
- *
- * It shortens the LONGEST VALUE, repeatedly, and never cuts the finished JSON:
- * slicing a serialised object mid-string produces something no parser can
- * read, so one long value would take every field beside it down too.
- */
-export function packJsonNote(obj: Record<string, string>, max = 256): string {
-  const w: Record<string, string> = {};
-  for (const [k, v] of Object.entries(obj)) {
-    w[k] = typeof v === "string" ? v : String(v ?? "");
-  }
-
-  let json = JSON.stringify(w);
-  let guard = 0;
-  while (json.length > max && guard < 200) {
-    guard += 1;
-    let key: string | null = null;
-    let len = 0;
-    for (const [k, v] of Object.entries(w)) {
-      if (v.length > len) {
-        len = v.length;
-        key = k;
-      }
-    }
-    if (!key || len === 0) break;
-    const trim = Math.max(1, Math.min(len, json.length - max));
-    w[key] = w[key].slice(0, len - trim);
-    json = JSON.stringify(w);
-  }
-  /* Still over after shortening everything: an empty object is readable, a
-     truncated one is not. */
-  return json.length > max ? "{}" : json;
 }

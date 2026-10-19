@@ -49,9 +49,9 @@ export function captureFbclid(): void {
  * The campaign context, read from STORAGE rather than from the current url.
  *
  * It is captured on first landing by lib/attribution.ts. Reading
- * `window.location.search` here instead returns nothing on /checkout, because
- * the buyer arrived by clicking a link and the query string did not come with
- * them. Every paid sale would then be written to the order with blank UTMs.
+ * `window.location.search` here instead returns nothing on /book, because the
+ * visitor arrived by clicking a link and the query string did not come with
+ * them.
  */
 export function readUtm() {
   const a = readAttribution();

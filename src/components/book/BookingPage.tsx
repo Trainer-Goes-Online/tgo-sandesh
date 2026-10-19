@@ -1,65 +1,24 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-import { LEGAL, PRICE, inr } from "@/app/_legal/legal";
-/* `import type`, and it has to stay that way. order-status.ts imports
-   checkout-config.ts, which reads RAZORPAY_KEY_SECRET. A type-only import is
-   erased before bundling so nothing from that module reaches the browser; a
-   value import from it would drag a module that mentions the secret into the
-   client graph. */
-import type { BookingState } from "@/app/book/order-status";
+import { LEGAL } from "@/app/_legal/legal";
 import { WHAT_THE_CALL_COVERS } from "@/lib/call-copy";
-import { trackPurchase } from "@/lib/track";
+import { trackSchedule } from "@/lib/track";
 
 /**
- * THE BOOKING PAGE, everything below the payment check.
+ * THE BOOKING PAGE.
  *
  * Modelled on the live SDP funnel's book-a-call page
- * (SDP-New-Funnel/components/book-a-call/BookACallPage.tsx): confirmation
- * strip, hero with a two-step indicator, an embedded calendar with a loading
- * state and an escape hatch, what the fee covers, who the buyer is about to
- * talk to, a final nudge, a docked bar. Only the theme differs.
+ * (SDP-New-Funnel/components/book-a-call/BookACallPage.tsx): announce strip,
+ * hero, an embedded calendar with a loading state and an escape hatch, what
+ * the call covers, who the visitor is about to talk to, a final nudge, a
+ * docked bar. Only the theme differs.
  *
- * TRACKING, and the whole of it:
- *   - GA4 `purchase`, once, keyed on the payment id.  Fired here.
- *   - Meta `Purchase`.                                NOT fired here, ever.
- *
- * Meta's Purchase belongs to the signature-verified Razorpay webhook and to
- * nothing else, because a UPI buyer finishes inside their bank app and often
- * never reaches this page at all. Firing it here as well would double-count
- * every buyer who does arrive, and firing it INSTEAD would lose most Indian
- * sales. GA4's copy is safe to fire here because it is keyed on the payment id
- * and the webhook's server-side copy carries the same key, so GA4 collapses
- * the pair.
- *
- * There is deliberately NO event when a slot is actually picked. The calendar
- * lives in a third-party iframe, and the only honest signal it offers is a
- * postMessage from the vendor's own origin. Adding one would mean inventing an
- * event name, and this project's rule is standard events only, declared in a
- * closed union, so a new name has to be a review rather than a line of code.
+ * Meta's `Schedule` fires from Cal's `bookingSuccessful` callback, just before
+ * the redirect to /thank-you. The CAPI fetch uses keepalive, so the navigation
+ * does not cancel it.
  */
-
-/* ---------------------------------------------------------------------
-   Copy sources, all named so nothing here is mistaken for invented.
-   --------------------------------------------------------------------- */
-
-/* ⚠️ VERBATIM from the checkout's own order summary (VALUE_BULLETS in
-   src/components/checkout/CheckoutForm.tsx). This page repeats what the buyer
-   was promised at the moment they paid, so the two lists must say the same
-   thing. They are duplicated rather than imported because importing them would
-   pull the whole checkout form module into this page's bundle. EDIT BOTH.
-
-   These three lines were written during the build, not supplied by Sandesh.
-   They still need his sign-off: they are this page's only description of what
-   the call actually contains.
-
-   MOVED TO @/lib/call-copy ON 2026-09-22. They were a second literal here,
-   kept in step with the checkout's copy by hand; the thank-you page would
-   have made a third. That module imports nothing, so reading it does not drag
-   the checkout's Razorpay config into this bundle, which was the reason for
-   the duplicate in the first place. */
 
 /* Verbatim from funnel-copy/01-landing-vsl.md, the source of truth. Nothing
    below is inferred, rounded or restated. */
@@ -254,7 +213,7 @@ function CalEmbed({ prefill }: { prefill: Prefill }) {
       Cal("init", CAL_NS, { origin: CAL_ORIGIN });
 
       /* From the supplied snippet: forwards the parent page's query string
-         into the embed, which carries ?o= and ?p= across the seam. */
+         (UTMs included) into the embed. */
       Cal.config = Cal.config || {};
       Cal.config.forwardQueryParams = true;
 
@@ -268,11 +227,6 @@ function CalEmbed({ prefill }: { prefill: Prefill }) {
              list instead of the month grid, which is the right first thing
              to show when the grid would be unreadable. */
           useSlotsViewOnSmallScreen: "true",
-          /* INERT TODAY. bookingHref() carries only the two ids, so neither
-             key is ever present. Wired anyway, because the moment the
-             checkout forwards a name and an email the calendar prefills with
-             no further change here, and a buyer typing details in twice is
-             the commonest reason a paid slot never gets booked. */
           ...(prefill.name ? { name: prefill.name } : {}),
           ...(prefill.email ? { email: prefill.email } : {}),
         },
@@ -287,17 +241,9 @@ function CalEmbed({ prefill }: { prefill: Prefill }) {
          slot. Without it they sit on a confirmed calendar with nowhere to
          go, and the page cannot tell a booked buyer from an unbooked one.
 
-         It goes to /thank-you, the sixth surface, added 2026-09-22. For the
-         few hours in between it returned to THIS page with `booked=1`,
-         because the build had no thank-you route at all; that fallback is
-         still wired below and is explained there.
-
-         Keeping the existing query string preserves `o` and `p`, so the
-         payment ids travel with the buyer and `booked=1` rides along with
-         them. /thank-you does not re-check the payment: by this point
-         Razorpay has confirmed it once on /book and Cal has confirmed the
-         booking, and a confirmation page that can fail its own check is a
-         worse outcome than one that simply confirms.
+         It goes to /thank-you, keeping the existing query string, with
+         `booked=1` added. The `booked=1` fallback on THIS page is explained
+         below.
 
          Belt and braces: a redirect can also be set on the event type in
          Cal's own dashboard. If one is ever set it WINS over this, so leave
@@ -305,6 +251,7 @@ function CalEmbed({ prefill }: { prefill: Prefill }) {
       ns("on", {
         action: "bookingSuccessful",
         callback: () => {
+          trackSchedule();
           const q = new URLSearchParams(window.location.search);
           q.set("booked", "1");
           window.location.href = `/thank-you?${q.toString()}`;
@@ -349,18 +296,9 @@ function Calendar({ prefill }: { prefill: Prefill }) {
    Sections
    --------------------------------------------------------------------- */
 
-function AnnounceStrip({ confirmed }: { confirmed: boolean }) {
+function AnnounceStrip() {
   return (
     <div className="book-announce" role="region" aria-label="Booking status">
-      {confirmed && (
-        <>
-          <span className="book-announce-item is-good">
-            <Tick />
-            Payment Confirmed
-          </span>
-          <span className="book-announce-dot" aria-hidden />
-        </>
-      )}
       <span className="book-announce-item">1:1 With Sandesh</span>
       <span className="book-announce-dot" aria-hidden />
       <span className="book-announce-item">10+ Years Coaching</span>
@@ -380,117 +318,22 @@ function goToCalendar(e: React.MouseEvent<HTMLAnchorElement>) {
   });
 }
 
-/**
- * Three states, three different things to say, and the difference between the
- * last two is the whole point of checking with Razorpay at all:
- *
- *   paid        we know the money is captured
- *   unconfirmed we could not find out (no ids on the link, or our own lookup
- *               failed). They still get a calendar: a real buyer whose query
- *               string was stripped on the way back from a bank app must never
- *               be stranded by our own uncertainty
- *   unpaid      Razorpay knows this order and says it is NOT paid. The only
- *               state where the calendar is withheld
- */
-function Hero({ state }: { state: BookingState }) {
-  const paid = state.status === "paid";
-  const unpaid = state.status === "unpaid";
-
+function Hero() {
   return (
     <section className="book-hero" id="book-top">
       <div className="book-wrap">
-        {paid && (
-          <div className="book-badge">
-            <span className="book-badge-tick" aria-hidden><Tick /></span>
-            Payment Confirmed
-          </div>
-        )}
-
-        {unpaid ? (
-          <h1>
-            One Step Missing. <em>Your Payment.</em>
-          </h1>
-        ) : (
-          <h1>
-            One Last Step. <em>Pick Your Slot.</em>
-          </h1>
-        )}
-
-        {paid ? (
-          <p className="book-hero-sub">
-            Your <strong>{inr(PRICE.amount)}</strong> booking fee is paid. Choose the date and time
-            for your <strong>{LEGAL.product}</strong> below.
-          </p>
-        ) : unpaid ? (
-          <p className="book-hero-sub">
-            We have not received a payment against this booking link yet, so there is no slot to
-            hold. The details are just below.
-          </p>
-        ) : (
-          <p className="book-hero-sub">
-            We could not confirm a payment from this link, which usually just means the
-            confirmation details did not carry across.{" "}
-            <strong>If you have already paid, pick your slot below.</strong> If you have not paid
-            yet, <Link href="/checkout">start here</Link>.
-          </p>
-        )}
-
-        <div className="book-steps">
-          <div className={`book-step${paid ? " is-done" : unpaid ? " is-active" : ""}`}>
-            <span className="book-step-circ">{paid ? <Tick /> : "1"}</span>
-            <span className="book-step-lbl">Paid</span>
-          </div>
-          <span className="book-step-line" aria-hidden />
-          <div className={`book-step${unpaid ? "" : " is-active"}`}>
-            <span className="book-step-circ">2</span>
-            <span className="book-step-lbl">Pick Slot</span>
-          </div>
-        </div>
+        <h1>
+          One Last Step. <em>Pick Your Slot.</em>
+        </h1>
+        <p className="book-hero-sub">
+          Choose the date and time for your <strong>{LEGAL.product}</strong> below.
+        </p>
       </div>
     </section>
   );
 }
 
-/** The one state where the calendar is withheld: Razorpay knows this order and
- *  says it has not been paid. Never phrased as a failure, and it never invites
- *  a second payment for an order that might simply be slow: the wording is the
- *  checkout's own, for the same situation. */
-function NotPaid() {
-  return (
-    <section className="book-section book-light" id="calendar">
-      <div className="book-wrap book-narrow">
-        <div className="book-blocked">
-          <h2>We Have Not Received Your Payment Yet</h2>
-          <p>
-            This booking link points at an order that has not been paid, so there is no slot to
-            hold yet.
-          </p>
-          <p>
-            <strong>
-              If money has already left your account, please do not pay again: email{" "}
-              <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a> with your name and we will book
-              your call.
-            </strong>
-          </p>
-          <Link className="book-btn" href="/checkout">
-            Go Back To Checkout
-            <span className="book-btn-arrow" aria-hidden><Arrow /></span>
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function CalendarSection({
-  state,
-  prefill,
-  booked,
-}: {
-  state: BookingState;
-  prefill: Prefill;
-  booked: boolean;
-}) {
+function CalendarSection({ prefill, booked }: { prefill: Prefill; booked: boolean }) {
   return (
     <section className="book-section book-light-alt" id="calendar">
       <div className="book-wrap">
@@ -513,17 +356,10 @@ function CalendarSection({
             /thank-you, so almost nobody sees this. It stays for the buyer who
             gets back HERE after booking, by the back button, their own
             history, or a redirect configured on the Cal event type that
-            overrides ours. Handing that person the picker again is how a paid
+            overrides ours. Handing that person the picker again is how a
             call gets booked twice, and they cannot tell from a calendar
             whether the first one worked. */}
         {booked ? <BookedPanel /> : <Calendar prefill={prefill} />}
-
-        {state.status === "paid" && (
-          <div className="book-cal-reassure">
-            <Tick />
-            Your {inr(PRICE.amount)} is paid. There is nothing more to pay to attend this call.
-          </div>
-        )}
       </div>
     </section>
   );
@@ -587,24 +423,20 @@ function CoachSection() {
   );
 }
 
-function FinalCTA({ blocked }: { blocked: boolean }) {
+function FinalCTA() {
   return (
     <section className="book-section book-dark-alt" id="book-final">
       <div className="book-wrap book-narrow">
-        {!blocked && (
-          <>
-            <h2 className="book-final-h">
-              The Hard Part Is Done. <em>Now Pick A Time.</em>
-            </h2>
-            <p className="book-final-sub">
-              Nothing else stands between today and a real conversation about your physique.
-            </p>
-            <a className="book-btn book-btn-lg" href="#calendar" onClick={goToCalendar}>
-              Pick My Slot
-              <span className="book-btn-arrow" aria-hidden><Arrow /></span>
-            </a>
-          </>
-        )}
+        <h2 className="book-final-h">
+          The Hard Part Is Done. <em>Now Pick A Time.</em>
+        </h2>
+        <p className="book-final-sub">
+          Nothing else stands between today and a real conversation about your physique.
+        </p>
+        <a className="book-btn book-btn-lg" href="#calendar" onClick={goToCalendar}>
+          Pick My Slot
+          <span className="book-btn-arrow" aria-hidden><Arrow /></span>
+        </a>
 
         <p className="book-support">
           Questions before your call?{" "}
@@ -671,43 +503,22 @@ function StickyBar() {
    --------------------------------------------------------------------- */
 
 export default function BookingPage({
-  state,
   prefill,
   booked = false,
 }: {
-  state: BookingState;
   prefill: Prefill;
   /** `?booked=1`, set by the redirect Cal fires on a completed booking. */
   booked?: boolean;
 }) {
-  /* GA4's browser-side purchase. Ref-guarded on top of the durable key inside
-     trackPurchase(), so StrictMode's double effect never reaches storage
-     twice. */
-  const fired = useRef(false);
-  useEffect(() => {
-    if (fired.current) return;
-    if (state.status !== "paid") return;
-    /* No payment id, no event. transaction_id is what GA4 dedupes on and what
-       lets this event collapse into the webhook's server-side copy of the same
-       sale; sending an empty one would key every such visit to the same row
-       and count one sale for all of them. The webhook still reports the sale,
-       so nothing is lost but the browser-side duplicate. */
-    if (!state.paymentId) return;
-    fired.current = true;
-    trackPurchase(state.paymentId);
-  }, [state]);
-
-  const blocked = state.status === "unpaid";
-
   return (
     <>
-      <AnnounceStrip confirmed={state.status === "paid"} />
-      <Hero state={state} />
-      {blocked ? <NotPaid /> : <CalendarSection state={state} prefill={prefill} booked={booked} />}
-      {!blocked && <IncludedSection />}
+      <AnnounceStrip />
+      <Hero />
+      <CalendarSection prefill={prefill} booked={booked} />
+      <IncludedSection />
       <CoachSection />
-      <FinalCTA blocked={blocked} />
-      {!blocked && <StickyBar />}
+      <FinalCTA />
+      <StickyBar />
     </>
   );
 }

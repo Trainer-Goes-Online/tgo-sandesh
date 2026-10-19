@@ -1,44 +1,32 @@
 /**
- * Pabbly Connect: the fulfilment hand-off.
+ * Pabbly Connect: the hand-off that tells the automation WHO filled the
+ * qualifying form, with their answers, so they land in the sheet before the
+ * call. Fired from /api/lead, once per completed form.
  *
- * Analytics tells Meta and GA4 THAT a sale happened. This tells the automation
- * WHO bought, so the buyer receives the booking link for their 1:1 call, the
- * reminders, and a row Sandesh can see before he takes it. Fired from the
- * Razorpay webhook only, the one place a payment is proven.
- *
- * Failure here must never fail the webhook, because Razorpay retries a non-200
- * and that re-fires Meta and GA4. So it swallows its errors and reports a
- * status, and retries IN PROCESS, because nothing else ever will.
- *
- * The Meta match keys ride along because this is the only place a full,
- * unhashed record of a sale exists, and they make a mis-sent conversion
- * recoverable.
+ * Failure here must never fail the request, so it swallows its errors, reports
+ * a status, and retries IN PROCESS, because nothing else ever will.
  *
  * NEVER REMOVE A KEY once Pabbly's steps map it. Removing one does not error,
- * it silently blanks a column downstream.
+ * it silently blanks a column downstream. The payment-era keys (payment_id,
+ * order_id, purchase_event_id, amount...) are still emitted, empty or zero,
+ * for exactly that reason: the same workflow URL mapped them.
  */
 export const pabblyReady = () => Boolean(process.env.PABBLY_WEBHOOK_URL);
 
-export type PabblyPurchase = {
+export type PabblyLead = {
   leadId: string;
   createdAt: string;
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
-  city: string;
-  /** "+91", kept apart from `phone`, which arrives as full E.164. */
-  dialCode: string;
-  countryCode: string;
   fbc: string;
   fbp: string;
   clientIp: string;
   clientUserAgent: string;
   externalId: string;
   eventSourceUrl: string;
-  amountRupees: number;
   isTest: boolean;
-  purchaseEventId: string;
+  leadEventId: string;
   utmSource: string;
   utmMedium: string;
   utmCampaign: string;
@@ -47,16 +35,15 @@ export type PabblyPurchase = {
   fbclid: string;
   referrer: string;
   landingUrl: string;
-  paymentId: string;
-  orderId: string;
-  currency: string;
   product: string;
-  /** Always "" here: this checkout asks no qualifying question. Emitted so the
-   *  column set matches the other TGO funnels. */
-  occupation: string;
-  /** The absolute /book url for THIS payment, so an automation can re-send it
-   *  to someone who paid and closed the tab before the calendar loaded. */
+  /** The absolute /book url with this person's prefill, so an automation can
+   *  re-send it to someone who closed the tab before booking. */
   bookingUrl: string;
+  physique: string;
+  seriousness: string;
+  investment: string;
+  decision: string;
+  qualified: boolean;
 };
 
 /* Every key is emitted on every call, empty string where unknown: Pabbly builds
@@ -66,29 +53,24 @@ const s = (v: unknown) => (v == null ? "" : String(v));
 
 /* One constant behind both `type` and `event`, so a workflow branching on
    either takes the same path. */
-const RECORD_TYPE = "purchase";
+const RECORD_TYPE = "lead";
 
-export async function sendPabblyPurchase(
-  p: PabblyPurchase,
-): Promise<{ ok: boolean; status: number }> {
+export async function sendPabblyLead(p: PabblyLead): Promise<{ ok: boolean; status: number }> {
   const url = process.env.PABBLY_WEBHOOK_URL ?? "";
   if (!url) return { ok: false, status: 0 };
 
-  /* Built ONCE, outside the retry loop, so a workflow deduping on payment_id
-     sees one sale rather than three near-misses. Flat keys, one level deep: a
-     nested object arrives in Pabbly's step mapper as an unusable blob. */
+  /* Built ONCE, outside the retry loop. Flat keys, one level deep: a nested
+     object arrives in Pabbly's step mapper as an unusable blob. */
   const body = JSON.stringify({
     lead_id: s(p.leadId),
     created_at: s(p.createdAt),
     first_name: s(p.firstName),
     last_name: s(p.lastName),
     email: s(p.email),
-    phone: s(p.phone),
-    city: s(p.city),
-    /* Separate from `phone`, which arrives as full E.164: +1 and +91 both
-       begin with a 1, so no leading-digit rule recovers a merged code. */
-    dial_code: s(p.dialCode),
-    country_code: s(p.countryCode),
+    phone: "",
+    city: "",
+    dial_code: "",
+    country_code: "",
     type: RECORD_TYPE,
     fbc: s(p.fbc),
     fbp: s(p.fbp),
@@ -96,11 +78,11 @@ export async function sendPabblyPurchase(
     client_user_agent: s(p.clientUserAgent),
     external_id: s(p.externalId),
     event_source_url: s(p.eventSourceUrl),
-    amount: p.amountRupees,
+    amount: 0,
     /* Boolean, not the string "false": a Pabbly router condition on a
        non-empty string treats "false" as true. */
     is_test: Boolean(p.isTest),
-    purchase_event_id: s(p.purchaseEventId),
+    purchase_event_id: "",
     utm_source: s(p.utmSource),
     utm_medium: s(p.utmMedium),
     utm_campaign: s(p.utmCampaign),
@@ -111,13 +93,20 @@ export async function sendPabblyPurchase(
     landing_url: s(p.landingUrl),
 
     event: RECORD_TYPE,
-    payment_id: s(p.paymentId),
-    order_id: s(p.orderId),
+    payment_id: "",
+    order_id: "",
     name: `${s(p.firstName)} ${s(p.lastName)}`.trim(),
-    currency: s(p.currency),
+    currency: "",
     product: s(p.product),
-    occupation: s(p.occupation),
+    occupation: "",
     booking_url: s(p.bookingUrl),
+
+    lead_event_id: s(p.leadEventId),
+    physique: s(p.physique),
+    seriousness: s(p.seriousness),
+    investment: s(p.investment),
+    decision: s(p.decision),
+    qualified: Boolean(p.qualified),
   });
 
   const ATTEMPTS = 3;
@@ -129,30 +118,21 @@ export async function sendPabblyPurchase(
         method: "POST",
         headers: { "content-type": "application/json" },
         body,
-        /* A hanging Pabbly must not hold the webhook open until the platform
-           kills the handler: that never returns 200, so Razorpay retries and
-           Meta and GA4 fire twice. */
         signal: AbortSignal.timeout(10_000),
         cache: "no-store",
       });
 
       if (res.ok) {
-        if (attempt > 1) {
-          console.info(
-            `[pabbly] purchase ${p.paymentId} sent on attempt ${attempt}`,
-          );
-        }
+        if (attempt > 1) console.info(`[pabbly] lead ${p.leadId} sent on attempt ${attempt}`);
         return { ok: true, status: res.status };
       }
 
       status = res.status;
 
       /* A 4xx is a deleted or re-generated workflow URL. No number of retries
-         fixes that, and each one holds the webhook open for longer. */
+         fixes that. */
       if (res.status >= 400 && res.status < 500) {
-        console.error(
-          `[pabbly] workflow rejected ${p.paymentId}: ${res.status}`,
-        );
+        console.error(`[pabbly] workflow rejected ${p.leadId}: ${res.status}`);
         return { ok: false, status: res.status };
       }
     } catch {
@@ -166,10 +146,8 @@ export async function sendPabblyPurchase(
     }
   }
 
-  /* Loud: the sale is charged, the buyer is waiting, and no record of them
-     reached the sheet. Nothing downstream will catch this. */
   console.error(
-    `[pabbly] purchase ${p.paymentId} FAILED after ${ATTEMPTS} attempts (last status ${status})`,
+    `[pabbly] lead ${p.leadId} FAILED after ${ATTEMPTS} attempts (last status ${status})`,
   );
   return { ok: false, status };
 }

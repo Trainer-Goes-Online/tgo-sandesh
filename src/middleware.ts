@@ -56,7 +56,7 @@ export function middleware(req: NextRequest) {
   return res;
 }
 
-/* Real page navigations only. API routes are skipped because the checkout POST
+/* Real page navigations only. API routes are skipped because a tracking POST
    must not be treated as a new touch, and Next internals and static files are
    skipped because they are not visits. */
 export const config = {

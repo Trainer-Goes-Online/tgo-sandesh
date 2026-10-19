@@ -2,7 +2,7 @@
   "name": "tgo-sandesh",
   "version": "0.1.0",
   "private": true,
-  "description": "Sandesh Soans — Extreme or Nothing Protocol. VSL funnel (landing + checkout) on Next.js + React 19.",
+  "description": "Sandesh Soans — Extreme or Nothing Protocol. Funnel (landing + free call booking) on Next.js + React 19.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "next": "16.2.10",
-    "razorpay": "^2.9.8",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },

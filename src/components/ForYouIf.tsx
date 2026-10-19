@@ -1,53 +1,27 @@
-import { CheckGlyph, CtaLockup, Section, SectionHeading, revealDelay } from "./sdp";
+import { CheckGlyph, Section, SectionHeading, revealDelay } from "./sdp";
 
-/**
- * BEAT 2: "THIS IS FOR YOU IF" (self-recognition set).
- *
- * Shape: a recognition set, six statements the right reader nods at. Category
- * §2 Contrast, rendered as the VSL blueprint's default: the ONE-SIDED ✓ list in
- * a single centred column. Not the two-column for-you / not-for-you fit-check,
- * which is for offers that need to disqualify; this copy only needs the reader
- * to see himself.
- *
- * Copy is the source md's, verbatim and in its order. Two rendering choices,
- * no word changed:
- *   1. The all-caps line is the EYEBROW and the Title Case line is the H2. That
- *      is the copywriter's own signal (caps = kicker, Title Case = headline)
- *      and it matches the hero, where the caps gate line sits in the pill above
- *      the Title Case H1.
- *   2. The ✔ character becomes the drawn check inside the accent disc, and the
- *      first sentence of each item is set in solid ink so the six statements
- *      scan in one pass. Emphasis only; the sentences are untouched.
- *
- * The section closes with the CTA lockup because the source repeats the button,
- * the three badges and the 5-hour timer here. Server component.
- */
-
-/** [recognition sentence, the sentence that qualifies it], both verbatim. */
+/** [bold lead, the rest of the sentence] */
 const ITEMS: [string, string][] = [
   [
-    "You’ve been training for years, but your physique still doesn’t reflect the amount of time and effort you’ve put into it.",
-    "You’re not completely out of shape, but you’re nowhere close to looking the way you know you could.",
+    "You sit at a desk 9 to 10 hours a day,",
+    "and your belly has grown a little every year since you started working.",
+  ],
+  ["You’ve joined a gym 2 or 3 times", "and stopped within a month because work took over."],
+  [
+    "You’ve tried cutting rice or skipping dinner,",
+    "lost a few kg, and got it all back in a few weeks.",
   ],
   [
-    "You’ve made progress before, only to lose momentum and find yourself starting over again.",
-    "You’re tired of constantly being “in progress” without ever completing the transformation.",
+    "Your shirts are tight around the stomach",
+    "and you’ve started avoiding photos at family functions.",
   ],
   [
-    "You don’t just want to lose weight or “get fit.”",
-    "You want visible abs, more muscle, better proportions and a physique that genuinely stands out.",
+    "You don’t need more fitness videos.",
+    "You want someone to tell you exactly what to eat and what to do this week.",
   ],
   [
-    "You know more fitness information isn’t what you’re missing.",
-    "You need the right structure, progression and accountability to push beyond the level you’ve been able to reach on your own.",
-  ],
-  [
-    "You’re willing to make your physique a genuine priority for the next 90–120 days.",
-    "You’d rather go all in for one focused transformation phase than spend another year making slow, inconsistent progress.",
-  ],
-  [
-    "You want to discover how far you can naturally take your physique.",
-    "Not to become a competitive bodybuilder, but to finally see what your body is capable of when your commitment matches your ambition.",
+    "You can give 4 sessions a week for 90 days.",
+    "Not your whole life. Just 90 days with a proper plan.",
   ],
 ];
 
@@ -56,10 +30,10 @@ export function ForYouIf() {
     <Section id="for-you" band="light">
       <div data-sdp-reveal>
         <SectionHeading
-          eyebrow="FOR MEN WHO ARE DONE LOOKING “FIT” & READY TO LOOK EXCEPTIONAL"
+          eyebrow="FOR BUSY MEN WHO ARE DONE STARTING OVER"
           title={
             <>
-              This Is For <em>You</em> if:
+              This Is For <em>You</em> If:
             </>
           }
         />
@@ -78,9 +52,10 @@ export function ForYouIf() {
         ))}
       </ul>
 
-      <div data-sdp-reveal style={revealDelay(".1s")}>
-        <CtaLockup />
-      </div>
+      <p className="sdp-not-for" data-sdp-reveal style={revealDelay(".1s")}>
+        <strong>Not for you if</strong> you want to lose 10 kg in 10 days, you’re looking for a pill
+        or a crash diet, or you want to step on a bodybuilding stage.
+      </p>
     </Section>
   );
 }

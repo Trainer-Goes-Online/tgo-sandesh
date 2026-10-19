@@ -37,7 +37,3 @@ export const LEGAL = {
    *  day they actually go live, so bump it if the launch slips. */
   effectiveDate: "4 September 2026",
 } as const;
-
-/** The booking fee, in rupees, and the anchor it is shown against. */
-export const PRICE = { amount: 97, anchor: 999 } as const;
-export const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;

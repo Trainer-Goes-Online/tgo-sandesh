@@ -17,7 +17,7 @@ export const metadata: Metadata = {
  * THE CONFIRMATION · /thank-you
  *
  * ── WHERE IT SITS ──────────────────────────────────────────────────────
- *   /checkout -> PAYMENT -> /book -> BOOKING -> /thank-you
+ *   / -> /book -> BOOKING -> /thank-you
  *
  * ── WHY THIS PAGE EXISTS (2026-09-22, Atul) ────────────────────────────
  * It did not, until now. SHAPE's VSL blueprint defines FIVE surfaces, and
@@ -27,22 +27,12 @@ export const metadata: Metadata = {
  * is now the house standard; the blueprint has been updated to match.
  *
  * ── WHAT IT IS FOR, AND WHAT IT IS NOT ─────────────────────────────────
- * By the time anyone lands here they have paid AND booked, so the only thing
- * left to influence is whether they turn up prepared. Every push to book is
- * gone: on a page reached only by booking, a "book your slot" button is a
- * bug.
+ * By the time anyone lands here they have booked, so the only thing left to
+ * influence is whether they turn up prepared. Every push to book is gone: on
+ * a page reached only by booking, a "book your slot" button is a bug.
  *
- * IT FIRES NOTHING. GA4's purchase is already sent from /book, keyed on the
- * payment id, and Meta's Purchase belongs to the signature-verified Razorpay
- * webhook and to nothing else. A second copy of either here would double
- * count every buyer who reaches this page and under-count every UPI buyer who
- * does not. tgo-deepti's thank-you fires nothing for the same reason.
- *
- * There is still no event for the booking itself. `Schedule` is a standard
- * Meta event and Cal's embed now reports a completed booking, so it is
- * finally possible, but it is not in this build's allow-list
- * (src/app/api/meta/event/route.ts) and widening that list is a review, not a
- * line of code: the list is what stops a stranger forging a conversion.
+ * IT FIRES NOTHING. Meta's `Schedule` has already fired on /book, from Cal's
+ * booking callback; a second copy here would double-count every booking.
  *
  * ── COPY ───────────────────────────────────────────────────────────────
  * Modelled beat for beat on tgo-deepti's /thank-you, which Atul named as the
@@ -56,7 +46,7 @@ export const metadata: Metadata = {
  * ⚠️ THE PREP LIST IS MINE, not Sandesh's. It follows from what the call
  * covers (current physique, training, nutrition) and asks for nothing a
  * client would not already have, but it is instructions given to someone who
- * has paid, so it should be confirmed rather than assumed.
+ * has booked, so it should be confirmed rather than assumed.
  *
  * A Server Component: nothing here is interactive.
  */

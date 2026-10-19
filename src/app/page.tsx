@@ -2,39 +2,20 @@ import SdpReveal from "@/components/SdpReveal";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import TrustStrip from "@/components/TrustStrip";
 import Hero from "@/components/Hero";
+import FoodStrip from "@/components/FoodStrip";
+import RealResults from "@/components/RealResults";
 import ForYouIf from "@/components/ForYouIf";
-import CreatorRails from "@/components/CreatorRails";
-import BeforeAfterTrack from "@/components/BeforeAfterTrack";
-import VideoTestimonials from "@/components/VideoTestimonials";
+import WhyBelly from "@/components/WhyBelly";
+import NammaMethod from "@/components/NammaMethod";
 import Founder from "@/components/Founder";
-import FounderStory from "@/components/FounderStory";
 import Included from "@/components/Included";
 import Guarantee from "@/components/Guarantee";
 import Faq from "@/components/Faq";
 import Finale from "@/components/Finale";
 import StickyCta from "@/components/StickyCta";
+import QualifyModal from "@/components/QualifyModal";
 
-/* Sandesh Soans: Extreme or Nothing Protocol. VSL landing page.
-   The 13-beat VSL blueprint on the SDP component system, re-themed IVORY x
-   CHARCOAL x COPPER.
-
-   Band rhythm, ivory unless named:
-     hero (with the VSL as a CHARCOAL block inside it) · for-you-if ·
-     CHARCOAL (the protocol's own product identity, closing on the
-     you-need-not-be-an-athlete turn) · STONE
-     (transformations) · video proof · CHARCOAL (founder authority) · story ·
-     STONE (programme) · CHARCOAL (guarantee) · FAQ · CHARCOAL (close).
-
-   The guarantee is a copper-ruled certification panel on charcoal. Ivory was
-   tried there and read flat, and there was a second reason: the whole beat,
-   including its terms ledger, is written in dark-band tokens, so on a light
-   band most of it rendered ivory-on-ivory. If it is ever moved to a light band
-   again, those tokens have to move with it.
-
-   Beat 6 (mechanism) and beat 9 (two choices) are absent: neither exists in the
-   source copy and neither was invented. See funnel-copy/01-landing-vsl.md.
-
-   The colophon's legal links are live now that the three policy routes exist. */
+/* Sandesh Soans: the NAMMA Method landing page, from "Sandesh Kannada Landing Page.pdf". */
 export default function Home() {
   return (
     <div className="sdp-root">
@@ -42,12 +23,12 @@ export default function Home() {
       <TrustStrip />
       <main>
         <Hero />
+        <FoodStrip />
+        <RealResults />
         <ForYouIf />
-        <CreatorRails />
-        <BeforeAfterTrack />
-        <VideoTestimonials />
+        <WhyBelly />
+        <NammaMethod />
         <Founder />
-        <FounderStory />
         <Included />
         <Guarantee />
         <Faq />
@@ -60,6 +41,7 @@ export default function Home() {
         />
       </main>
       <StickyCta />
+      <QualifyModal />
       {/* Arms reveal-on-scroll. Mount once, last. Fail-open: without it nothing hides. */}
       <SdpReveal />
     </div>

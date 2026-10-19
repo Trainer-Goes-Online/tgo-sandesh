@@ -3,10 +3,10 @@ import crypto from "crypto";
 /**
  * Meta Conversions API primitives, shared by every server-side event route.
  *
- * Standard event names only. A custom event cannot be an Aggregated Event
- * Measurement priority event, does not populate the standard funnel report and
- * cannot be optimised against the same way, so nothing custom is sendable from
- * here at all.
+ * Standard event names, plus ONE custom name: `QualifiedLead`. A custom event
+ * cannot be an Aggregated Event Measurement priority event and does not
+ * populate the standard funnel report; it is reported and optimised through a
+ * custom conversion built on it in Events Manager.
  *
  * ── Health and wellness classification hygiene ────────────────────────────
  * Meta classifies a dataset into its restricted "Health and wellness
@@ -17,7 +17,7 @@ import crypto from "crypto";
  * remove. Every signal that CAN be removed is removed here, and there are
  * exactly two surfaces this file owns:
  *
- *   `custom_data`: value, currency and order_id ONLY. No `content_name`, no
+ *   `custom_data`: not sent at all. No `content_name`, no
  *   product string, no category, no UTM, no fbclid. custom_data is NOT hashed
  *   and IS read, so "Drop 8-10% Body Fat" arriving on every event is a
  *   plain-text declaration of what is being sold, and `utm_campaign` values
@@ -56,22 +56,13 @@ export function originOnly(url: string): string {
 }
 
 /**
- * Meta's standard events. Nothing outside this union is sendable, and that is
+ * Every event name this site sends. Nothing outside this union is sendable, and that is
  * enforced by the type rather than by care: a free-form string is how a body
  * or condition term eventually reaches Meta as an event name, which is the
  * surface that gets a dataset classified. Adding a name here is a type change,
  * which is a review.
- *
- * There is no `QualifiedLead` on this funnel. The event exists in the house
- * build to segment an existing step by a qualifying answer, and this checkout
- * asks no qualifying question. Inventing one to justify the event would be
- * inventing a client fact.
  */
-export type StandardEvent =
-  | "ViewContent"
-  | "AddToCart"
-  | "InitiateCheckout"
-  | "Purchase";
+export type StandardEvent = "ViewContent" | "Lead" | "QualifiedLead" | "Schedule";
 
 export function sha256Hex(value: string): string {
   return crypto.createHash("sha256").update(value).digest("hex");
@@ -138,7 +129,7 @@ function buildUserData(u: UserSignals) {
 /**
  * One event, one POST. Returns Meta's response so routes can log it; never
  * throws into a request, because a failed analytics call must not fail a
- * payment or a page.
+ * page.
  */
 export async function sendCapiEvent(params: {
   pixelId: string;
@@ -147,11 +138,6 @@ export async function sendCapiEvent(params: {
   eventId: string;
   eventSourceUrl: string;
   user: UserSignals;
-  valueRupees: number;
-  currency: string;
-  /* An opaque Razorpay id. It says nothing about what was bought, and Meta
-     uses it for its own deduplication of a purchase across sources. */
-  orderId?: string;
   testEventCode?: string;
 }): Promise<{ ok: boolean; status: number; body: unknown }> {
   const body = {
@@ -163,16 +149,10 @@ export async function sendCapiEvent(params: {
         event_source_url: originOnly(params.eventSourceUrl),
         action_source: "website",
         user_data: buildUserData(params.user),
-        /* Nothing may be added here without the same review these three got.
-           See the classification note at the top of this file: every key below
-           is a number or an opaque id, and that is the property that keeps
-           this dataset unclassified. A product name, a category, a UTM or a
-           path is a plain-text description of a body-composition offer. */
-        custom_data: {
-          currency: params.currency,
-          value: params.valueRupees,
-          ...(params.orderId && { order_id: params.orderId }),
-        },
+        /* No custom_data at all. See the classification note at the top of
+           this file: a product name, a category, a UTM or a path is a
+           plain-text description of a body-composition offer, and with no
+           price there is no value to send either. */
       },
     ],
     ...(params.testEventCode && { test_event_code: params.testEventCode }),

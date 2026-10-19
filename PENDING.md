@@ -1,5 +1,20 @@
 # tgo-sandesh: what is still open
 
+## 0. 18 Oct 2026: paid setup REMOVED (supersedes sections 1 and 2 below)
+
+Every CTA now goes straight to `/book` (free call on Cal.com). Deleted:
+`/checkout`, `CheckoutForm`, all three `/api/razorpay/*` routes,
+`book/order-status.ts`, `order-notes`, `pabbly`, `ga4-server`, `countries`,
+`request-signals`. `checkout-config.ts` became `tracking-config.ts` (Meta
+only). `PRICE` is gone from `legal.ts`; the terms, refund and privacy pages
+were edited to describe a free call. Tracking is ViewContent / view_item on
+the landing page and Meta `Schedule` (CAPI) on Cal's `bookingSuccessful`, no
+value on either. `razorpay` and its 11 transitive packages are out of
+`package.json` and `package-lock.json`. Open:
+
+- The edited policy text needs the same legal read as the rest.
+- The unused `.eon-checkout` / payment-state rules are still in `globals.css`.
+
 ## 1. Payment rail: BUILT (pass 1). Booking page: BUILT (pass 2)
 
 Built and wired:

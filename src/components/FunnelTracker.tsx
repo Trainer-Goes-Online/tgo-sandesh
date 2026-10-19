@@ -14,17 +14,8 @@ import { trackViewItem } from "@/lib/track";
  * tracker in the layout keeps that boundary intact and means a future landing
  * edit cannot silently delete the funnel's first event.
  *
- * It fires on the LANDING ROUTE ONLY. The checkout fires its own arrival event
- * from its own mount, because a visitor who opens /checkout from an email, a
- * retargeting ad or a bookmark never touches the landing page and would
- * otherwise be invisible to Meta until the pay tap. The legal pages fire
- * nothing: a reader of the refund policy has not seen the offer.
- *
- * AddToCart deliberately does NOT fire from here on a CTA click. The landing
- * page carries seven CTAs, so a click listener counts a reader who taps two of
- * them twice, which inflates AddToCart volume and deflates the
- * cost-per-AddToCart the ads are judged on. A click is also not an arrival.
- * Do not re-add it: the two together double-count every ordinary buyer.
+ * It fires on the LANDING ROUTE ONLY. The legal pages fire nothing: a reader of
+ * the refund policy has not seen the offer.
  */
 const LANDING_ROUTES = new Set(["/"]);
 

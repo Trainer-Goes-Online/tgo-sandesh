@@ -36,7 +36,7 @@ const inter = Inter({
    a host that defines the variable with a blank value (Vercel does exactly this
    when a key is added without one) gives new URL('') and ERR_INVALID_URL.
 
-   Keep identical to `fallbackEventSourceUrl` in src/lib/checkout-config.ts,
+   Keep identical to `fallbackEventSourceUrl` in src/lib/tracking-config.ts,
    which is the value Meta receives as event_source_url. */
 const FALLBACK_ORIGIN = "https://transformmebro.com";
 
@@ -56,9 +56,9 @@ const SITE_URL = resolveSiteUrl();
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title:
-    "Sandesh Soans | Drop 8-10% Body Fat & Build Visible Abs In 90-120 Days",
+    "Sandesh Soans | Lose 8-15 KG & Your Stubborn Belly Fat In Just 90 Days",
   description:
-    "The Extreme or Nothing Protocol: a 90-120 day natural physique transformation for men 28-40. 1000+ success stories across 7 countries, 4x natural bodybuilding pro coach, 100% money-back guarantee.",
+    "The NAMMA Method: Karnataka-friendly nutrition, 4 short workouts a week and weekly 1:1 check-ins, so the belly comes off without losing muscle. 1000+ men coached across 7 countries.",
   // Pre-launch: keep out of search until assets and the VSL land.
   robots: { index: false, follow: false },
 };

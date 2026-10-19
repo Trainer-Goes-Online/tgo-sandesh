@@ -1,25 +1,17 @@
 import { NextResponse } from "next/server";
 
-import { CHECKOUT_CONFIG, capiReady } from "@/lib/checkout-config";
+import { TRACKING_CONFIG, capiReady } from "@/lib/tracking-config";
 import { sendCapiEvent, sha256Hex, type StandardEvent } from "@/lib/meta-capi";
 
 /**
- * One route for the three PRE-PAYMENT events: ViewContent, AddToCart and
- * InitiateCheckout.
- *
- * The allow-list below is what keeps a single public endpoint from becoming a
- * hole: only reviewed names are accepted, and PURCHASE IS EXPLICITLY NOT AMONG
- * THEM. Purchase is only ever sent by the Razorpay webhook, where the payment
- * is proven and the request carries a verified signature. Without that
- * exclusion anyone who learns this URL can post a fake sale and teach the ad
- * account to buy the wrong people.
+ * The browser's route into Meta CAPI. The allow-list below is what keeps a
+ * single public endpoint from becoming a hole: only reviewed names are
+ * accepted, so nobody who learns this URL can post a fake conversion.
  *
  * The client IP and user agent are read from THIS request's headers, which is
- * the correct source: this is a fetch from the buyer's own browser. The
- * webhook's equivalent values have to travel via the order notes, because that
- * request comes from Razorpay. See lib/request-signals.ts.
+ * the correct source: this is a fetch from the visitor's own browser.
  */
-const ALLOWED: StandardEvent[] = ["ViewContent", "AddToCart", "InitiateCheckout"];
+const ALLOWED: StandardEvent[] = ["ViewContent", "Lead", "QualifiedLead", "Schedule"];
 
 export async function POST(req: Request) {
   if (!capiReady()) {
@@ -50,8 +42,8 @@ export async function POST(req: Request) {
   const eventId = sha256Hex(`${seed}|${eventName}`);
 
   const result = await sendCapiEvent({
-    pixelId: CHECKOUT_CONFIG.meta.pixelId,
-    accessToken: CHECKOUT_CONFIG.meta.accessToken,
+    pixelId: TRACKING_CONFIG.meta.pixelId,
+    accessToken: TRACKING_CONFIG.meta.accessToken,
     eventName,
     eventId,
     /* Reduced to its origin inside sendCapiEvent, server-side, rather than
@@ -60,17 +52,12 @@ export async function POST(req: Request) {
        fbclid. */
     eventSourceUrl:
       (typeof body.eventSourceUrl === "string" && body.eventSourceUrl) ||
-      CHECKOUT_CONFIG.fallbackEventSourceUrl,
+      TRACKING_CONFIG.fallbackEventSourceUrl,
     user: {
       email: email || undefined,
       phone: typeof body.phone === "string" ? body.phone : undefined,
       firstName: typeof body.firstName === "string" ? body.firstName : undefined,
       lastName: typeof body.lastName === "string" ? body.lastName : undefined,
-      /* The checkout asks, so an overseas buyer is not reported as Indian: a
-         wrong hashed value is worse than a missing one, because it matches
-         nobody while looking like a match key. Falls back to India for the
-         landing-page events, which carry no form. This funnel sells into
-         seven countries, so the fallback matters. */
       country:
         typeof body.country === "string" && body.country.length === 2
           ? body.country.toLowerCase()
@@ -85,13 +72,7 @@ export async function POST(req: Request) {
         undefined,
       clientUserAgent: req.headers.get("user-agent") ?? undefined,
     },
-    valueRupees: CHECKOUT_CONFIG.amountRupees,
-    currency: CHECKOUT_CONFIG.currency,
-    /* No content_name, no UTMs, no order id. These three events happen before
-       an order exists, so custom_data carries value and currency alone. The
-       UTMs the browser still sends in this body are deliberately read for
-       nothing here: they reach the sale through Razorpay's order notes. */
-    testEventCode: CHECKOUT_CONFIG.meta.testEventCode || undefined,
+    testEventCode: TRACKING_CONFIG.meta.testEventCode || undefined,
   });
 
   return NextResponse.json({ ok: result.ok, eventName, eventId });

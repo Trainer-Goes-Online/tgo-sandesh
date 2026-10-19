@@ -8,12 +8,8 @@ import Script from "next/script";
  *
  * This exists because every GA4 call in lib/ga4.ts checks for `window.gtag`
  * and returns quietly when it is absent. Without a base tag on the page, that
- * check never passes: view_item, add_to_cart, begin_checkout, add_payment_info
- * and the browser copy of purchase all silently do nothing, and the failure
- * looks exactly like a working site. The server-side purchase from the
- * Razorpay webhook keeps reporting through the Measurement Protocol, which
- * makes the gap HARDER to spot, not easier: GA4 shows revenue with no funnel
- * above it.
+ * check never passes: view_item silently does nothing, and the failure looks
+ * exactly like a working site.
  *
  * Both tags render nothing when their id is missing, so an unfilled env var
  * leaves no broken script tag behind.
