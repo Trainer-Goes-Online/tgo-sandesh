@@ -2796,27 +2796,23 @@ br.sdp-br-lg{ display:inline; }
   background:#FFFFFF; border:1px solid var(--border); border-radius:var(--r-lg);
   box-shadow:var(--shadow-card);
 }
-.sdp-result-shot{ aspect-ratio:5/4; overflow:hidden; background:var(--bg-dark); }
+/* flex:1 lets the photo fill its card when the row is taller (beside the dark
+   box), cropping slightly instead of leaving white under it. */
+.sdp-result-shot{ flex:1; aspect-ratio:5/4; overflow:hidden; background:var(--bg-dark); }
 .sdp-root .sdp-result-shot img{ width:100%; height:100%; object-fit:cover; object-position:center top; }
-.sdp-result-cap{ display:flex; flex-direction:column; gap:4px; padding:14px 16px 16px; }
-.sdp-result-title{
-  font-family:var(--fh); font-weight:700; font-size:18px; letter-spacing:.03em;
-  text-transform:uppercase; color:var(--ink); line-height:1.15;
-}
-.sdp-result-line{ font-family:var(--fb); font-size:13px; line-height:1.5; color:var(--ink-soft); }
 .sdp-result-dark{
-  display:flex; flex-direction:column; justify-content:space-between; gap:18px;
-  padding:22px; border-radius:var(--r-lg); background:var(--bg-dark); color:var(--ink-dark);
+  display:flex; flex-direction:column; justify-content:space-between; gap:12px;
+  padding:16px 18px; border-radius:var(--r-lg); background:var(--bg-dark); color:var(--ink-dark);
 }
-.sdp-result-dark-split{ border-top:1px solid var(--border-dark-strong); padding-top:18px; }
+.sdp-result-dark-split{ border-top:1px solid var(--border-dark-strong); padding-top:12px; }
 .sdp-result-kicker{
-  display:block; margin-bottom:10px; font-family:var(--fb); font-size:10.5px; font-weight:800;
+  display:block; margin-bottom:6px; font-family:var(--fb); font-size:9.5px; font-weight:800;
   letter-spacing:.16em; text-transform:uppercase; color:var(--brand-bright);
 }
 .sdp-root h3.sdp-result-big{
-  font-size:clamp(20px,2.2vw,26px); line-height:1.12; color:var(--ink-dark); margin:0 0 12px;
+  font-size:clamp(15px,1.55vw,19px); line-height:1.1; color:var(--ink-dark); margin:0 0 6px;
 }
-.sdp-root .sdp-result-dark p{ font-size:13.5px; line-height:1.65; color:var(--ink-dark-soft); margin:0; }
+.sdp-root .sdp-result-dark p{ font-size:12px; line-height:1.5; color:var(--ink-dark-soft); margin:0; }
 
 .sdp-watch-grid{
   display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin:24px auto 0;
@@ -2939,6 +2935,12 @@ br.sdp-br-lg{ display:inline; }
 }
 @media (max-width:640px){
   .sdp-result-grid,.sdp-watch-grid,.sdp-get-grid,.sdp-namma-grid{ grid-template-columns:1fr; }
+  /* Alone in its row on a phone, so no photo height to match: original sizes. */
+  .sdp-result-dark{ gap:18px; padding:22px; }
+  .sdp-result-dark-split{ padding-top:18px; }
+  .sdp-result-kicker{ margin-bottom:10px; font-size:10.5px; }
+  .sdp-root h3.sdp-result-big{ font-size:20px; line-height:1.12; margin:0 0 12px; }
+  .sdp-root .sdp-result-dark p{ font-size:13.5px; line-height:1.65; }
   .sdp-coach-card{ flex-direction:column; text-align:center; gap:14px; padding:20px 16px; }
   .sdp-coach-stat{ align-items:center; }
   .sdp-coach-stat:first-child{ padding-left:12px; }

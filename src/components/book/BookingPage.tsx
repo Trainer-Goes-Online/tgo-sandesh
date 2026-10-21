@@ -251,7 +251,7 @@ function CalEmbed({ prefill }: { prefill: Prefill }) {
       ns("on", {
         action: "bookingSuccessful",
         callback: () => {
-          trackSchedule();
+          trackSchedule(prefill.name, prefill.email);
           const q = new URLSearchParams(window.location.search);
           q.set("booked", "1");
           window.location.href = `/thank-you?${q.toString()}`;

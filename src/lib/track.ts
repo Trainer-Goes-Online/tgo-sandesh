@@ -80,7 +80,14 @@ export function sendLeadToPabbly(lead: {
   }
 }
 
-/** Booking page: Cal reported a completed booking. Meta only. */
-export function trackSchedule() {
-  once("schedule", () => capi("Schedule"));
+/** Booking page: Cal reported a completed booking. Meta only. Carries the
+ *  qualify form's name and email (the /book prefill) so it matches like Lead. */
+export function trackSchedule(name = "", email = "") {
+  const [firstName, ...rest] = name.trim().split(/\s+/);
+  const person = {
+    email: email.trim() || undefined,
+    firstName: firstName || undefined,
+    lastName: rest.join(" ") || undefined,
+  };
+  once("schedule", () => capi("Schedule", person));
 }

@@ -1,34 +1,14 @@
 import { CtaLockup, Section, SectionHeading, revealDelay } from "./sdp";
 import { WatchCards, type WatchItem } from "./WatchCards";
 
-type Result = { src: string; title: string; line: string };
+type Result = { src: string };
 
 const RESULTS: Result[] = [
-  {
-    src: "ba-08.webp",
-    title: "-8 KG IN 2 MONTHS",
-    line: "[Name], CEO and dad, [city]. Lost the belly while running a company.",
-  },
-  {
-    src: "ba-02.webp",
-    title: "[-X KG] IN [X] WEEKS",
-    line: "[Name], [job], [city]. [One line on his schedule.]",
-  },
-  {
-    src: "ba-06.webp",
-    title: "-7 KG IN 2 MONTHS",
-    line: "[Name], [job], [city]. Trained around a packed shoot and travel schedule.",
-  },
-  {
-    src: "ba-01.webp",
-    title: "[-X KG] IN [X] WEEKS",
-    line: "[Name], [job], [city]. [One line on his schedule.]",
-  },
-  {
-    src: "ba-03.webp",
-    title: "[-X KG] IN [X] WEEKS",
-    line: "[Name], [job], [city]. [One line on his schedule.]",
-  },
+  { src: "ba-08.webp" },
+  { src: "ba-02.webp" },
+  { src: "ba-06.webp" },
+  { src: "ba-01.webp" },
+  { src: "ba-03.webp" },
 ];
 
 /* No Chandan film exists among the supplied Vimeo uploads, so his card has no id and renders disabled. */
@@ -44,17 +24,18 @@ const WATCH: WatchItem[] = [
   },
 ];
 
-function ResultCard({ src, title, line }: Result) {
+function ResultCard({ src }: Result) {
   return (
     <figure className="sdp-result-card">
       <div className="sdp-result-shot">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={`/before-after/${src}`} alt={title} loading="lazy" decoding="async" />
+        <img
+          src={`/before-after/${src}`}
+          alt="Client before and after transformation"
+          loading="lazy"
+          decoding="async"
+        />
       </div>
-      <figcaption className="sdp-result-cap">
-        <span className="sdp-result-title">{title}</span>
-        <span className="sdp-result-line">{line}</span>
-      </figcaption>
     </figure>
   );
 }
