@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { BOOKING_HREF } from "@/lib/funnel";
-import { sendLeadToPabbly, trackLead } from "@/lib/track";
+import { sendLeadToPabbly, trackAddToCart, trackLead } from "@/lib/track";
 import { ArrowGlyph, CheckGlyph } from "./sdp";
 
 type Choice = { kind: "choice"; key: string; q: string; options: string[]; other?: string };
@@ -111,6 +111,7 @@ export default function QualifyModal() {
       trigger.current = a;
       setStep(0);
       setOpen(true);
+      trackAddToCart();
     };
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);

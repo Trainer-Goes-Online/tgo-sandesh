@@ -27,7 +27,8 @@ Built and wired:
 - `GET /api/razorpay/order-status`, the confirmation poll that keeps the
   checkout's "wait up to 10 seconds" promise when Razorpay's own handler is
   slow or never fires
-- `POST /api/meta/event` for ViewContent / AddToCart / InitiateCheckout.
+- `POST /api/meta/event` for ViewContent / AddToCart / Lead / QualifiedLead / Schedule.
+  AddToCart fires when a `data-qualify` CTA opens the qualifying form.
   Purchase is excluded from its allow-list so the public endpoint cannot be
   used to forge a sale
 - Meta Pixel, GA4 and Clarity base tags, all from env, all mounted in

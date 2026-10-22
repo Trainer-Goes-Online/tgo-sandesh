@@ -3,7 +3,7 @@
 import { LEGAL } from "@/app/_legal/legal";
 import { collectSignals } from "@/lib/client-signals";
 import { GA4_ITEM_ID } from "@/lib/funnel";
-import { ga4ViewItem, once, type Ga4Item } from "@/lib/ga4";
+import { ga4AddToCart, ga4ViewItem, once, type Ga4Item } from "@/lib/ga4";
 
 /**
  * The one place a page calls to record something. Each function fires the
@@ -45,6 +45,13 @@ export function trackViewItem() {
     capi("ViewContent");
     ga4ViewItem({ value: 0, currency: "INR", items: [ITEM] });
   });
+}
+
+/** A landing CTA opened the qualifying form. Fires on every tap; the CAPI
+ *  route's deterministic event id collapses repeats on Meta's side. */
+export function trackAddToCart() {
+  capi("AddToCart");
+  ga4AddToCart({ value: 0, currency: "INR", items: [ITEM] });
 }
 
 /** Qualifying form submitted. `Lead` for every submission, plus the custom

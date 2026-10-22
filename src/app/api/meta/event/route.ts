@@ -11,7 +11,7 @@ import { sendCapiEvent, sha256Hex, type StandardEvent } from "@/lib/meta-capi";
  * The client IP and user agent are read from THIS request's headers, which is
  * the correct source: this is a fetch from the visitor's own browser.
  */
-const ALLOWED: StandardEvent[] = ["ViewContent", "Lead", "QualifiedLead", "Schedule"];
+const ALLOWED: StandardEvent[] = ["ViewContent", "AddToCart", "Lead", "QualifiedLead", "Schedule"];
 
 export async function POST(req: Request) {
   if (!capiReady()) {

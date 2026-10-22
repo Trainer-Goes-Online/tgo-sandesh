@@ -56,6 +56,7 @@ const money = (m: Money) => ({
 });
 
 export const ga4ViewItem = (m: Money) => send("view_item", money(m));
+export const ga4AddToCart = (m: Money) => send("add_to_cart", money(m));
 
 /* Some events should fire once rather than on every render. The flag is
    stamped BEFORE the call so a rapid double-click or a tab closed

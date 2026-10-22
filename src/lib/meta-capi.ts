@@ -62,7 +62,7 @@ export function originOnly(url: string): string {
  * surface that gets a dataset classified. Adding a name here is a type change,
  * which is a review.
  */
-export type StandardEvent = "ViewContent" | "Lead" | "QualifiedLead" | "Schedule";
+export type StandardEvent = "ViewContent" | "AddToCart" | "Lead" | "QualifiedLead" | "Schedule";
 
 export function sha256Hex(value: string): string {
   return crypto.createHash("sha256").update(value).digest("hex");

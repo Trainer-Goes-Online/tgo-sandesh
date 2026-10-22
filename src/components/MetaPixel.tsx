@@ -10,7 +10,7 @@ import { captureFbclid } from "@/lib/client-signals";
  * The Meta pixel base code and the ONE browser-side event this site fires:
  * PageView.
  *
- * Everything else (ViewContent, AddToCart, InitiateCheckout, Purchase) goes
+ * Everything else (ViewContent, AddToCart, Lead, QualifiedLead, Schedule) goes
  * server-side through the Conversions API, so Meta counts one source of truth
  * per event and browser auto-detection cannot inflate it.
  *
