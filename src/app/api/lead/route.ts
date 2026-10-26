@@ -13,6 +13,8 @@ import { TRACKING_CONFIG } from "@/lib/tracking-config";
  */
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+/** A plus, a non-zero first digit, at most 15 digits in all. */
+const E164 = /^\+[1-9]\d{5,14}$/;
 
 /* Public endpoint: every string is capped so a forged post cannot push an
    arbitrarily large row into the sheet. */
@@ -26,12 +28,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, reason: "bad-json" }, { status: 400 });
   }
 
+  /* All four contact fields are mandatory (client, 2026-10-26), here as well
+     as in the form, because the endpoint is public. Phone must be E.164 with
+     no spaces: "+919075453949". */
   const name = str(body.name, 120);
   const email = str(body.email, 200);
-  if (!name || !EMAIL.test(email)) {
+  const phone = str(body.phone, 20);
+  const city = str(body.city, 80);
+  if (!name || !EMAIL.test(email) || !E164.test(phone) || city.length < 2) {
     return NextResponse.json({ ok: false, reason: "bad-input" }, { status: 400 });
   }
   if (!pabblyReady()) return NextResponse.json({ ok: false, reason: "pabbly-not-configured" });
+
+  const countryCode = /^[A-Z]{2}$/.test(str(body.countryCode, 2)) ? str(body.countryCode, 2) : "";
+  const dialCode = /^\+\d{1,4}$/.test(str(body.dialCode, 5)) ? str(body.dialCode, 5) : "";
 
   const [firstName, ...rest] = name.split(/\s+/);
   const utm = (typeof body.utm === "object" && body.utm ? body.utm : {}) as Record<string, unknown>;
@@ -43,6 +53,10 @@ export async function POST(req: Request) {
     firstName,
     lastName: rest.join(" "),
     email,
+    phone,
+    countryCode,
+    dialCode,
+    city,
     fbc: str(body.fbc),
     fbp: str(body.fbp),
     clientIp:

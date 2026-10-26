@@ -19,6 +19,13 @@ export type PabblyLead = {
   firstName: string;
   lastName: string;
   email: string;
+  /** E.164, no spaces: "+919075453949". "" when the form sent none. */
+  phone: string;
+  /** ISO 3166-1 alpha-2, "IN". */
+  countryCode: string;
+  /** "+91". */
+  dialCode: string;
+  city: string;
   fbc: string;
   fbp: string;
   clientIp: string;
@@ -67,10 +74,13 @@ export async function sendPabblyLead(p: PabblyLead): Promise<{ ok: boolean; stat
     first_name: s(p.firstName),
     last_name: s(p.lastName),
     email: s(p.email),
-    phone: "",
-    city: "",
-    dial_code: "",
-    country_code: "",
+    /* Filled since 2026-10-26, when the form started asking for a phone and
+       city. These keys were already in the payload, empty, so a workflow
+       that mapped them starts receiving values with no remapping. */
+    phone: s(p.phone),
+    city: s(p.city),
+    dial_code: s(p.dialCode),
+    country_code: s(p.countryCode),
     type: RECORD_TYPE,
     fbc: s(p.fbc),
     fbp: s(p.fbp),
