@@ -2,21 +2,18 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { DEFAULT_COUNTRY, countryByCode, isValidPhone, toE164 } from "@/lib/countries";
 import { BOOKING_HREF } from "@/lib/funnel";
 import { sendLeadToPabbly, trackAddToCart, trackLead } from "@/lib/track";
+import PhoneField from "./PhoneField";
 import { ArrowGlyph, CheckGlyph } from "./sdp";
 
 type Choice = { kind: "choice"; key: string; q: string; options: string[]; other?: string };
 type Scale = { kind: "scale"; key: string; q: string; min: string; max: string };
-type Text = {
-  kind: "text";
-  key: "name" | "email";
-  q: string;
-  type: "text" | "email";
-  autoComplete: string;
-  placeholder: string;
-};
-type Question = Choice | Scale | Text;
+/** The last step: name, email and phone together (was two single-field steps
+ *  until 2026-10-26). */
+type Contact = { kind: "contact"; key: "contact"; q: string };
+type Question = Choice | Scale | Contact;
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -67,20 +64,9 @@ const QUESTIONS: Question[] = [
     ],
   },
   {
-    kind: "text",
-    key: "name",
-    q: "Name",
-    type: "text",
-    autoComplete: "name",
-    placeholder: "Your full name",
-  },
-  {
-    kind: "text",
-    key: "email",
-    q: "Email",
-    type: "email",
-    autoComplete: "email",
-    placeholder: "you@example.com",
+    kind: "contact",
+    key: "contact",
+    q: "Where should we send your call details?",
   },
 ];
 
@@ -91,6 +77,14 @@ export default function QualifyModal() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [otherText, setOtherText] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [country, setCountry] = useState(DEFAULT_COUNTRY);
+  const [city, setCity] = useState("");
+  /* Errors show only after a submit attempt or once a field is left, never
+     while someone is still typing their first characters. */
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const trigger = useRef<HTMLElement | null>(null);
   const panel = useRef<HTMLDivElement>(null);
   const body = useRef<HTMLDivElement>(null);
@@ -148,13 +142,19 @@ export default function QualifyModal() {
   const q = QUESTIONS[step];
   const picked = answers[q.key] ?? "";
   const needsOther = q.kind === "choice" && picked === OTHER;
+  const valid = {
+    name: name.trim().length > 0,
+    email: EMAIL.test(email.trim()),
+    phone: isValidPhone(country, phone),
+    city: city.trim().length >= 2,
+  };
   const ready =
-    q.kind === "text"
-      ? q.type === "email"
-        ? EMAIL.test(picked.trim())
-        : picked.trim().length > 0
+    q.kind === "contact"
+      ? valid.name && valid.email && valid.phone && valid.city
       : Boolean(picked) && (!needsOther || otherText.trim().length > 0);
   const last = step === QUESTIONS.length - 1;
+  const showError = (f: keyof typeof valid) => touched[f] && !valid[f];
+  const touch = (f: string) => setTouched((t) => ({ ...t, [f]: true }));
 
   const pick = (value: string) => setAnswers((s) => ({ ...s, [q.key]: value }));
 
@@ -176,33 +176,46 @@ export default function QualifyModal() {
   };
 
   const next = () => {
-    if (!ready) return;
+    if (!ready) {
+      /* The button is disabled until the step is complete, but Enter in a
+         field still lands here: show what is missing rather than nothing. */
+      if (q.kind === "contact") setTouched({ name: true, email: true, phone: true, city: true });
+      return;
+    }
     if (!last) {
       setStep(step + 1);
       return;
     }
     const qualified = answers.investment !== NOT_READY;
+    /* E.164, no spaces: "+919075453949". The one format the webhook, Meta
+       and every SMS / WhatsApp tool accept as-is. */
+    const phoneE164 = toE164(country, phone);
     /* keepalive fetches inside, so the navigation below does not cancel them. */
-    trackLead(answers.name, answers.email, qualified);
+    trackLead(name, email, qualified, phoneE164, country, city.trim());
 
     /* Cal attaches `metadata[...]` query params to the booking it creates; the
-       embed forwards this page's query string into the calendar. */
+       embed forwards this page's query string into the calendar. Name and
+       email are Cal's own booking fields: passed bare, they prefill the
+       calendar instead of riding along as metadata. */
     const params = new URLSearchParams(window.location.search);
+    params.set("name", name.trim());
+    params.set("email", email.trim());
+    params.set("metadata[phone]", phoneE164);
+    params.set("metadata[city]", city.trim());
     for (const item of QUESTIONS) {
-      /* Name and email are Cal's own booking fields: passed bare, they
-         prefill the calendar instead of riding along as metadata. */
-      if (item.kind === "text") {
-        params.set(item.key, answers[item.key].trim());
-        continue;
-      }
+      if (item.kind === "contact") continue;
       const value = answers[item.key] === OTHER ? `Other: ${otherText.trim()}` : answers[item.key];
       params.set(`metadata[${item.key}]`, value);
     }
     const bookingPath = `${BOOKING_HREF}?${params.toString()}`;
 
     sendLeadToPabbly({
-      name: answers.name.trim(),
-      email: answers.email.trim(),
+      name: name.trim(),
+      email: email.trim(),
+      phone: phoneE164,
+      countryCode: country,
+      dialCode: countryByCode(country).dial,
+      city: city.trim(),
       physique: answers.physique === OTHER ? `Other: ${otherText.trim()}` : answers.physique,
       seriousness: answers.seriousness,
       investment: answers.investment,
@@ -293,21 +306,90 @@ export default function QualifyModal() {
               </div>
             </div>
           ) : (
-            <input
-              key={q.key}
-              className="sdp-qm-input"
-              type={q.type}
-              inputMode={q.type === "email" ? "email" : undefined}
-              enterKeyHint={last ? "go" : "next"}
-              autoComplete={q.autoComplete}
-              autoCapitalize={q.type === "email" ? "none" : "words"}
-              placeholder={q.placeholder}
-              aria-labelledby="sdp-qm-q"
-              value={picked}
-              onChange={(e) => pick(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && next()}
-              data-autofocus=""
-            />
+            <div className="sdp-qm-fields">
+              <div className="sdp-qm-field">
+                <label className="sdp-qm-label" htmlFor="sdp-qm-name">Name</label>
+                <input
+                  id="sdp-qm-name"
+                  className={`sdp-qm-input${showError("name") ? " is-invalid" : ""}`}
+                  type="text"
+                  enterKeyHint="next"
+                  autoComplete="name"
+                  autoCapitalize="words"
+                  placeholder="Your full name"
+                  aria-invalid={showError("name") || undefined}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onBlur={() => touch("name")}
+                  onKeyDown={(e) => e.key === "Enter" && next()}
+                  data-autofocus=""
+                />
+                {showError("name") && <p className="sdp-qm-error">Please enter your name.</p>}
+              </div>
+
+              <div className="sdp-qm-field">
+                <label className="sdp-qm-label" htmlFor="sdp-qm-email">Email</label>
+                <input
+                  id="sdp-qm-email"
+                  className={`sdp-qm-input${showError("email") ? " is-invalid" : ""}`}
+                  type="email"
+                  inputMode="email"
+                  enterKeyHint="next"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  placeholder="you@example.com"
+                  aria-invalid={showError("email") || undefined}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onBlur={() => touch("email")}
+                  onKeyDown={(e) => e.key === "Enter" && next()}
+                />
+                {showError("email") && <p className="sdp-qm-error">Please enter a valid email.</p>}
+              </div>
+
+              <div className="sdp-qm-field" onBlur={(e) => {
+                /* Left the whole phone field (code picker included), not just
+                   moved between its two halves. */
+                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) touch("phone");
+              }}>
+                <span className="sdp-qm-label" id="sdp-qm-phone-label">Phone number</span>
+                <PhoneField
+                  code={country}
+                  onCode={setCountry}
+                  value={phone}
+                  onChange={setPhone}
+                  invalid={showError("phone")}
+                  labelledBy="sdp-qm-phone-label"
+                  onEnter={next}
+                />
+                {showError("phone") && (
+                  <p className="sdp-qm-error">
+                    {country === "IN"
+                      ? "Please enter a valid 10-digit mobile number."
+                      : "Please enter a valid phone number."}
+                  </p>
+                )}
+              </div>
+
+              <div className="sdp-qm-field">
+                <label className="sdp-qm-label" htmlFor="sdp-qm-city">City</label>
+                <input
+                  id="sdp-qm-city"
+                  className={`sdp-qm-input${showError("city") ? " is-invalid" : ""}`}
+                  type="text"
+                  enterKeyHint="go"
+                  autoComplete="address-level2"
+                  autoCapitalize="words"
+                  placeholder="Your city"
+                  aria-invalid={showError("city") || undefined}
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  onBlur={() => touch("city")}
+                  onKeyDown={(e) => e.key === "Enter" && next()}
+                />
+                {showError("city") && <p className="sdp-qm-error">Please enter your city.</p>}
+              </div>
+            </div>
           )}
         </div>
 
@@ -319,7 +401,14 @@ export default function QualifyModal() {
           ) : (
             <span />
           )}
-          <button type="button" className="sdp-qm-next" disabled={!ready} onClick={next}>
+          {/* Live on the contact step even while incomplete, so a press shows
+              which field is missing instead of a dead button. */}
+          <button
+            type="button"
+            className="sdp-qm-next"
+            disabled={!ready && q.kind !== "contact"}
+            onClick={next}
+          >
             {last ? "Book My Free Call" : "Continue"}
             <span className="arrow" aria-hidden>
               <ArrowGlyph />

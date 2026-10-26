@@ -21,7 +21,14 @@ const ITEM: Ga4Item = {
   quantity: 1,
 };
 
-type Person = { email?: string; firstName?: string; lastName?: string };
+type Person = {
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  country?: string;
+  city?: string;
+};
 
 /** Fire-and-forget: analytics must never block or fail a click. */
 function capi(eventName: string, person: Person = {}) {
@@ -56,9 +63,25 @@ export function trackAddToCart() {
 
 /** Qualifying form submitted. `Lead` for every submission, plus the custom
  *  `QualifiedLead` when the visitor chose an investment level. Meta only. */
-export function trackLead(name: string, email: string, qualified: boolean) {
+export function trackLead(
+  name: string,
+  email: string,
+  qualified: boolean,
+  phone?: string,
+  country?: string,
+  city?: string,
+) {
   const [firstName, ...rest] = name.trim().split(/\s+/);
-  const person = { email, firstName, lastName: rest.join(" ") || undefined };
+  /* Phone (E.164) and the ISO country lift Meta's match quality; the CAPI
+     route hashes both and otherwise assumes India for the country. */
+  const person = {
+    email,
+    firstName,
+    lastName: rest.join(" ") || undefined,
+    phone: phone || undefined,
+    country: country || undefined,
+    city: city || undefined,
+  };
   capi("Lead", person);
   if (qualified) capi("QualifiedLead", person);
 }
@@ -68,6 +91,13 @@ export function trackLead(name: string, email: string, qualified: boolean) {
 export function sendLeadToPabbly(lead: {
   name: string;
   email: string;
+  /** E.164, no spaces: "+919075453949". */
+  phone: string;
+  /** ISO 3166-1 alpha-2, "IN". */
+  countryCode: string;
+  /** "+91". */
+  dialCode: string;
+  city: string;
   physique: string;
   seriousness: string;
   investment: string;
