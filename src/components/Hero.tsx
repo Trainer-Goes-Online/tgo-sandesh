@@ -51,7 +51,7 @@ export function Hero() {
         </h1>
 
         <p className="sdp-hero-promise" data-sdp-reveal style={revealDelay(".1s")}>
-          Or I’ll keep coaching you free until you get there.
+          Or I’ll keep coaching you at no extra cost until you get there.
         </p>
 
         <p className="sdp-hero-sub" data-sdp-reveal style={revealDelay(".14s")}>

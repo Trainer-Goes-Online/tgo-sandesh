@@ -1,7 +1,9 @@
-import { ArrowGlyph, BOOKING_HREF } from "./sdp";
+import { PRICE, inr } from "@/app/_legal/legal";
 
-const LABEL = "Book My Free Call";
-const NOTE = "Free 1:1 Call With Sandesh";
+import { ArrowGlyph, CHECKOUT_HREF } from "./sdp";
+
+const LABEL = "Book My Call";
+const NOTE = `1:1 Call With Sandesh · ${inr(PRICE.amount)}`;
 const TITLE = "The NAMMA Method";
 
 /* Always visible; the page reserves its height via --stuck-h on .sdp-root. */
@@ -17,7 +19,7 @@ export function StickyCta() {
           </span>
         </div>
 
-        <a className="sdp-stuck-btn" href={BOOKING_HREF} data-qualify>
+        <a className="sdp-stuck-btn" href={CHECKOUT_HREF} data-cta>
           <span>{LABEL}</span>
           <span className="arrow" aria-hidden>
             <ArrowGlyph />

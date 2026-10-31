@@ -5,7 +5,7 @@ import PolicyToc from "@/components/policy/PolicyToc";
 import PolicyContactCTA from "@/components/policy/PolicyContactCTA";
 import SiteFooter from "@/components/SiteFooter";
 import { useTocActive } from "@/components/policy/useTocActive";
-import { LEGAL } from "@/app/_legal/legal";
+import { LEGAL, PRICE, inr } from "@/app/_legal/legal";
 
 /**
  * ⚠️ DRAFTED, NOT SUPPLIED. Atul gave the entity details for these pages but not
@@ -18,8 +18,9 @@ import { LEGAL } from "@/app/_legal/legal";
  */
 const TOC = [
   { id: "who", label: "Who You Contract With" },
-  { id: "what", label: "What You Are Booking" },
+  { id: "what", label: "What You Are Buying" },
   { id: "booking", label: "Booking and Attendance" },
+  { id: "payment", label: "Payment" },
   { id: "refunds", label: "Refunds" },
   { id: "results", label: "Results" },
   { id: "health", label: "Health Disclaimer" },
@@ -41,7 +42,7 @@ export default function TermsAndConditions() {
         title={<>TERMS &amp; <em>CONDITIONS.</em></>}
         sub={
           <>
-            What the free call is, what happens after it, and the limits on both sides. <strong>No jargon, no padding.</strong>
+            What the booking fee buys, what happens after the call, and the limits on both sides. <strong>No jargon, no padding.</strong>
           </>
         }
         metaLabel="Last updated"
@@ -55,7 +56,7 @@ export default function TermsAndConditions() {
 
             <article className="legal-body">
               <p className="legal-intro">
-                These terms govern your booking of the free <strong>{LEGAL.product}</strong> with <strong>{LEGAL.entity}</strong> and any coaching that follows it. By booking the call you accept them.
+                These terms govern your purchase of the <strong>{LEGAL.product}</strong> from <strong>{LEGAL.entity}</strong> and any coaching that follows it. By paying the booking fee you accept them.
               </p>
 
               <section className="legal-section" id="who">
@@ -68,9 +69,10 @@ export default function TermsAndConditions() {
               </section>
 
               <section className="legal-section" id="what">
-                <h2>What You Are Booking</h2>
+                <h2>What You Are Buying</h2>
       <p>
-        The 1:1 Physique Transformation Strategy Call with Sandesh is free. It is a consultation, not the Extreme or Nothing Programme. The
+        {inr(PRICE.amount)} buys a one-time booking fee for a 1:1 Physique Transformation Strategy
+        Call with Sandesh. It is a consultation, not the Extreme or Nothing Programme. The
         programme is a separate enrolment offered after the call, on its own terms and its own
         price, and you are under no obligation to take it.
       </p>
@@ -79,16 +81,26 @@ export default function TermsAndConditions() {
               <section className="legal-section" id="booking">
                 <h2>Booking and Attendance</h2>
       <p>
-        You select a call time when you book. Please attend at the time booked. If
+        You will be asked to select a call time after payment. Please attend at the time booked. If
         you cannot, tell us in advance and we will reschedule you once where a slot is available. A
         call missed without notice is treated as delivered.
+      </p>
+              </section>
+
+              <section className="legal-section" id="payment">
+                <h2>Payment</h2>
+      <p>
+        Payment is taken in Indian Rupees through Razorpay. Prices shown include applicable taxes
+        unless stated otherwise. We reserve the right to change our prices at any time; the price
+        shown when you pay is the price that applies to you.
       </p>
               </section>
 
               <section className="legal-section" id="refunds">
                 <h2>Refunds</h2>
       <p>
-        The call is free, so there is nothing to refund for it. The Extreme or Nothing Programme carries its own 100% Money-Back Guarantee. The
+        The {inr(PRICE.amount)} booking fee is non-refundable, because it pays for the consultation
+        it secures. The Extreme or Nothing Programme carries its own 100% Money-Back Guarantee. The
         full terms of both, including eligibility and the request process, are set out in our
         Refund Policy, which forms part of these terms.
       </p>

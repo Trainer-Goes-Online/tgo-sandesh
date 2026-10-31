@@ -4,7 +4,16 @@
    this file imports from it rather than the other way round. A `'use client'`
    module cannot be called from middleware or an API route: the import
    succeeds, the call throws. Keep the arrow pointing this way. */
-import { CAP, EMPTY, KEY, cut, type Attribution } from "@/lib/attribution-edge";
+import {
+  CAMPAIGN_KEYS,
+  CAP,
+  EMPTY,
+  KEY,
+  capFor,
+  cut,
+  parseAttributionFromUrl,
+  type Attribution,
+} from "@/lib/attribution-edge";
 
 export type { Attribution };
 
@@ -18,27 +27,23 @@ export type { Attribution };
  * navigated there by clicking a link, so the answer to "which ad produced this
  * sale" evaporates one click after arrival unless it is stamped on arrival.
  *
- * Overwrite rule: a visit carrying a utm_source or an fbclid is a new ad click
+ * Overwrite rule: a visit carrying a utm_* or Meta ad param, or an fbclid, is a new ad click
  * and replaces what is stored. A visit with neither leaves the stored campaign
  * alone rather than blanking it, which is what makes paid sales look organic.
  */
 export function captureAttribution(): void {
   if (typeof window === "undefined") return;
   try {
-    const q = new URLSearchParams(window.location.search);
-    const fbclid = q.get("fbclid") ?? "";
-    const utmSource = q.get("utm_source") ?? "";
+    const live = parseAttributionFromUrl(window.location.search);
+    const fbclid = live.fbclid ?? "";
+    const hasCampaign = CAMPAIGN_KEYS.some((k) => live[k]);
 
     /* Nothing to record and something already stored: leave it. */
     const stored = window.localStorage.getItem(KEY);
-    if (stored && !utmSource && !fbclid) return;
+    if (stored && !hasCampaign && !fbclid) return;
 
     const next: Attribution = {
-      utmSource: cut(utmSource, CAP.utm),
-      utmMedium: cut(q.get("utm_medium"), CAP.utm),
-      utmCampaign: cut(q.get("utm_campaign"), CAP.utm),
-      utmContent: cut(q.get("utm_content"), CAP.utm),
-      utmTerm: cut(q.get("utm_term"), CAP.utm),
+      ...EMPTY,
       fbclid: cut(fbclid, CAP.fbclid),
       /* An internal referrer is not an acquisition source. Recording it would
          report every sale as coming from our own landing page. */
@@ -47,6 +52,7 @@ export function captureAttribution(): void {
         : "",
       landingUrl: cut(window.location.href, CAP.landingUrl),
     };
+    for (const k of CAMPAIGN_KEYS) next[k] = cut(live[k], capFor(k));
     window.localStorage.setItem(KEY, JSON.stringify(next));
   } catch {
     /* private mode / storage disabled: attribution is nice to have, never

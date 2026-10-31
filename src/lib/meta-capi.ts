@@ -3,10 +3,13 @@ import crypto from "crypto";
 /**
  * Meta Conversions API primitives, shared by every server-side event route.
  *
- * Standard event names, plus ONE custom name: `QualifiedLead`. A custom event
- * cannot be an Aggregated Event Measurement priority event and does not
- * populate the standard funnel report; it is reported and optimised through a
- * custom conversion built on it in Events Manager.
+ * Standard event names only. A custom event cannot be an Aggregated Event
+ * Measurement priority event and does not populate the standard funnel report.
+ *
+ * Every event is sent TWICE, deliberately: once by the browser pixel and once
+ * from here, with the SAME event_id, which Meta deduplicates. The browser copy
+ * catches what server-side matching misses and vice versa; together they are
+ * what lifts Event Match Quality. See lib/track.ts.
  *
  * ── Health and wellness classification hygiene ────────────────────────────
  * Meta classifies a dataset into its restricted "Health and wellness
@@ -17,7 +20,7 @@ import crypto from "crypto";
  * remove. Every signal that CAN be removed is removed here, and there are
  * exactly two surfaces this file owns:
  *
- *   `custom_data`: not sent at all. No `content_name`, no
+ *   `custom_data`: value, currency and order_id ONLY. No `content_name`, no
  *   product string, no category, no UTM, no fbclid. custom_data is NOT hashed
  *   and IS read, so "Drop 8-10% Body Fat" arriving on every event is a
  *   plain-text declaration of what is being sold, and `utm_campaign` values
@@ -62,7 +65,12 @@ export function originOnly(url: string): string {
  * surface that gets a dataset classified. Adding a name here is a type change,
  * which is a review.
  */
-export type StandardEvent = "ViewContent" | "AddToCart" | "Lead" | "QualifiedLead" | "Schedule";
+export type StandardEvent =
+  | "ViewContent"
+  | "AddToCart"
+  | "InitiateCheckout"
+  | "Purchase"
+  | "Schedule";
 
 export function sha256Hex(value: string): string {
   return crypto.createHash("sha256").update(value).digest("hex");
@@ -138,8 +146,15 @@ export async function sendCapiEvent(params: {
   eventId: string;
   eventSourceUrl: string;
   user: UserSignals;
+  /** The money events only (ViewContent, AddToCart, InitiateCheckout,
+   *  Purchase). Schedule carries none. */
+  valueRupees?: number;
+  currency?: string;
+  /* An opaque Razorpay id. It says nothing about what was bought. */
+  orderId?: string;
   testEventCode?: string;
 }): Promise<{ ok: boolean; status: number; body: unknown }> {
+  const hasValue = typeof params.valueRupees === "number" && params.currency;
   const body = {
     data: [
       {
@@ -149,10 +164,18 @@ export async function sendCapiEvent(params: {
         event_source_url: originOnly(params.eventSourceUrl),
         action_source: "website",
         user_data: buildUserData(params.user),
-        /* No custom_data at all. See the classification note at the top of
-           this file: a product name, a category, a UTM or a path is a
-           plain-text description of a body-composition offer, and with no
-           price there is no value to send either. */
+        /* value, currency and order_id ONLY, and nothing may be added here
+           without the same review. See the classification note at the top of
+           this file: every key below is a number or an opaque id. A product
+           name, a category, a UTM or a path is a plain-text description of a
+           body-composition offer. */
+        ...(hasValue && {
+          custom_data: {
+            currency: params.currency,
+            value: params.valueRupees,
+            ...(params.orderId && { order_id: params.orderId }),
+          },
+        }),
       },
     ],
     ...(params.testEventCode && { test_event_code: params.testEventCode }),

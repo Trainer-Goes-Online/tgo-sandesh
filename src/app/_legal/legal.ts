@@ -37,3 +37,20 @@ export const LEGAL = {
    *  day they actually go live, so bump it if the launch slips. */
   effectiveDate: "4 September 2026",
 } as const;
+
+/**
+ * The booking fee, in whole rupees. From NEXT_PUBLIC_CHECKOUT_PRICE_INR so it
+ * can be changed without a code edit, and NEXT_PUBLIC_ because the checkout,
+ * the landing CTAs and the policies all render it in the browser. The server
+ * reads the same variable for the Razorpay charge and the Meta `value`, so the
+ * label and the charge cannot disagree.
+ *
+ * NEXT_PUBLIC_ values are inlined at BUILD time: change it, then rebuild.
+ * Falls back to 97 when unset, blank or not a positive number.
+ */
+const envPrice = Number((process.env.NEXT_PUBLIC_CHECKOUT_PRICE_INR || "").trim());
+export const PRICE = {
+  amount: Number.isFinite(envPrice) && envPrice > 0 ? Math.round(envPrice) : 97,
+  currency: "INR",
+} as const;
+export const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;

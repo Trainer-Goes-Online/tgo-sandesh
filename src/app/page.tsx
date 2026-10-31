@@ -13,7 +13,6 @@ import Guarantee from "@/components/Guarantee";
 import Faq from "@/components/Faq";
 import Finale from "@/components/Finale";
 import StickyCta from "@/components/StickyCta";
-import QualifyModal from "@/components/QualifyModal";
 
 /* Sandesh Soans: the NAMMA Method landing page, from "Sandesh Kannada Landing Page.pdf". */
 export default function Home() {
@@ -41,7 +40,6 @@ export default function Home() {
         />
       </main>
       <StickyCta />
-      <QualifyModal />
       {/* Arms reveal-on-scroll. Mount once, last. Fail-open: without it nothing hides. */}
       <SdpReveal />
     </div>

@@ -5,20 +5,24 @@ import PolicyToc from "@/components/policy/PolicyToc";
 import PolicyContactCTA from "@/components/policy/PolicyContactCTA";
 import SiteFooter from "@/components/SiteFooter";
 import { useTocActive } from "@/components/policy/useTocActive";
-import { LEGAL } from "@/app/_legal/legal";
+import { LEGAL, PRICE, inr } from "@/app/_legal/legal";
 
 /**
  * Atul's copy, verbatim, in the live SDP funnel's policy structure: pill
  * eyebrow masthead, sticky "On This Page" rail beside the body, ruled sections,
  * charcoal contact close, footer carrying the operator identity.
  *
- * Two substitutions only, both flagged: "[INSERT SUPPORT EMAIL]" resolves to
- * LEGAL.email, and the date replaces "Last updated: x August 2026" (the day was
- * a literal x, and August has passed). No clause was reworded or reordered,
- * except "The ₹97 Booking Fee", rewritten for the free call on 18 Oct 2026.
+ * Substitutions only, all flagged: "[INSERT SUPPORT EMAIL]" resolves to
+ * LEGAL.email, the date replaces "Last updated: x August 2026" (the day was a
+ * literal x, and August has passed), and "₹97" renders from PRICE
+ * (NEXT_PUBLIC_CHECKOUT_PRICE_INR) so the policy cannot disagree with the
+ * charge. No clause was reworded or reordered. The paid booking fee wording
+ * was restored on 31 Oct 2026, when the funnel went back to a paid call.
  */
+const FEE = inr(PRICE.amount);
+
 const TOC = [
-  { id: "fee", label: "The Free Strategy Call" },
+  { id: "fee", label: `The ${FEE} Booking Fee` },
   { id: "guarantee", label: "90–120 Day Money-Back Guarantee" },
   { id: "eligibility", label: "Eligibility Requirements" },
   { id: "target", label: "Personalised Transformation Target" },
@@ -37,7 +41,7 @@ export default function RefundPolicy() {
         title={<>REFUND <em>POLICY.</em></>}
         sub={
           <>
-            What the free call is, what the guarantee covers, what you have to do to qualify, and
+            What the {FEE} buys, what the guarantee covers, what you have to do to qualify, and
             exactly when it does not apply. <strong>No jargon, no padding.</strong>
           </>
         }
@@ -60,15 +64,16 @@ export default function RefundPolicy() {
               </p>
 
               <section className="legal-section" id="fee">
-                <h2>The Free Strategy Call</h2>
+                <h2>The {FEE} Booking Fee</h2>
                 <p>
-                  Your initial 1:1 Physique Transformation Strategy Call with Sandesh is free, so
-                  there is nothing to refund for it.
+                  The {FEE} paid on this website is a one-time booking fee for your initial 1:1
+                  Physique Transformation Strategy Call with Sandesh.
                 </p>
+                <p>Because this fee secures and pays for the consultation, it is non-refundable.</p>
                 <p>
-                  The call is separate from the Extreme or Nothing Programme, which you may choose
-                  to enrol into after the call and which carries its own Money-Back Guarantee as set
-                  out below.
+                  The {FEE} booking fee is separate from the Extreme or Nothing Programme, which you
+                  may choose to enrol into after the call and which carries its own Money-Back
+                  Guarantee as set out below.
                 </p>
               </section>
 

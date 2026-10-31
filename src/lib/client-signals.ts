@@ -12,7 +12,7 @@
 
 import { readAttribution } from "@/lib/attribution";
 
-const EXTERNAL_ID_KEY = "eon_external_id";
+export const EXTERNAL_ID_KEY = "eon_external_id";
 
 export function getOrCreateExternalId(): string {
   if (typeof window === "undefined") return "";
@@ -84,7 +84,7 @@ export function readGaClientId(): string {
  *
  * Note what is NOT here: the client IP and the user agent. Both are read
  * server-side from the request headers, because a browser cannot know its own
- * IP and a user agent sent up in a body is forgeable. See lib/request-signals.
+ * IP and a user agent sent up in a body is forgeable. See lib/request-signals.ts.
  */
 export function collectSignals() {
   const a = readAttribution();
@@ -95,6 +95,18 @@ export function collectSignals() {
     fbp: readCookie("_fbp") || undefined,
     eventSourceUrl: typeof window !== "undefined" ? window.location.href : "",
     utm: readUtm(),
+    /* Meta's dynamic URL parameters (campaign / ad set / ad ids and names,
+       placement, site source), from the same first-landing capture. */
+    ads: {
+      campaignId: a.campaignId,
+      adsetId: a.adsetId,
+      adId: a.adId,
+      campaignName: a.campaignName,
+      adsetName: a.adsetName,
+      adName: a.adName,
+      placement: a.placement,
+      siteSourceName: a.siteSourceName,
+    },
     fbclid: a.fbclid,
     referrer: a.referrer,
     landingUrl: a.landingUrl,

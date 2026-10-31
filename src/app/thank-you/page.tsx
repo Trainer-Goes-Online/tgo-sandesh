@@ -17,7 +17,7 @@ export const metadata: Metadata = {
  * THE CONFIRMATION · /thank-you
  *
  * ── WHERE IT SITS ──────────────────────────────────────────────────────
- *   / -> /book -> BOOKING -> /thank-you
+ *   / -> /checkout -> PAYMENT -> /book -> BOOKING -> /thank-you
  *
  * ── WHY THIS PAGE EXISTS (2026-09-22, Atul) ────────────────────────────
  * It did not, until now. SHAPE's VSL blueprint defines FIVE surfaces, and
@@ -27,11 +27,12 @@ export const metadata: Metadata = {
  * is now the house standard; the blueprint has been updated to match.
  *
  * ── WHAT IT IS FOR, AND WHAT IT IS NOT ─────────────────────────────────
- * By the time anyone lands here they have booked, so the only thing left to
+ * By the time anyone lands here they have paid AND booked, so the only thing left to
  * influence is whether they turn up prepared. Every push to book is gone: on
  * a page reached only by booking, a "book your slot" button is a bug.
  *
- * IT FIRES NOTHING. Meta's `Schedule` has already fired on /book, from Cal's
+ * IT FIRES NOTHING. Purchase fired on /book (pixel) and server-side (verify +
+ * webhook); `Schedule` fired on /book, from Cal's
  * booking callback; a second copy here would double-count every booking.
  *
  * ── COPY ───────────────────────────────────────────────────────────────
