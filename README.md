@@ -1,7 +1,7 @@
 # tgo-sandesh
 
 VSL funnel for **Sandesh Soans** (Extreme or Nothing Protocol, 90-120 day natural
-physique transformation, free 1:1 call entry).
+physique transformation, paid 1:1 call entry: landing -> /checkout (Razorpay) -> /book (Cal.com) -> /thank-you).
 
 - Stack: Next.js 16 App Router, React 19, TypeScript, plain CSS (no Tailwind).
 - Design: the SDP VSL component system (`~/.claude/system/design-system.skin.sdp-vsl.md`),

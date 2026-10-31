@@ -1,6 +1,30 @@
 # tgo-sandesh: what is still open
 
-## 0. 18 Oct 2026: paid setup REMOVED (supersedes sections 1 and 2 below)
+## 00. 31 Oct 2026: PAID AGAIN (supersedes section 0 below)
+
+Flow: `/` (ViewContent; every CTA -> AddToCart) -> `/checkout` (InitiateCheckout
+on Pay) -> Razorpay -> `/book` (payment verified server-side; Purchase) -> Cal
+booking (Schedule) -> `/thank-you`. The qualifying-form modal, `PhoneField`
+and `/api/lead` were removed: CTAs go straight to checkout.
+
+- Price: `NEXT_PUBLIC_CHECKOUT_PRICE_INR` (default 97). Razorpay:
+  `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`.
+- Every Meta event fires on the pixel AND CAPI with one shared event id.
+  Purchase's CAPI copy comes from `/api/razorpay/verify` (buyer's browser,
+  signature-checked) and `/api/razorpay/webhook` (payment.captured), both
+  keyed on the payment id; the public `/api/meta/event` refuses Purchase.
+- Pabbly (same URL) gets ONE row per buyer, only on a captured payment:
+  `event=purchase` from the webhook, with contact details,
+  UTMs and Meta ad params (`campaign_id`, `adset_id`, `ad_id`, names,
+  `placement`, `site_source_name`). The ad URL-parameter template is in
+  `.env.example`. **Re-capture the Pabbly sample payload**: new keys were
+  added, and the old lead-form keys stay in the payload, empty.
+- Open: register the Razorpay webhook; set the ad URL parameters on every
+  ad; the paid policy wording (restored from before 18 Oct) still needs the
+  legal read; the guarantee-vs-non-refundable-fee point in section 2 applies
+  again (the checkout carries the clarifying line).
+
+## 0. 18 Oct 2026: paid setup REMOVED (superseded by 00 above)
 
 Every CTA now goes straight to `/book` (free call on Cal.com). Deleted:
 `/checkout`, `CheckoutForm`, all three `/api/razorpay/*` routes,

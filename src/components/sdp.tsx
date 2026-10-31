@@ -10,9 +10,9 @@
  */
 import type { CSSProperties, ReactNode } from "react";
 
-import { BOOKING_HREF } from "@/lib/funnel";
+import { CHECKOUT_HREF } from "@/lib/funnel";
 
-export { BOOKING_HREF };
+export { CHECKOUT_HREF };
 
 /* ===================================================================
    Glyphs: line icons, never emoji. The source copy prints the CTA
@@ -195,11 +195,12 @@ export function MarkerChips({ items, label }: { items: string[]; label?: string 
 /* ===================================================================
    THE CTA LOCKUP: the button with an optional note line under it.
    =================================================================== */
-export const CTA_LABEL = "Book Your Free 1:1 Call";
+export const CTA_LABEL = "Book Your 1:1 Call";
 
+/* `data-cta` is what FunnelTracker listens for to fire AddToCart. */
 export function PrimaryCTA({ sub }: { sub?: ReactNode }) {
   return (
-    <a className="sdp-cta" href={BOOKING_HREF} data-qualify>
+    <a className="sdp-cta" href={CHECKOUT_HREF} data-cta>
       <span className="sdp-cta-top">
         <span className="cta-label">{CTA_LABEL}</span>
         <span className="arrow" aria-hidden>

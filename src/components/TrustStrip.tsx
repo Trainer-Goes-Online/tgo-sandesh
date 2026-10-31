@@ -18,7 +18,7 @@ export function TrustStrip() {
         <span className="sdp-trust-check" aria-hidden>
           <ShieldGlyph size={18} />
         </span>
-        <span>Results Or I Keep Coaching You Free</span>
+        <span>Results Or Coaching Continues At No Extra Cost</span>
       </span>
 
       <span className="sdp-trust-item">

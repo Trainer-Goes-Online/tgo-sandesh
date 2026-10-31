@@ -1,8 +1,10 @@
+import { PRICE, inr } from "@/app/_legal/legal";
+
 import { CheckGlyph, CtaLockup, revealDelay } from "./sdp";
 
 export type ColophonLink = { label: string; href: string };
 
-const ASSURANCES = ["Free 1:1 call", "Kannada or English", "Limited slots each week"];
+const ASSURANCES = [`1:1 call for ${inr(PRICE.amount)}`, "Kannada or English", "Limited slots each week"];
 
 export function Finale({ links = [] }: { links?: ColophonLink[] }) {
   return (
@@ -20,7 +22,7 @@ export function Finale({ links = [] }: { links?: ColophonLink[] }) {
         </h2>
 
         <p className="sdp-sub sdp-finale-sub" data-sdp-reveal style={revealDelay(".1s")}>
-          Book a free call with Sandesh. You’ll know what’s been holding you back and what your next
+          Book your 1:1 call with Sandesh. You’ll know what’s been holding you back and what your next
           90 days would look like. No pressure, and no pitch if it’s not right for you.
         </p>
 

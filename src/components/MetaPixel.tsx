@@ -4,15 +4,21 @@ import Script from "next/script";
 import { useEffect } from "react";
 
 import { captureAttribution } from "@/lib/attribution";
-import { captureFbclid } from "@/lib/client-signals";
+import { EXTERNAL_ID_KEY, captureFbclid, getOrCreateExternalId } from "@/lib/client-signals";
+import { AM_KEY } from "@/lib/track";
 
 /**
- * The Meta pixel base code and the ONE browser-side event this site fires:
- * PageView.
+ * The Meta pixel base code and PageView.
  *
- * Everything else (ViewContent, AddToCart, Lead, QualifiedLead, Schedule) goes
- * server-side through the Conversions API, so Meta counts one source of truth
- * per event and browser auto-detection cannot inflate it.
+ * The funnel events (ViewContent, AddToCart, InitiateCheckout, Purchase,
+ * Schedule) are fired from lib/track.ts, on the pixel AND the Conversions API
+ * with one shared event id, so Meta deduplicates them.
+ *
+ * ADVANCED MATCHING: `init` is given the buyer's hashed email, phone, name,
+ * city and country once the checkout has collected them (stored hashed by
+ * `rememberPerson` in lib/track.ts), plus our external id. Every page after
+ * the checkout is a full page load, so /book and /thank-you initialise with
+ * them and their browser events match on more than `_fbp`.
  *
  * Renders nothing when the pixel id is absent, so a missing env var leaves no
  * broken script tag behind.
@@ -33,6 +39,9 @@ export default function MetaPixel() {
   useEffect(() => {
     captureFbclid();
     captureAttribution();
+    /* Mint the external id on first landing, so the NEXT page's pixel init
+       already carries it. */
+    getOrCreateExternalId();
   }, []);
 
   if (!PIXEL_ID) return null;
@@ -45,7 +54,9 @@ n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
 n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
 document,'script','https://connect.facebook.net/en_US/fbevents.js');
-fbq('init','${PIXEL_ID}');fbq('track','PageView');`}
+var am={};try{am=JSON.parse(localStorage.getItem('${AM_KEY}')||'{}')||{};
+var x=localStorage.getItem('${EXTERNAL_ID_KEY}');if(x)am.external_id=x;}catch(e){}
+fbq('init','${PIXEL_ID}',am);fbq('track','PageView');`}
       </Script>
       <noscript>
         {/* eslint-disable-next-line @next/next/no-img-element */}

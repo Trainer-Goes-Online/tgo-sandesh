@@ -1,25 +1,29 @@
 /**
- * Pabbly Connect: the hand-off that tells the automation WHO filled the
- * qualifying form, with their answers, so they land in the sheet before the
- * call. Fired from /api/lead, once per completed form.
+ * Pabbly Connect: the hand-off that tells the automation WHO is buying, with
+ * their contact details, their campaign and their Meta ad ids. Same workflow
+ * URL as before (PABBLY_WEBHOOK_URL), fired ONCE per buyer, only when the
+ * payment is captured: type/event = "purchase", from /api/razorpay/webhook.
  *
  * Failure here must never fail the request, so it swallows its errors, reports
  * a status, and retries IN PROCESS, because nothing else ever will.
  *
  * NEVER REMOVE A KEY once Pabbly's steps map it. Removing one does not error,
- * it silently blanks a column downstream. The payment-era keys (payment_id,
- * order_id, purchase_event_id, amount...) are still emitted, empty or zero,
- * for exactly that reason: the same workflow URL mapped them.
+ * it silently blanks a column downstream. The qualifying-form keys (physique,
+ * seriousness, investment, decision, qualified, lead_event_id) are still
+ * emitted, empty, for exactly that reason: the same workflow URL mapped them.
  */
 export const pabblyReady = () => Boolean(process.env.PABBLY_WEBHOOK_URL);
 
-export type PabblyLead = {
+export type PabblyEvent = "purchase";
+
+export type PabblyRecord = {
+  event: PabblyEvent;
   leadId: string;
   createdAt: string;
   firstName: string;
   lastName: string;
   email: string;
-  /** E.164, no spaces: "+919075453949". "" when the form sent none. */
+  /** E.164, no spaces: "+919075453949". */
   phone: string;
   /** ISO 3166-1 alpha-2, "IN". */
   countryCode: string;
@@ -31,26 +35,37 @@ export type PabblyLead = {
   clientIp: string;
   clientUserAgent: string;
   externalId: string;
+  gaClientId: string;
   eventSourceUrl: string;
   isTest: boolean;
-  leadEventId: string;
   utmSource: string;
   utmMedium: string;
   utmCampaign: string;
   utmContent: string;
   utmTerm: string;
+  campaignId: string;
+  adsetId: string;
+  adId: string;
+  campaignName: string;
+  adsetName: string;
+  adName: string;
+  placement: string;
+  siteSourceName: string;
   fbclid: string;
   referrer: string;
   landingUrl: string;
   product: string;
-  /** The absolute /book url with this person's prefill, so an automation can
-   *  re-send it to someone who closed the tab before booking. */
+  amountRupees: number;
+  currency: string;
+  orderId: string;
+  paymentId: string;
+  /** The Meta InitiateCheckout event id. */
+  initiateCheckoutEventId: string;
+  /** The Meta Purchase event id (the payment id). */
+  purchaseEventId: string;
+  /** Absolute /book url for this order, so an automation can re-send it to a
+   *  buyer who closed the tab before booking. */
   bookingUrl: string;
-  physique: string;
-  seriousness: string;
-  investment: string;
-  decision: string;
-  qualified: boolean;
 };
 
 /* Every key is emitted on every call, empty string where unknown: Pabbly builds
@@ -58,11 +73,7 @@ export type PabblyLead = {
    absent cannot be mapped later without re-running the trigger. */
 const s = (v: unknown) => (v == null ? "" : String(v));
 
-/* One constant behind both `type` and `event`, so a workflow branching on
-   either takes the same path. */
-const RECORD_TYPE = "lead";
-
-export async function sendPabblyLead(p: PabblyLead): Promise<{ ok: boolean; status: number }> {
+export async function sendPabbly(p: PabblyRecord): Promise<{ ok: boolean; status: number }> {
   const url = process.env.PABBLY_WEBHOOK_URL ?? "";
   if (!url) return { ok: false, status: 0 };
 
@@ -73,54 +84,68 @@ export async function sendPabblyLead(p: PabblyLead): Promise<{ ok: boolean; stat
     created_at: s(p.createdAt),
     first_name: s(p.firstName),
     last_name: s(p.lastName),
+    name: `${s(p.firstName)} ${s(p.lastName)}`.trim(),
     email: s(p.email),
-    /* Filled since 2026-10-26, when the form started asking for a phone and
-       city. These keys were already in the payload, empty, so a workflow
-       that mapped them starts receiving values with no remapping. */
     phone: s(p.phone),
     city: s(p.city),
     dial_code: s(p.dialCode),
     country_code: s(p.countryCode),
-    type: RECORD_TYPE,
-    fbc: s(p.fbc),
-    fbp: s(p.fbp),
-    client_ip_address: s(p.clientIp),
-    client_user_agent: s(p.clientUserAgent),
-    external_id: s(p.externalId),
-    event_source_url: s(p.eventSourceUrl),
-    amount: 0,
+
+    /* One value behind both `type` and `event`, so a workflow branching on
+       either takes the same path. */
+    type: p.event,
+    event: p.event,
+
+    product: s(p.product),
+    amount: Number(p.amountRupees) || 0,
+    currency: s(p.currency),
+    order_id: s(p.orderId),
+    payment_id: s(p.paymentId),
+    booking_url: s(p.bookingUrl),
     /* Boolean, not the string "false": a Pabbly router condition on a
        non-empty string treats "false" as true. */
     is_test: Boolean(p.isTest),
-    purchase_event_id: "",
+
     utm_source: s(p.utmSource),
     utm_medium: s(p.utmMedium),
     utm_campaign: s(p.utmCampaign),
     utm_content: s(p.utmContent),
     utm_term: s(p.utmTerm),
+    campaign_id: s(p.campaignId),
+    adset_id: s(p.adsetId),
+    ad_id: s(p.adId),
+    campaign_name: s(p.campaignName),
+    adset_name: s(p.adsetName),
+    ad_name: s(p.adName),
+    placement: s(p.placement),
+    site_source_name: s(p.siteSourceName),
     fbclid: s(p.fbclid),
+    fbc: s(p.fbc),
+    fbp: s(p.fbp),
     referrer: s(p.referrer),
     landing_url: s(p.landingUrl),
+    event_source_url: s(p.eventSourceUrl),
 
-    event: RECORD_TYPE,
-    payment_id: "",
-    order_id: "",
-    name: `${s(p.firstName)} ${s(p.lastName)}`.trim(),
-    currency: "",
-    product: s(p.product),
+    client_ip_address: s(p.clientIp),
+    client_user_agent: s(p.clientUserAgent),
+    external_id: s(p.externalId),
+    ga_client_id: s(p.gaClientId),
+    initiate_checkout_event_id: s(p.initiateCheckoutEventId),
+    purchase_event_id: s(p.purchaseEventId),
+
+    /* Qualifying-form era keys. Empty, never removed: see the note above. */
     occupation: "",
-    booking_url: s(p.bookingUrl),
-
-    lead_event_id: s(p.leadEventId),
-    physique: s(p.physique),
-    seriousness: s(p.seriousness),
-    investment: s(p.investment),
-    decision: s(p.decision),
-    qualified: Boolean(p.qualified),
+    lead_event_id: "",
+    physique: "",
+    seriousness: "",
+    investment: "",
+    decision: "",
+    qualified: false,
   });
 
   const ATTEMPTS = 3;
   let status = 0;
+  const tag = `${p.event} ${p.orderId || p.leadId}`;
 
   for (let attempt = 1; attempt <= ATTEMPTS; attempt += 1) {
     try {
@@ -133,7 +158,7 @@ export async function sendPabblyLead(p: PabblyLead): Promise<{ ok: boolean; stat
       });
 
       if (res.ok) {
-        if (attempt > 1) console.info(`[pabbly] lead ${p.leadId} sent on attempt ${attempt}`);
+        if (attempt > 1) console.info(`[pabbly] ${tag} sent on attempt ${attempt}`);
         return { ok: true, status: res.status };
       }
 
@@ -142,7 +167,7 @@ export async function sendPabblyLead(p: PabblyLead): Promise<{ ok: boolean; stat
       /* A 4xx is a deleted or re-generated workflow URL. No number of retries
          fixes that. */
       if (res.status >= 400 && res.status < 500) {
-        console.error(`[pabbly] workflow rejected ${p.leadId}: ${res.status}`);
+        console.error(`[pabbly] workflow rejected ${tag}: ${res.status}`);
         return { ok: false, status: res.status };
       }
     } catch {
@@ -156,8 +181,6 @@ export async function sendPabblyLead(p: PabblyLead): Promise<{ ok: boolean; stat
     }
   }
 
-  console.error(
-    `[pabbly] lead ${p.leadId} FAILED after ${ATTEMPTS} attempts (last status ${status})`,
-  );
+  console.error(`[pabbly] ${tag} FAILED after ${ATTEMPTS} attempts (last status ${status})`);
   return { ok: false, status };
 }

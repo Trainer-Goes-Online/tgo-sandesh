@@ -12,7 +12,7 @@ export function Guarantee() {
 
         <h2 className="sdp-guarantee-title">
           Hit Your Target In 90 Days.
-          <br className="sdp-br-lg" /> <em>Or I Keep Coaching You Free Until You Do.</em>
+          <br className="sdp-br-lg" /> <em>Or I Keep Coaching You Until You Do.</em>
         </h2>
 
         <p className="sdp-guarantee-copy">

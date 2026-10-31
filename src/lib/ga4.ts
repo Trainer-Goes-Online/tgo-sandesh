@@ -5,7 +5,7 @@
  * revenue reports populate with no custom configuration.
  *
  * The two vocabularies differ and that is expected: Meta's ViewContent is
- * GA4's view_item.
+ * GA4's view_item, and Meta's InitiateCheckout is GA4's begin_checkout.
  *
  * All failures are swallowed: analytics must never throw into a click.
  */
@@ -57,6 +57,9 @@ const money = (m: Money) => ({
 
 export const ga4ViewItem = (m: Money) => send("view_item", money(m));
 export const ga4AddToCart = (m: Money) => send("add_to_cart", money(m));
+export const ga4BeginCheckout = (m: Money) => send("begin_checkout", money(m));
+export const ga4Purchase = (m: Money & { transactionId: string }) =>
+  send("purchase", { transaction_id: m.transactionId, ...money(m) });
 
 /* Some events should fire once rather than on every render. The flag is
    stamped BEFORE the call so a rapid double-click or a tab closed
@@ -72,13 +75,17 @@ export function once(key: string, fire: () => void) {
      failure was invisible from both sides. A guard protects its own transport
      and nothing else. GA4's own send() queues safely on its own. */
 
-  /* A per-SESSION guard: a durable key means a returning visitor generates no
-     ViewContent ever again, which starves the retargeting audience and
-     shrinks the optimisation signal. */
+  /* A purchase must never be counted twice for the same transaction, so those
+     keys are remembered for the life of the browser. Everything else is a
+     per-SESSION guard: a durable view_item key means a returning visitor
+     generates no ViewContent ever again, which starves the retargeting
+     audience and shrinks the optimisation signal. */
+  const durable = key.startsWith("purchase_") || key.startsWith("schedule_");
   const k = `eon_ga4_${key}`;
   try {
-    if (window.sessionStorage.getItem(k)) return;
-    window.sessionStorage.setItem(k, "1");
+    const store = durable ? window.localStorage : window.sessionStorage;
+    if (store.getItem(k)) return;
+    store.setItem(k, "1");
   } catch {
     /* private mode: fire anyway rather than lose the event */
   }

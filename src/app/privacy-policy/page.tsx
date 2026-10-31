@@ -69,9 +69,14 @@ export default function PrivacyPolicy() {
                 <h2>What We Collect</h2>
       <ul className="l-list">
         <li>
-          <strong>What you give us.</strong> Your name, email address and phone number when you
-          book a strategy call, and anything you tell us about your training, nutrition, health and
-          goals during that call or the programme that may follow.
+          <strong>What you give us.</strong> Your name, email address, phone number and city when
+          you book a strategy call, and anything you tell us about your training, nutrition, health
+          and goals during that call or the programme that may follow.
+        </li>
+        <li>
+          <strong>Payment details.</strong> Card and UPI details are entered with our payment
+          processor, Razorpay, and are handled by them. We never see or store your full card
+          number.
         </li>
         <li>
           <strong>Usage data.</strong> Pages viewed, approximate location, device and browser, and
@@ -83,8 +88,8 @@ export default function PrivacyPolicy() {
               <section className="legal-section" id="why">
                 <h2>Why We Use It</h2>
       <ul className="l-list">
-        <li>To deliver the call and any coaching you enrol in.</li>
-        <li>To keep the records tax law requires us to keep.</li>
+        <li>To deliver the call and the coaching you have paid for.</li>
+        <li>To take payment and to keep the records tax law requires us to keep.</li>
         <li>To contact you about your booking, your programme and your progress.</li>
         <li>To understand which advertising works, and to improve this website.</li>
       </ul>
@@ -94,7 +99,7 @@ export default function PrivacyPolicy() {
                 <h2>Who We Share It With</h2>
       <p>
         We do not sell your personal information. We share it only with the services that make this
-        site work: Cal.com for booking your call, and analytics and advertising platforms including Google
+        site work: Razorpay for payments, Cal.com for booking your call, and analytics and advertising platforms including Google
         Analytics and Meta, which receive usage data and, for advertising measurement, an encoded
         form of your contact details. Each processes that data under its own policy.
       </p>

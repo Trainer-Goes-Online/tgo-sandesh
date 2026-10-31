@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+
+import { PRICE, inr } from "@/app/_legal/legal";
+
 import { PlusGlyph, Section, SectionHeading } from "./sdp";
 
 const QA: [string, string][] = [
@@ -26,8 +29,8 @@ const QA: [string, string][] = [
     "Yes. Kannada, English or both. Whatever you’re comfortable with.",
   ],
   [
-    "Is the call really free? What happens on it?",
-    "Yes, it’s free. Sandesh looks at where you are today, what’s held you back, and what your 90 days would look like. If it’s not the right fit, he’ll tell you honestly.",
+    "What does the call cost? What happens on it?",
+    `It’s a one-time ${inr(PRICE.amount)} booking fee. Sandesh looks at where you are today, what’s held you back, and what your 90 days would look like. If it’s not the right fit, he’ll tell you honestly.`,
   ],
   [
     "What happens after 90 days?",
