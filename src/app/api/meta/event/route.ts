@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { TRACKING_CONFIG, capiReady } from "@/lib/tracking-config";
+import { logError, logInfo, logWarn, maskEmail } from "@/lib/log";
 import { sendCapiEvent, sha256Hex, type StandardEvent } from "@/lib/meta-capi";
 import { readClientIp, readClientUserAgent, readRequestCookie } from "@/lib/request-signals";
 
@@ -29,6 +30,7 @@ const str = (v: unknown, max = 300) => (typeof v === "string" ? v.trim().slice(0
 
 export async function POST(req: Request) {
   if (!capiReady()) {
+    logError("meta-event", "SKIPPED: CAPI not configured (META_PIXEL_ID / META_CAPI_ACCESS_TOKEN missing)");
     return NextResponse.json({ ok: false, reason: "capi-not-configured" });
   }
 
@@ -41,6 +43,7 @@ export async function POST(req: Request) {
 
   const eventName = String(body.eventName ?? "") as StandardEvent;
   if (!ALLOWED.includes(eventName)) {
+    logWarn("meta-event", "REFUSED event not allowed", { eventName });
     return NextResponse.json(
       { ok: false, reason: "event-not-allowed" },
       { status: 400 },
@@ -61,6 +64,18 @@ export async function POST(req: Request) {
   const eventId = EVENT_ID.test(bodyId) ? bodyId : sha256Hex(`${seed}|${eventName}`);
 
   const country = str(body.country, 2);
+
+  logInfo("meta-event", `${eventName} received from browser`, {
+    event_id: eventId,
+    page: str(body.eventSourceUrl, 1000).split("?")[0],
+    email: maskEmail(email),
+    has_fbp: Boolean(fbp),
+    has_fbc: Boolean(fbc),
+    has_external_id: Boolean(str(body.externalId, 100)),
+    utm_source: str((body.utm as Record<string, unknown> | undefined)?.source),
+    campaign_id: str((body.ads as Record<string, unknown> | undefined)?.campaignId, 32),
+    ad_id: str((body.ads as Record<string, unknown> | undefined)?.adId, 32),
+  });
 
   const result = await sendCapiEvent({
     pixelId: TRACKING_CONFIG.meta.pixelId,

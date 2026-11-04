@@ -2,6 +2,7 @@ import crypto from "crypto";
 
 import { NextResponse } from "next/server";
 
+import { logError, logInfo, logWarn } from "@/lib/log";
 import { ORDER_KIND } from "@/lib/funnel";
 import { notesOf, sendPurchaseCapi, sendPurchasePabbly, type RzpPayment } from "@/lib/purchase";
 import { TRACKING_CONFIG } from "@/lib/tracking-config";
@@ -26,8 +27,14 @@ export async function POST(req: Request) {
   const signature = req.headers.get("x-razorpay-signature") ?? "";
   const secret = TRACKING_CONFIG.razorpay.webhookSecret;
 
+  logInfo("rzp-webhook", "POST received", {
+    bytes: raw.length,
+    has_signature: Boolean(signature),
+    secret_configured: Boolean(secret),
+  });
+
   if (!secret) {
-    console.error("[rzp-webhook] no webhook secret configured");
+    logError("rzp-webhook", "REJECTED: RAZORPAY_WEBHOOK_SECRET is not set in this deployment");
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 
@@ -38,7 +45,11 @@ export async function POST(req: Request) {
      throw inside a webhook is a 500, which Razorpay retries. */
   const valid = sigBuf.length === expBuf.length && crypto.timingSafeEqual(sigBuf, expBuf);
   if (!valid) {
-    console.warn("[rzp-webhook] bad signature, rejected");
+    logWarn("rzp-webhook", "bad signature, rejected", {
+      hint: "secret in Vercel must equal the secret on this webhook in Razorpay, same mode (live/test); redeploy after changing it",
+      secret_len: secret.length,
+      signature_len: signature.length,
+    });
     return NextResponse.json({ ok: false }, { status: 401 });
   }
 
@@ -46,10 +57,12 @@ export async function POST(req: Request) {
   try {
     parsed = JSON.parse(raw);
   } catch {
+    logWarn("rzp-webhook", "ignored: body is not JSON");
     return NextResponse.json({ ok: true, ignored: "bad-json" });
   }
   if (parsed.event !== "payment.captured") {
     // Razorpay sends many event types; only a captured payment is a Purchase.
+    logInfo("rzp-webhook", "signature OK, ignored event type", { event: parsed.event });
     return NextResponse.json({ ok: true, ignored: parsed.event });
   }
 
@@ -61,16 +74,28 @@ export async function POST(req: Request) {
      error: a non-200 makes Razorpay retry a foreign payment for hours. */
   const kind = String(notesOf(payment.notes).kind ?? "");
   if (kind !== ORDER_KIND) {
-    console.warn(`[rzp-webhook] ignored ${String(payment.id ?? "")}: kind="${kind || "none"}"`);
+    logWarn("rzp-webhook", "signature OK, ignored: payment is not from this funnel", {
+      payment_id: String(payment.id ?? ""),
+      kind: kind || "none",
+    });
     return NextResponse.json({ ok: true, ignored: "not-this-funnel" });
   }
 
   /* Fulfilment first, and independent of Meta: a missing CAPI config must
      never stop a paying buyer being recorded. */
+  logInfo("rzp-webhook", "payment.captured accepted (this funnel)", {
+    payment_id: String(payment.id ?? ""),
+    order_id: String(payment.order_id ?? ""),
+    amount_rupees: Number(payment.amount ?? 0) / 100,
+  });
   const pabbly = await sendPurchasePabbly(payment);
   const capi = await sendPurchaseCapi(payment);
 
-  console.log(`[rzp-webhook] ${String(payment.id)} Purchase capi=${capi.ok} pabbly=${pabbly.ok}`);
+  logInfo("rzp-webhook", "DONE", {
+    payment_id: String(payment.id ?? ""),
+    meta_purchase: capi.ok ? "sent" : "FAILED/skipped",
+    pabbly: pabbly.ok ? "sent" : "FAILED/skipped",
+  });
   /* Always 200 once the signature is valid. A non-200 makes Razorpay retry
      the whole webhook, which re-sends the Pabbly row. */
   return NextResponse.json({ ok: true, capi: capi.ok, pabbly: pabbly.ok });

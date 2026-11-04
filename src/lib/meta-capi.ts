@@ -1,5 +1,7 @@
 import crypto from "crypto";
 
+import { logError, logInfo } from "@/lib/log";
+
 /**
  * Meta Conversions API primitives, shared by every server-side event route.
  *
@@ -190,8 +192,39 @@ export async function sendCapiEvent(params: {
         body: JSON.stringify(body),
       },
     );
-    return { ok: res.ok, status: res.status, body: await res.json() };
+    const json = (await res.json()) as {
+      events_received?: number;
+      fbtrace_id?: string;
+      error?: { message?: string; code?: number };
+    };
+    const common = {
+      event_id: params.eventId,
+      status: res.status,
+      user_data_fields: Object.keys(body.data[0].user_data).join(","),
+      value: hasValue ? params.valueRupees : undefined,
+      currency: hasValue ? params.currency : undefined,
+      order_id: params.orderId,
+      test_code: params.testEventCode ? "SET (events go to Test Events only)" : "none (live)",
+      fbtrace_id: json.fbtrace_id,
+    };
+    if (res.ok) {
+      logInfo("meta-capi", `${params.eventName} SENT`, {
+        ...common,
+        events_received: json.events_received,
+      });
+    } else {
+      logError("meta-capi", `${params.eventName} REJECTED by Meta`, {
+        ...common,
+        meta_error: json.error?.message,
+        meta_code: json.error?.code,
+      });
+    }
+    return { ok: res.ok, status: res.status, body: json };
   } catch (e) {
+    logError("meta-capi", `${params.eventName} FAILED (network)`, {
+      event_id: params.eventId,
+      error: String(e),
+    });
     return { ok: false, status: 0, body: String(e) };
   }
 }

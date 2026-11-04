@@ -1,3 +1,4 @@
+import { logError } from "@/lib/log";
 import { bookingHref } from "@/lib/funnel";
 import { sendCapiEvent } from "@/lib/meta-capi";
 import { readOrderContext, type OrderContext } from "@/lib/order-notes";
@@ -107,7 +108,12 @@ export async function sendPurchaseCapi(
   payment: RzpPayment,
   live: { clientIp?: string; clientUserAgent?: string; fbc?: string; fbp?: string } = {},
 ) {
-  if (!capiReady()) return { ok: false, status: 0, body: "capi-not-configured" as unknown };
+  if (!capiReady()) {
+    logError("meta-capi", "Purchase SKIPPED: CAPI not configured (META_PIXEL_ID / META_CAPI_ACCESS_TOKEN missing)", {
+      event_id: String(payment.id ?? ""),
+    });
+    return { ok: false, status: 0, body: "capi-not-configured" as unknown };
+  }
   const { ctx, email, phone, country } = buyerOf(payment);
   const valueRupees = Number(payment.amount ?? 0) / 100 || TRACKING_CONFIG.amountRupees;
 
@@ -142,7 +148,12 @@ export async function sendPurchaseCapi(
 /** The Pabbly "purchase" row, the only Pabbly hand-off in the funnel. Sent
  *  from the webhook only, so each sale is one row. */
 export async function sendPurchasePabbly(payment: RzpPayment) {
-  if (!pabblyReady()) return { ok: false, status: 0 };
+  if (!pabblyReady()) {
+    logError("pabbly", "purchase SKIPPED: PABBLY_WEBHOOK_URL is not set", {
+      payment_id: String(payment.id ?? ""),
+    });
+    return { ok: false, status: 0 };
+  }
   const notes = notesOf(payment.notes);
   const { ctx, email, phone, country } = buyerOf(payment);
   const paymentId = String(payment.id ?? "");

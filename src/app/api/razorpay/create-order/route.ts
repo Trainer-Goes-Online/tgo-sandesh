@@ -2,6 +2,7 @@ import crypto from "crypto";
 
 import { NextResponse } from "next/server";
 
+import { logError, logInfo, logWarn, maskEmail, maskPhone } from "@/lib/log";
 import { ATTR_COOKIE, readAttrCookie } from "@/lib/attribution-edge";
 import { ORDER_KIND } from "@/lib/funnel";
 import { writeOrderNotes, type OrderContext } from "@/lib/order-notes";
@@ -35,7 +36,7 @@ const str = (v: unknown, max = 300) => (typeof v === "string" ? v.trim().slice(0
 
 export async function POST(req: Request) {
   if (!razorpayReady()) {
-    console.error("[create-order] Razorpay keys not configured");
+    logError("create-order", "Razorpay keys not configured (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET)");
     return NextResponse.json({ ok: false, reason: "not-configured" }, { status: 503 });
   }
   const { keyId, keySecret } = TRACKING_CONFIG.razorpay;
@@ -57,7 +58,14 @@ export async function POST(req: Request) {
   const dialRaw = str(body.dialCode, 5);
   const dialCode = /^\+\d{1,4}$/.test(dialRaw) ? dialRaw : "";
 
+  logInfo("create-order", "Pay pressed, creating order", {
+    email: maskEmail(email),
+    phone: maskPhone(phone),
+    country,
+  });
+
   if (!firstName || !lastName || !EMAIL.test(email) || !E164.test(phone) || city.length < 2) {
+    logWarn("create-order", "REJECTED missing/invalid fields");
     return NextResponse.json({ ok: false, reason: "missing-fields" }, { status: 400 });
   }
 
@@ -148,6 +156,20 @@ export async function POST(req: Request) {
     console.error("[create-order] failed", e);
     return NextResponse.json({ ok: false, reason: "network" }, { status: 502 });
   }
+
+  logInfo("create-order", "order CREATED", {
+    order_id: String(order.id),
+    amount_paise: order.amount,
+    lead_id: leadId,
+    key_mode: keyId.startsWith("rzp_live_") ? "live" : "test",
+    utm_source: ctx.utmSource,
+    utm_campaign: ctx.utmCampaign,
+    campaign_id: ctx.campaignId,
+    ad_id: ctx.adId,
+    has_fbp: Boolean(ctx.fbp),
+    has_fbc: Boolean(ctx.fbc),
+    initiate_checkout_event_id: ctx.initiateCheckoutEventId,
+  });
 
   return NextResponse.json({
     ok: true,

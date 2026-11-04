@@ -12,6 +12,8 @@
  * seriousness, investment, decision, qualified, lead_event_id) are still
  * emitted, empty, for exactly that reason: the same workflow URL mapped them.
  */
+import { logError, logInfo, maskEmail, maskPhone } from "@/lib/log";
+
 export const pabblyReady = () => Boolean(process.env.PABBLY_WEBHOOK_URL);
 
 export type PabblyEvent = "purchase";
@@ -75,7 +77,10 @@ const s = (v: unknown) => (v == null ? "" : String(v));
 
 export async function sendPabbly(p: PabblyRecord): Promise<{ ok: boolean; status: number }> {
   const url = process.env.PABBLY_WEBHOOK_URL ?? "";
-  if (!url) return { ok: false, status: 0 };
+  if (!url) {
+    logError("pabbly", "SKIPPED: PABBLY_WEBHOOK_URL is not set");
+    return { ok: false, status: 0 };
+  }
 
   /* Built ONCE, outside the retry loop. Flat keys, one level deep: a nested
      object arrives in Pabbly's step mapper as an unusable blob. */
@@ -147,6 +152,21 @@ export async function sendPabbly(p: PabblyRecord): Promise<{ ok: boolean; status
   let status = 0;
   const tag = `${p.event} ${p.orderId || p.leadId}`;
 
+  logInfo("pabbly", `${p.event} sending`, {
+    order_id: p.orderId,
+    payment_id: p.paymentId,
+    email: maskEmail(p.email),
+    phone: maskPhone(p.phone),
+    amount: p.amountRupees,
+    utm_source: p.utmSource,
+    utm_campaign: p.utmCampaign,
+    campaign_id: p.campaignId,
+    adset_id: p.adsetId,
+    ad_id: p.adId,
+    is_test: p.isTest,
+    keys: Object.keys(JSON.parse(body)).length,
+  });
+
   for (let attempt = 1; attempt <= ATTEMPTS; attempt += 1) {
     try {
       const res = await fetch(url, {
@@ -158,7 +178,7 @@ export async function sendPabbly(p: PabblyRecord): Promise<{ ok: boolean; status
       });
 
       if (res.ok) {
-        if (attempt > 1) console.info(`[pabbly] ${tag} sent on attempt ${attempt}`);
+        logInfo("pabbly", `${tag} SENT`, { status: res.status, attempt });
         return { ok: true, status: res.status };
       }
 
@@ -167,7 +187,7 @@ export async function sendPabbly(p: PabblyRecord): Promise<{ ok: boolean; status
       /* A 4xx is a deleted or re-generated workflow URL. No number of retries
          fixes that. */
       if (res.status >= 400 && res.status < 500) {
-        console.error(`[pabbly] workflow rejected ${tag}: ${res.status}`);
+        logError("pabbly", `${tag} REJECTED by workflow (check PABBLY_WEBHOOK_URL)`, { status: res.status });
         return { ok: false, status: res.status };
       }
     } catch {
@@ -181,6 +201,6 @@ export async function sendPabbly(p: PabblyRecord): Promise<{ ok: boolean; status
     }
   }
 
-  console.error(`[pabbly] ${tag} FAILED after ${ATTEMPTS} attempts (last status ${status})`);
+  logError("pabbly", `${tag} FAILED after ${ATTEMPTS} attempts`, { last_status: status });
   return { ok: false, status };
 }
