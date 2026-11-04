@@ -9,9 +9,8 @@ import { readClientIp, readClientUserAgent, readRequestCookie } from "@/lib/requ
  *
  * The allow-list below is what keeps a single public endpoint from becoming a
  * hole: only reviewed names are accepted, and PURCHASE IS EXPLICITLY NOT AMONG
- * THEM. Purchase is only ever sent server-side where the payment is proven:
- * /api/razorpay/verify (signature checked) and /api/razorpay/webhook
- * (signature checked). Without that exclusion anyone who learns this URL can
+ * THEM. Purchase is only ever sent once, by /api/razorpay/webhook (signature
+ * checked). Without that exclusion anyone who learns this URL can
  * post a fake sale and teach the ad account to buy the wrong people.
  *
  * The client IP and user agent are read from THIS request's headers, which is

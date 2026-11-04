@@ -648,7 +648,7 @@ export default function BookingPage({
      never reach Meta or GA4 twice. */
   useEffect(() => {
     if (state.status !== "paid" || !state.paymentId) return;
-    trackPurchase(state.paymentId, state.orderId);
+    trackPurchase(state.paymentId);
   }, [state]);
 
   const blocked = state.status === "unpaid";

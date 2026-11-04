@@ -15,8 +15,8 @@ export const metadata: Metadata = {
  * for.
  *
  *   Pay pressed      -> InitiateCheckout (pixel + CAPI)
- *   Payment success  -> /api/razorpay/verify sends Purchase (CAPI), then the
- *                       buyer is moved to /book, which fires the pixel copy
+ *   Payment success  -> buyer is moved to /book. Purchase is sent once, by the
+ *                       Razorpay webhook, and nowhere else
  */
 export default function CheckoutPage() {
   return (

@@ -35,7 +35,7 @@ export const LEGAL = {
   /** ⚠️ Atul's draft read "x August 2026" with the day left as a literal x, and
    *  August has passed. Set to the day these were written. It must match the
    *  day they actually go live, so bump it if the launch slips. */
-  effectiveDate: "4 September 2026",
+  effectiveDate: "4 November 2026",
 } as const;
 
 /**

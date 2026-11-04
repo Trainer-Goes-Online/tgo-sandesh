@@ -12,8 +12,7 @@ import { TRACKING_CONFIG } from "@/lib/tracking-config";
  * THE AUTHORITATIVE PURCHASE. A browser-side signal misses every UPI payer who
  * completes inside a bank app and never returns to the tab; this is the only
  * place the payment is proven whether or not the buyer comes back. The
- * checkout's /api/razorpay/verify sends the same Purchase (same event_id, the
- * payment id) from the buyer's browser, and Meta collapses the two.
+ * Purchase is sent from nowhere else (no browser pixel, no verify route).
  *
  * This request's own IP and user agent are deliberately NOT read; they are
  * Razorpay's. The buyer's come from the order notes.

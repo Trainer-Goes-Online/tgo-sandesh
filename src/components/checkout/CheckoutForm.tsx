@@ -373,20 +373,8 @@ export default function CheckoutForm() {
           },
         },
         handler: (r: RzpSuccess) => {
-          /* Purchase, server side, from THIS browser's request: the verify
-             route checks Razorpay's signature and sends Meta's Purchase with
-             the buyer's live IP and user agent. keepalive, so the navigation
-             below cannot cancel it. The pixel copy fires on /book. */
-          try {
-            void fetch("/api/razorpay/verify", {
-              method: "POST",
-              headers: { "content-type": "application/json" },
-              body: JSON.stringify(r),
-              keepalive: true,
-            });
-          } catch {
-            /* the webhook still sends Purchase */
-          }
+          /* Nothing is sent to Meta from here. Purchase is sent exactly once,
+             by the Razorpay webhook. */
           goToBooking(String(r?.razorpay_payment_id ?? ""), order.orderId);
         },
       });

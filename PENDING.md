@@ -9,10 +9,11 @@ and `/api/lead` were removed: CTAs go straight to checkout.
 
 - Price: `NEXT_PUBLIC_CHECKOUT_PRICE_INR` (default 97). Razorpay:
   `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`.
-- Every Meta event fires on the pixel AND CAPI with one shared event id.
-  Purchase's CAPI copy comes from `/api/razorpay/verify` (buyer's browser,
-  signature-checked) and `/api/razorpay/webhook` (payment.captured), both
-  keyed on the payment id; the public `/api/meta/event` refuses Purchase.
+- Every Meta event except Purchase fires on the pixel AND CAPI with one shared
+  event id. Purchase is sent ONCE, server-side, by `/api/razorpay/webhook`
+  (payment.captured), keyed on the payment id. There is no browser-pixel
+  Purchase and no `/api/razorpay/verify` route; the public `/api/meta/event`
+  refuses Purchase.
 - Pabbly (same URL) gets ONE row per buyer, only on a captured payment:
   `event=purchase` from the webhook, with contact details,
   UTMs and Meta ad params (`campaign_id`, `adset_id`, `ad_id`, names,

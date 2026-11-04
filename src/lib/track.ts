@@ -29,10 +29,9 @@ import {
  * Meta deduplicates the pair on (event name, event id), so nothing is counted
  * twice, and each copy fills the gaps in the other.
  *
- * Purchase is the exception on the server half: it is NEVER sent through the
- * public /api/meta/event route. Its CAPI copy comes from the signature-checked
- * /api/razorpay/verify and /api/razorpay/webhook, keyed on the Razorpay payment
- * id, and the browser pixel copy below uses that same id.
+ * Purchase is the exception: it is NEVER sent from the browser or through the
+ * public /api/meta/event route. It is sent exactly once, by the
+ * signature-checked /api/razorpay/webhook, keyed on the Razorpay payment id.
  */
 
 declare global {
@@ -179,15 +178,13 @@ export function trackInitiateCheckout(person: Person): string {
 }
 
 /**
- * Browser half of Purchase, plus GA4's purchase. Called from /book once
- * Razorpay has confirmed the order is paid, with the payment id Razorpay
- * reports. The CAPI half (same id) comes from /api/razorpay/verify and the
- * webhook. Keyed on the payment id: a refresh must not count the sale twice,
- * a genuine second purchase later must.
+ * GA4's purchase ONLY. Meta's Purchase is deliberately NOT fired from the
+ * browser: it is sent once, server-side, by the Razorpay webhook. Called from
+ * /book once Razorpay has confirmed the order is paid. Keyed on the payment
+ * id so a refresh does not count the sale twice.
  */
-export function trackPurchase(paymentId: string, orderId: string) {
+export function trackPurchase(paymentId: string) {
   once(`purchase_${paymentId}`, () => {
-    pixel("Purchase", { value: VALUE, currency: CURRENCY, order_id: orderId || undefined }, paymentId);
     ga4Purchase({ transactionId: paymentId, ...money });
   });
 }
