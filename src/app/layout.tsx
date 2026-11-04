@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Oswald } from "next/font/google";
+import localFont from "next/font/local";
 
 import Analytics from "@/components/Analytics";
 import FunnelTracker from "@/components/FunnelTracker";
@@ -10,17 +10,24 @@ import "./globals.css";
    read as a gym poster next to copper. Two weights only: 600 sets the headings,
    700 is there for the few places that need to push harder. Anything more and
    the display voice stops being one voice. */
-const oswald = Oswald({
+/* SELF-HOSTED, deliberately. next/font/google downloads the font from Google
+   at BUILD time, and when that fetch failed on Vercel the whole deploy failed
+   ("next/font/google queries have exactly one entry"), which also silently
+   blocked every env-var redeploy. These are the latin variable woff2 files
+   from @fontsource-variable (OFL licence), committed under ./fonts, so a build
+   never touches the network for fonts. The variable files cover 600 and 700. */
+const oswald = localFont({
   variable: "--font-oswald",
-  subsets: ["latin"],
-  weight: ["600", "700"],
+  src: "./fonts/oswald-latin-wght-normal.woff2",
+  weight: "200 700",
   display: "swap",
 });
 
 /* BODY: neutral grotesque, the skin's --fb role. */
-const inter = Inter({
+const inter = localFont({
   variable: "--font-inter",
-  subsets: ["latin"],
+  src: "./fonts/inter-latin-wght-normal.woff2",
+  weight: "100 900",
   display: "swap",
 });
 
