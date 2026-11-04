@@ -17,7 +17,7 @@ import { TRACKING_CONFIG } from "@/lib/tracking-config";
  * This request's own IP and user agent are deliberately NOT read; they are
  * Razorpay's. The buyer's come from the order notes.
  *
- * Register at: <site>/api/razorpay/webhook, event `payment.captured`, with a
+ * Register at: https://transformmebro.com/api/razorpay/webhook, event `payment.captured`, with a
  * secret from Razorpay Settings -> Webhooks (a DIFFERENT value from the API
  * keys) in RAZORPAY_WEBHOOK_SECRET.
  */
