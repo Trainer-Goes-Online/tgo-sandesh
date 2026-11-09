@@ -28,18 +28,18 @@ import { trackPurchase, trackSchedule } from "@/lib/track";
  *             cancel it.
  */
 
-/* Verbatim from funnel-copy/01-landing-vsl.md, the source of truth. Nothing
-   below is inferred, rounded or restated. */
+/* From the landing page (components/Founder.tsx, Hero.tsx, AnnouncementBar.tsx),
+   so the two pages describe the same coach with the same numbers. */
 const COACH_CREDS = [
-  "First Indian to earn Pro Cards across natural bodybuilding federations in India through a completely self-coached journey.",
-  "Finished Top 20 amongst ~16,000–17,000 participants in the Fitter Transformation Challenge.",
-  "Represented India internationally and placed 5th in the Fitness Model category.",
-  "Has coached athletes to Gold, Silver & Bronze Medals, Pro Cards, Overall Titles, Champion Posing & Conditioning Awards.",
+  "Coached himself to 4 natural bodybuilding pro cards.",
+  "Represented India internationally and placed 5th.",
+  "Prepared athletes who won gold, silver and bronze.",
+  "Stepped away from stage prep to coach working men, around your job, your family and the food you grew up eating.",
 ];
 
 const COACH_STATS = [
-  { n: "10+ Yrs", l: "Coaching Experience" },
-  { n: "1000+", l: "Success Stories" },
+  { n: "8+ Yrs", l: "Coaching Experience" },
+  { n: "1000+", l: "Men Coached" },
   { n: "4X", l: "Natural Bodybuilding Pro" },
   { n: "7", l: "Countries Coached" },
 ];
@@ -328,9 +328,9 @@ function AnnounceStrip() {
     <div className="book-announce" role="region" aria-label="Booking status">
       <span className="book-announce-item">1:1 With Sandesh</span>
       <span className="book-announce-dot" aria-hidden />
-      <span className="book-announce-item">10+ Years Coaching</span>
+      <span className="book-announce-item">8+ Years Coaching</span>
       <span className="book-announce-dot" aria-hidden />
-      <span className="book-announce-item">1000+ Success Stories</span>
+      <span className="book-announce-item">1000+ Men Coached</span>
     </div>
   );
 }
@@ -383,7 +383,7 @@ function Hero({ state }: { state: BookingState }) {
         {paid ? (
           <p className="book-hero-sub">
             Your <strong>{inr(PRICE.amount)}</strong> booking fee is paid. Choose the date and time
-            for your <strong>{LEGAL.product}</strong> below.
+            for your <strong>1:1 call with Sandesh</strong> below.
           </p>
         ) : unpaid ? (
           <p className="book-hero-sub">
@@ -523,7 +523,7 @@ function CoachSection() {
           <div className="book-eyebrow is-dark">WHO YOU ARE TALKING TO</div>
           <h2 className="book-h2 is-dark">Sandesh Soans</h2>
           <p className="book-coach-role">
-            4X Natural Bodybuilding Pro · Specialist In Natural Body Recomposition
+            4X Natural Bodybuilding Pro · Now Coaches Busy Working Kannadiga Men
           </p>
 
           <ul className="book-coach-creds">
@@ -557,7 +557,7 @@ function FinalCTA() {
           The Hard Part Is Done. <em>Now Pick A Time.</em>
         </h2>
         <p className="book-final-sub">
-          Nothing else stands between today and a real conversation about your physique.
+          You’ll know what’s been holding you back and what your next 90 days would look like.
         </p>
         <a className="book-btn book-btn-lg" href="#calendar" onClick={goToCalendar}>
           Pick My Slot

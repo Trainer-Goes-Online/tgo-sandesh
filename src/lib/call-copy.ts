@@ -1,13 +1,12 @@
 /**
- * WHAT THE STRATEGY CALL CONTAINS, in one place. Read by the booking page and
- * the thank-you page, so both describe the call identically.
+ * WHAT THE CALL CONTAINS, in one place. Read by the checkout, the booking page
+ * and the thank-you page, so all three describe the call identically.
  *
- * ⚠️ THEY STILL NEED SANDESH'S SIGN-OFF. They were written during the build,
- * not supplied by him, and they are the only description anywhere of what the
- * call actually contains. Edit here, once.
+ * Reworded from the landing page's FAQ and closing section when the offer
+ * became the NAMMA Method. Edit here, once.
  */
 export const WHAT_THE_CALL_COVERS = [
-  "A personalised assessment of your current physique, training and nutrition to identify exactly what’s holding back your progress",
-  "A clear 90–120 day transformation roadmap to reduce body fat, build visible muscle and push your natural physique towards its peak",
-  "A walkthrough of the Extreme or Nothing Protocol and an honest assessment of whether it’s the right fit for your body, goals and commitment level",
+  "A look at where you are today: your belly, your food, your work hours and what’s held you back so far",
+  "What your next 90 days would look like, with Karnataka-friendly food, 4 short workouts a week and weekly 1:1 check-ins",
+  "A walkthrough of the NAMMA Method and an honest answer on whether it’s right for you. No pressure, and no pitch if it’s not",
 ] as const;

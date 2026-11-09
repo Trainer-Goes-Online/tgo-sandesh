@@ -5,8 +5,8 @@ import { LEGAL } from "@/app/_legal/legal";
 import { WHAT_THE_CALL_COVERS } from "@/lib/call-copy";
 
 export const metadata: Metadata = {
-  title: "You Are Booked · Extreme or Nothing",
-  description: "Your 1:1 Physique Transformation Strategy Call is confirmed.",
+  title: "You Are Booked · The NAMMA Method",
+  description: "Your 1:1 call with Sandesh is confirmed.",
   /* Never indexable, for the same reason as /book: it is a post-payment page
      and a search result for it would send strangers into a confirmation for a
      call they have not booked. */
@@ -61,19 +61,19 @@ const first = (v: string | string[] | undefined) =>
 const HAVE_READY: [string, string][] = [
   [
     "Recent photos",
-    "Front, side and back, in the same light. They say more about where you actually are than a number does.",
+    "Front, side and back, in the same light. They show where you’re starting better than a number does.",
   ],
   [
-    "Your current weight",
-    "Plus any measurements you already track. If you track nothing, that is an answer too.",
+    "Your weight and waist size",
+    "A rough number is fine. If you’ve never measured, that’s an answer too.",
   ],
   [
-    "Your real training week",
-    "What you actually did the last seven days, not the week you meant to have.",
+    "Your real work week",
+    "Office hours, travel, and whether you’d train at the gym or at home. Your plan is built around this.",
   ],
   [
     "A normal day of eating",
-    "An ordinary day, not a good one. The ordinary day is the one worth fixing.",
+    "Rice, ragi, dosa, whatever’s cooked at home. An ordinary day, not a good one. We change how much and when, not what.",
   ],
 ];
 
@@ -142,7 +142,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
           <div className="book-head">
             <div className="book-eyebrow">WHAT THIS CALL ACTUALLY IS</div>
             <h2 className="book-h2">
-              This is not a <em>sales call.</em>
+              No pressure. <em>Just an honest answer.</em>
             </h2>
           </div>
 
@@ -177,8 +177,8 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
           </ul>
 
           <p className="ty-note">
-            Come with what is true for you today, not what you wish were true. The honest version is
-            the one that can actually be worked from.
+            Come with what is true for you today, not what you wish were true. And speak in Kannada,
+            English or both, whatever you’re comfortable with.
           </p>
         </div>
       </section>
@@ -197,7 +197,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
         </div>
       </section>
 
-      <SiteFooter />
+      <SiteFooter brand="The NAMMA Method" />
     </div>
   );
 }

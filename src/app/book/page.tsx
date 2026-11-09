@@ -6,8 +6,8 @@ import SiteFooter from "@/components/SiteFooter";
 import { readBookingState } from "./order-status";
 
 export const metadata: Metadata = {
-  title: "Pick Your Slot · Extreme or Nothing",
-  description: "Choose the date and time for your 1:1 Physique Transformation Strategy Call.",
+  title: "Pick Your Slot · The NAMMA Method",
+  description: "Choose the date and time for your 1:1 call with Sandesh.",
   /* Never indexable: a post-payment page, and a search result for it would
      send unpaid strangers into the calendar. */
   robots: { index: false, follow: false },
@@ -44,7 +44,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
   return (
     <div className="eon-book">
       <BookingPage state={state} booked={booked} />
-      <SiteFooter />
+      <SiteFooter brand="The NAMMA Method" />
     </div>
   );
 }

@@ -9,12 +9,14 @@ import { LEGAL } from "@/app/_legal/legal";
  *
  * Carries the registered name, the full postal address and a working phone plus
  * email on the SITE rather than inside one policy page.
+ *
+ * `brand` lets the booking and thank-you pages carry the landing page's name.
  */
-export default function SiteFooter() {
+export default function SiteFooter({ brand = LEGAL.brand }: { brand?: string }) {
   return (
     <footer className="eon-foot">
       <div className="eon-foot-wrap">
-        <div className="eon-foot-brand">{LEGAL.brand}</div>
+        <div className="eon-foot-brand">{brand}</div>
         <p>
           © 2026 {LEGAL.entity} All rights reserved.
           <br />
