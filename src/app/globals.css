@@ -2555,62 +2555,117 @@ br.sdp-br-lg{ display:inline; }
 .eon-ty .ty-hero,
 .eon-ty .ty-close{ text-align:center; }
 
-/* The seal. Built like the guarantee card's icon tile rather than a tick
-   on its own: a confirmation is the one moment this funnel is allowed to
-   feel like an award. */
-/* `display:grid`, NOT inline-grid, and that is the whole fix for the pill.
-   The seal and the badge under it were both inline-level, so they sat side
-   by side on one line: a tick with "Booking confirmed" next to it rather
-   than above it. A block-level seal centred with `margin:auto` pushes the
-   badge onto its own line, where it belongs. */
-.eon-ty .ty-seal{
-  display:grid; place-items:center;
-  width:62px; height:62px; border-radius:50%;
-  background:rgba(var(--brand-rgb),.16);
-  border:1px solid rgba(var(--brand-rgb),.45);
-  color:var(--brand-bright);
-  margin:0 auto 16px;
-}
-.eon-ty .ty-seal svg{ width:30px; height:30px; }
-
-.eon-ty .ty-badge{
-  display:inline-flex; align-items:center;
-  padding:7px 15px; border-radius:999px;
-  border:1px solid rgba(var(--brand-rgb),.45);
-  background:rgba(var(--brand-rgb),.14);
-  font-family:var(--fb); font-size:10.5px; font-weight:700;
-  letter-spacing:.14em; text-transform:uppercase; line-height:1;
-  color:var(--brand-bright);
-}
-.eon-ty .ty-h1{
-  font-family:var(--fh);
-  font-size:clamp(28px,4.4vw,46px); line-height:1.12; letter-spacing:-.015em;
-  color:var(--ink-dark); margin:16px 0 0; text-wrap:balance;
-}
-.eon-ty .ty-h1 em{ font-style:normal; color:var(--brand-bright); }
+/* The dark close band's sub line. */
 .eon-ty .ty-sub{
   max-width:56ch; margin:14px auto 0;
   font-size:15px; line-height:1.72; color:var(--ink-dark-soft);
 }
 .eon-ty .ty-sub a{ color:var(--brand-bright); }
 
-/* Two facts, not a list of features: what arrives, and when. */
-.eon-ty .ty-chips{
-  display:flex; flex-wrap:wrap; justify-content:center; gap:10px 14px;
-  margin:26px 0 0; padding:0; list-style:none;
+/* ---- hero: the WhatsApp confirmation (client's reference, 2026-11-13) ----
+   Steps, headline, portrait, the green WhatsApp button, a 60-second
+   countdown, then "your slot is held". Light band, the booking page's hero
+   stage, so /book and /thank-you read as one flow. */
+.eon-ty .ty-steps{ margin:0 0 34px; }
+.eon-ty .book-announce{ text-transform:uppercase; letter-spacing:.1em; }
+
+/* Three selectors deep to beat `.eon-book .book-hero h1`. */
+.eon-ty .book-hero .ty-wait-h1{
+  font-size:clamp(28px,4.6vw,46px); line-height:1.1; letter-spacing:.02em;
+  max-width:20ch; margin:0 auto 28px; text-wrap:balance;
 }
-.eon-ty .ty-chips li{
-  display:inline-flex; align-items:center; gap:9px;
-  padding:9px 16px; border-radius:999px;
-  border:1px solid var(--border-dark-strong);
-  font-family:var(--fb); font-size:12.5px; color:var(--ink-dark-soft);
+.eon-ty .ty-wait{ color:var(--danger); }
+
+.eon-ty .ty-portrait{
+  display:block; width:180px; height:180px; margin:0 auto 26px;
+  border-radius:50%; object-fit:cover; object-position:50% 18%;
+  background:var(--bg-dark);
+  border:4px solid var(--brand);
+  box-shadow:0 0 0 7px var(--brand-soft), 0 18px 40px rgba(var(--brand-rgb),.22);
 }
-.eon-ty .ty-tick{
-  display:grid; place-items:center;
-  width:16px; height:16px; flex:0 0 16px; border-radius:50%;
-  background:var(--brand); color:#fff;
+
+.eon-ty .ty-lead{
+  max-width:46ch; margin:0 auto 10px;
+  font-size:17px; line-height:1.6; color:var(--ink-soft);
 }
-.eon-ty .ty-tick svg{ width:9px; height:9px; }
+.eon-ty .ty-lead strong{ color:var(--ink); font-weight:700; }
+
+.eon-ty .ty-wa{ margin-top:26px; }
+
+/* WhatsApp's green is the one place it appears on the site: the button has
+   to read as WhatsApp at a glance. Dark enough at the bottom of the gradient
+   to hold white text. */
+.eon-ty .ty-wa-btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:12px;
+  padding:18px 34px; border-radius:999px;
+  background:linear-gradient(180deg,#22C35E 0%,#0F8A5C 100%); color:#FFFFFF;
+  font-family:var(--fb); font-size:17px; font-weight:800; line-height:1.25; text-align:center;
+  box-shadow:0 12px 28px rgba(15,138,92,.35), inset 0 1px 0 rgba(255,255,255,.25);
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.eon-ty .ty-wa-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 16px 34px rgba(15,138,92,.42), inset 0 1px 0 rgba(255,255,255,.25);
+}
+.eon-ty .ty-wa-btn:focus-visible{ outline:3px solid var(--ink); outline-offset:3px; }
+.eon-ty .ty-wa-icon{ display:grid; width:24px; height:24px; flex:0 0 24px; }
+.eon-ty .ty-wa-icon svg{ width:100%; height:100%; }
+.eon-ty .ty-wa-note{ margin:12px 0 0; font-size:13px; color:var(--muted); }
+
+/* The countdown. Urgency in the danger red the headline's "Wait!" uses. */
+.eon-ty .ty-timer{
+  display:inline-flex; align-items:center; gap:10px; margin-top:18px;
+  padding:10px 18px; border-radius:999px;
+  background:rgba(var(--danger-rgb),.07); border:1px solid rgba(var(--danger-rgb),.32);
+  font-size:14px; font-weight:600; color:var(--ink);
+}
+.eon-ty .ty-timer-clock{
+  font-family:var(--fh); font-size:19px; font-weight:700; color:var(--danger);
+  font-variant-numeric:tabular-nums; letter-spacing:.04em; margin:0 3px;
+}
+.eon-ty .ty-timer-dot{
+  width:8px; height:8px; flex:0 0 8px; border-radius:50%; background:var(--danger);
+  animation:ty-pulse 1s ease-in-out infinite;
+}
+.eon-ty .ty-timer.is-done .ty-timer-dot{ animation:none; }
+@keyframes ty-pulse{ 50%{ opacity:.25; transform:scale(.7); } }
+
+.eon-ty .ty-held{
+  font-size:clamp(26px,4.2vw,40px); margin:52px auto 10px; text-wrap:balance;
+}
+.eon-ty .ty-held-sub{ max-width:58ch; margin:0 auto; font-size:15px; line-height:1.7; }
+
+/* Mobile docked bar: the same WhatsApp button, always reachable. */
+.eon-ty .ty-stuck{ display:none; }
+
+@media (max-width:760px){
+  /* Room for the docked bar, so it never covers the footer's last line. */
+  .eon-ty{ padding-bottom:88px; }
+  .eon-ty .ty-stuck{
+    display:block; position:fixed; z-index:40; left:0; right:0; bottom:0;
+    background:var(--bg-dark);
+    padding:12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+    box-shadow:0 -8px 24px rgba(0,0,0,.28);
+  }
+  .eon-ty .ty-wa-btn{ font-size:15px; padding:15px 24px; }
+  .eon-ty .ty-wa-btn-block{ display:flex; width:100%; padding:14px 18px; }
+  .eon-ty .ty-portrait{ width:140px; height:140px; margin-bottom:22px; }
+  .eon-ty .ty-lead{ font-size:15.5px; }
+  .eon-ty .ty-timer{ font-size:13px; padding:9px 14px; }
+  /* One line each, as in the reference: the strip and the step labels. */
+  .eon-ty .book-announce{
+    flex-wrap:nowrap; white-space:nowrap; gap:7px;
+    padding:9px 10px; font-size:9.5px; letter-spacing:.06em;
+  }
+  .eon-ty .ty-steps{ gap:6px; }
+  .eon-ty .ty-steps .book-step-lbl{ font-size:9px; letter-spacing:.06em; white-space:nowrap; }
+  .eon-ty .ty-steps .book-step-line{ width:24px; }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .eon-ty .ty-timer-dot{ animation:none; }
+  .eon-ty .ty-wa-btn{ transition:none; }
+}
 
 /* The three things the call covers, as display ordinals. Same treatment
    as the programme beat's pillar numbers on the landing page. */

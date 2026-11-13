@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import SiteFooter from "@/components/SiteFooter";
+import WhatsAppConfirm from "@/components/thank-you/WhatsAppConfirm";
 import { LEGAL } from "@/app/_legal/legal";
 import { WHAT_THE_CALL_COVERS } from "@/lib/call-copy";
 
@@ -27,9 +28,11 @@ export const metadata: Metadata = {
  * is now the house standard; the blueprint has been updated to match.
  *
  * ── WHAT IT IS FOR, AND WHAT IT IS NOT ─────────────────────────────────
- * By the time anyone lands here they have paid AND booked, so the only thing left to
- * influence is whether they turn up prepared. Every push to book is gone: on
- * a page reached only by booking, a "book your slot" button is a bug.
+ * By the time anyone lands here they have paid AND booked. What is left is
+ * getting them onto WhatsApp (2026-11-13, client's reference design), which
+ * is where the joining link and reminders go and what drives show rate, and
+ * whether they turn up prepared. Every push to book is gone: on a page
+ * reached only by booking, a "book your slot" button is a bug.
  *
  * IT FIRES NOTHING. Purchase fired on /book (pixel) and server-side (verify +
  * webhook); `Schedule` fired on /book, from Cal's
@@ -37,8 +40,9 @@ export const metadata: Metadata = {
  *
  * ── COPY ───────────────────────────────────────────────────────────────
  * Modelled beat for beat on tgo-deepti's /thank-you, which Atul named as the
- * standard: confirmation seal, "what this call actually is", "what to have
- * ready", and a close that is contact details rather than a pitch.
+ * standard: "what this call actually is", "what to have ready", and a close
+ * that is contact details rather than a pitch. The hero is the client's own
+ * WhatsApp-confirmation layout instead of the old confirmation seal.
  *
  * `WHAT_THE_CALL_COVERS` is the SAME constant the checkout and the booking
  * page read, so all three surfaces describe the call identically. It still
@@ -49,7 +53,8 @@ export const metadata: Metadata = {
  * client would not already have, but it is instructions given to someone who
  * has booked, so it should be confirmed rather than assumed.
  *
- * A Server Component: nothing here is interactive.
+ * A Server Component. The countdown and the mobile docked bar are the one
+ * client island, components/thank-you/WhatsAppConfirm.tsx.
  */
 
 type SP = Promise<Record<string, string | string[] | undefined>>;
@@ -77,15 +82,6 @@ const HAVE_READY: [string, string][] = [
   ],
 ];
 
-function Seal() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <circle cx="12" cy="12" r="9.2" />
-      <polyline points="7.6 12.4 10.6 15.4 16.4 8.8" />
-    </svg>
-  );
-}
-
 function Tick() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -104,35 +100,65 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
 
   return (
     <div className="eon-book eon-ty">
-      {/* ── 1 · CONFIRMATION. Dark band, the page's first peak. ─────── */}
-      <section className="book-section book-dark ty-hero">
+      <div className="book-announce" role="note">
+        <span className="book-announce-item">Slot Reserved</span>
+        <span className="book-announce-dot" aria-hidden />
+        <span className="book-announce-item">One Step Left</span>
+        <span className="book-announce-dot" aria-hidden />
+        <span className="book-announce-item">A Diagnosis, Not A Pitch</span>
+      </div>
+
+      {/* ── 1 · HERO: one step left. The client's reference layout: steps,
+          headline, portrait, the WhatsApp confirmation, a countdown under
+          it, then the "slot is held" line. ─────────────────────────── */}
+      <section className="book-hero ty-hero">
         <div className="book-wrap book-narrow">
-          <span className="ty-seal" aria-hidden>
-            <Seal />
-          </span>
-          <span className="ty-badge">Booking confirmed</span>
-          <h1 className="ty-h1">
-            Your call is <em>locked in.</em>
+          <div className="book-steps ty-steps">
+            <div className="book-step is-done">
+              <span className="book-step-circ"><Tick /></span>
+              <span className="book-step-lbl">Your Details</span>
+            </div>
+            <span className="book-step-line" aria-hidden />
+            <div className="book-step is-done">
+              <span className="book-step-circ"><Tick /></span>
+              <span className="book-step-lbl">Pick Your Time</span>
+            </div>
+            <span className="book-step-line" aria-hidden />
+            <div className="book-step is-active">
+              <span className="book-step-circ">3</span>
+              <span className="book-step-lbl">Confirmed</span>
+            </div>
+          </div>
+
+          <h1 className="ty-wait-h1">
+            <span className="ty-wait">Wait!</span> Your 1:1 Call Has Not Been Confirmed Yet…
           </h1>
-          <p className="ty-sub">
-            Your slot is confirmed and the details are on their way to the email address you booked
-            with. Put it in your calendar now, while it is in front of you.
+
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className="ty-portrait"
+            src="/sandesh-portrait.webp"
+            alt="Sandesh Soans"
+            width={180}
+            height={180}
+          />
+
+          <p className="ty-lead">
+            You’ve just <strong>completed the first step</strong>.
+          </p>
+          <p className="ty-lead">
+            Connect on WhatsApp to <strong>get the next steps to confirm your 1:1 Call</strong>.
           </p>
 
-          <ul className="ty-chips">
-            <li>
-              <span className="ty-tick" aria-hidden>
-                <Tick />
-              </span>
-              Confirmation by email, with your joining link
-            </li>
-            <li>
-              <span className="ty-tick" aria-hidden>
-                <Tick />
-              </span>
-              A reminder before the call
-            </li>
-          </ul>
+          <WhatsAppConfirm />
+
+          <h2 className="ty-held">
+            Your slot is held. <em>One step left.</em>
+          </h2>
+          <p className="ty-held-sub">
+            Confirm on WhatsApp and your joining link and reminders come through there. Bring nothing
+            but honest answers: the more accurate you are, the more useful your plan will be.
+          </p>
         </div>
       </section>
 
