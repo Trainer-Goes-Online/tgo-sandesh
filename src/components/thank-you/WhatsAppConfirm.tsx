@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
  */
 
 /* +91 63604 43776, digits only, as wa.me wants it. */
-const WHATSAPP_NUMBER = "916360443776";
+const WHATSAPP_NUMBER = "918105195782";
 const WHATSAPP_MESSAGE = "Hi, I’ve picked my call slot. What’s the next step to confirm it?";
 const WHATSAPP_CONFIRM_HREF = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
 
